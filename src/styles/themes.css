@@ -1,0 +1,58 @@
+/**
+ * DashFlow Theme System - CSS Variable Schema
+ * Tailwind-compatible: use bg-[var(--color-bg)] or var(--color-text)
+ */
+
+/* =============================================================================
+   THEME VARIABLE SCHEMA
+   ============================================================================= */
+
+:root {
+  /* Semantic tokens - mapped per theme */
+  --color-bg: var(--theme-bg);
+  --color-bg-elevated: var(--theme-bg-elevated);
+  --color-surface: var(--theme-surface);
+  --color-surface-hover: var(--theme-surface-hover);
+  --color-text: var(--theme-text);
+  --color-text-muted: var(--theme-text-muted);
+  --color-border: var(--theme-border);
+  --color-primary: var(--theme-primary);
+  --color-primary-hover: var(--theme-primary-hover);
+}
+
+/* -----------------------------------------------------------------------------
+   LIGHT THEME
+   ----------------------------------------------------------------------------- */
+[data-theme='light'] {
+  --theme-bg: rgb(248 250 252);
+  --theme-bg-elevated: rgb(255 255 255);
+  --theme-surface: rgb(241 245 249);
+  --theme-surface-hover: rgb(226 232 240);
+  --theme-text: rgb(15 23 42);
+  --theme-text-muted: rgb(100 116 139);
+  --theme-border: rgb(226 232 240);
+  --theme-primary: rgb(59 130 246);
+  --theme-primary-hover: rgb(37 99 235);
+}
+
+/* -----------------------------------------------------------------------------
+   DARK THEME
+   ----------------------------------------------------------------------------- */
+[data-theme='dark'] {
+  --theme-bg: rgb(2 6 23);
+  --theme-bg-elevated: rgb(15 23 42);
+  --theme-surface: rgb(30 41 59);
+  --theme-surface-hover: rgb(51 65 85);
+  --theme-text: rgb(248 250 252);
+  --theme-text-muted: rgb(148 163 184);
+  --theme-border: rgb(51 65 85);
+  --theme-primary: rgb(96 165 250);
+  --theme-primary-hover: rgb(147 197 253);
+}
+
+/* -----------------------------------------------------------------------------
+   CUSTOM OVERRIDES (applied via inline style when user sets overrides)
+   ----------------------------------------------------------------------------- */
+[data-theme-custom='true'] {
+  /* Overrides applied by JS: --color-bg, --color-surface, etc. */
+}
