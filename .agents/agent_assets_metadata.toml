@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "QlxsEvbUV84WryQ_bigVM"
+uri = "file://INSTALL_EXTENSION.md"
+type = "text"
+title = "Инструкция по сборке и установке расширения"

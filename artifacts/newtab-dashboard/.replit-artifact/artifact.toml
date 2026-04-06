@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "New Tab Dashboard"
+version = "1.0.0"
+id = "artifacts/newtab-dashboard"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25200
+
+[services.development]
+run = "pnpm --filter @workspace/newtab-dashboard run dev:web"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/newtab-dashboard", "run", "build" ]
+publicDir = "artifacts/newtab-dashboard/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25200"
+BASE_PATH = "/"
