@@ -47,3 +47,7 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+
+#Ignore insiders AI rules
+.github\instructions\codacy.instructions.md
