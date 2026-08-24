@@ -48,6 +48,9 @@ Thumbs.db
 .cache/
 .local/
 
+# Superpowers brainstorming (локальные макеты и состояние сессии)
+.superpowers/
+
 
 #Ignore insiders AI rules
 .github\instructions\codacy.instructions.md
