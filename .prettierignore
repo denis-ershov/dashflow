@@ -1,0 +1,18 @@
+.wxt/
+.output/
+node_modules/
+package-lock.json
+
+# Каталоги, которые переезжают в этапах 2-6. Список обязан совпадать с ignores
+# в eslint.config.js: переезд каталога удаляет строку из обоих файлов сразу.
+src/components/
+src/entrypoints/
+src/features/dashboard/
+src/features/marketplace/
+src/features/settings/
+src/features/themes/
+src/plugins/
+src/sdk/
+src/services/
+src/stores/
+src/widgets/

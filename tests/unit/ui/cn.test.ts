@@ -3,7 +3,7 @@ import { cn } from '@/ui/lib/cn';
 
 describe('cn', () => {
   it('объединяет классы и отбрасывает ложные значения', () => {
-    expect(cn('a', false && 'b', undefined, 'c')).toBe('a c');
+    expect(cn('a', false, null, undefined, '', 'c')).toBe('a c');
   });
 
   it('разрешает конфликт утилит Tailwind в пользу последней', () => {
