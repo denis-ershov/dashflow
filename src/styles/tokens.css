@@ -1,81 +1,314 @@
-/* Дизайн-токены DashFlow Premium (Linear / Raycast / Apple / Vercel Aesthetic) */
+/**
+ * Токены дизайн-системы DashFlow. Три слоя, каждый со своей зоной ответственности.
+ *
+ * Слой 1 — структура. Значения, которые тема не меняет никогда: шкала z-index,
+ *   тайминги, тени. Живёт в обычном :root и всегда попадает в сборку.
+ * Слой 2 — палитра. Единственное, что переписывает тема: переменные --dashflow-*.
+ *   Theme Engine печатает их копию в один <style id="dashflow-theme">, и она
+ *   перекрывает эти значения по порядку следования.
+ * Слой 3 — псевдонимы старых имён. --color-bg и соседи ссылаются на слой 2,
+ *   поэтому ещё не переехавшие файлы продолжают компилироваться.
+ *
+ * Мост в Tailwind — директивы темы внизу файла. Обычная директива темы печатает
+ * литералы, статическая гарантирует вывод переменной даже без утилит в разметке,
+ * а встроенная (inline) подставляет ссылку в утилиту и ничего не печатает в :root.
+ *
+ * Правило файла: одно имя живёт либо в директиве темы, либо в :root, но не в обоих.
+ * Нарушение этого правила и было причиной коллизии --radius-*: Tailwind печатал
+ * свои значения после нашего @import, и rounded-md молча означал 14px вместо 6px.
+ */
+
+/* ── Слой 1. Структура ─────────────────────────────────────────────────── */
+
 :root {
-  /* Типографика */
-  --font-family-base: 'Sofia Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-family-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  
-  /* Скругления */
-  --radius-xs: 6px;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
-  --radius-full: 9999px;
+  --z-base: 0;
+  --z-raised: 10;
+  --z-grid-item-active: 20;
+  --z-rail: 30;
+  --z-overlay: 40;
+  --z-modal: 50;
+  --z-toast: 60;
 
-  /* Переходы и Анимации */
-  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-normal: 220ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-slow: 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  /* Правило 19: анимации 150–250 ms, длиннее — воспринимается как торможение. */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 250ms;
 
-  /* Цветовая Палитра Premium Dark (По умолчанию) */
-  --color-bg: #0b0f17;
-  --color-surface: rgba(18, 26, 38, 0.7);
-  --color-surface-hover: rgba(28, 39, 56, 0.85);
-  --color-surface-active: rgba(35, 49, 70, 0.95);
+  --transition-fast: var(--duration-fast) var(--ease-expo);
+  --transition-normal: var(--duration-normal) var(--ease-expo);
+  --transition-slow: var(--duration-slow) var(--ease-expo);
 
-  --color-primary: #3b82f6;
-  --color-primary-hover: #60a5fa;
-  --color-primary-glow: rgba(59, 130, 246, 0.35);
-
-  --color-secondary: #06b6d4;
-  --color-accent: #8b5cf6;
-
-  --color-text: #f8fafc;
-  --color-text-muted: #94a3b8;
-  --color-text-dim: #64748b;
-
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-hover: rgba(255, 255, 255, 0.22);
-  --color-border-glow: rgba(59, 130, 246, 0.5);
-
-  /* Тени и Свечения */
-  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 16px 50px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 40px var(--color-primary-glow);
-
-  /* Эффект матового стекла (Glassmorphism Pro) */
-  --glass-bg: rgba(15, 23, 42, 0.65);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-blur: 24px;
+  --shadow-1: 0 2px 10px rgb(0 0 0 / 0.3);
+  --shadow-2: 0 8px 30px rgb(0 0 0 / 0.45);
+  --shadow-3: 0 16px 50px rgb(0 0 0 / 0.6);
 }
 
+/* ── Слой 2. Палитра темы «Neutral Dark» ───────────────────────────────── */
+
+:root {
+  --dashflow-canvas: #0b0f17;
+  --dashflow-surface: rgb(18 26 38 / 0.7);
+  --dashflow-surface-hover: rgb(28 39 56 / 0.85);
+  --dashflow-surface-active: rgb(35 49 70 / 0.95);
+
+  --dashflow-primary: #3b82f6;
+  --dashflow-primary-hover: #60a5fa;
+  /* Текст на кнопке: #f8fafc на #3b82f6 даёт 3.52:1 и не проходит AA,
+     тёмный #0b0f17 даёт 5.21:1. */
+  --dashflow-primary-fg: #0b0f17;
+  --dashflow-secondary: #06b6d4;
+  --dashflow-accent: #8b5cf6;
+
+  --dashflow-fg: #f8fafc;
+  --dashflow-fg-muted: #94a3b8;
+  /* slate-500 (#64748b) на канве даёт 4.03:1 и не проходит AA, #748196 — 4.86:1. */
+  --dashflow-fg-dim: #748196;
+
+  --dashflow-line: rgb(255 255 255 / 0.08);
+  --dashflow-line-hover: rgb(255 255 255 / 0.22);
+
+  --dashflow-danger: #ef4444;
+  --dashflow-warning: #f59e0b;
+  --dashflow-success: #10b981;
+  --dashflow-info: #38bdf8;
+
+  --dashflow-primary-glow: rgb(59 130 246 / 0.35);
+  --dashflow-line-glow: rgb(59 130 246 / 0.5);
+  --dashflow-ambient-1: rgb(139 92 246 / 0.15);
+  --dashflow-ambient-2: rgb(6 182 212 / 0.08);
+
+  --dashflow-glass-bg: rgb(18 26 38 / 0.65);
+  --dashflow-glass-border: rgb(248 250 252 / 0.1);
+  --dashflow-glass-blur: 24px;
+  --dashflow-glass-opacity: 0.65;
+
+  --dashflow-radius-xs: 6px;
+  --dashflow-radius-sm: 10px;
+  --dashflow-radius-md: 14px;
+  --dashflow-radius-lg: 20px;
+  --dashflow-radius-xl: 28px;
+
+  --dashflow-font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --dashflow-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --dashflow-font-scale: 1;
+}
+
+/**
+ * ВРЕМЕННЫЙ мост светлой темы. Пока переключение темы живёт в useAppStore и
+ * ставит data-theme на <html>, у пользователя с сохранённым 'light' палитра
+ * обязана остаться светлой. Специфичность :root и [data-theme] одинакова (0,1,0),
+ * поэтому блок обязан идти после слоя 2 — решает порядок, а не вес селектора.
+ *
+ * Удаляется в задаче, которая вводит applyTheme(): после неё палитру печатает
+ * Theme Engine, а data-theme исчезает вместе с этим блоком.
+ *
+ * Известный дефект, который здесь сознательно не чинится: --dashflow-fg-dim
+ * (#94a3b8) на светлой канве даёт 2.45:1 и не проходит AA. Значение перенесено
+ * из текущей темы без изменений, чтобы шаг не менял поведение; правильные
+ * значения приходят вместе с измеренным пресетом «Default Light».
+ */
 [data-theme='light'] {
-  --color-bg: #f8fafc;
-  --color-surface: rgba(255, 255, 255, 0.85);
-  --color-surface-hover: rgba(241, 245, 249, 0.95);
-  --color-surface-active: rgba(226, 232, 240, 1);
+  --dashflow-canvas: #f8fafc;
+  --dashflow-surface: rgb(255 255 255 / 0.85);
+  --dashflow-surface-hover: rgb(241 245 249 / 0.95);
+  --dashflow-surface-active: rgb(226 232 240 / 1);
 
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-primary-glow: rgba(37, 99, 235, 0.2);
+  --dashflow-primary: #2563eb;
+  --dashflow-primary-hover: #1d4ed8;
+  /* Белый на #2563eb даёт 5.17:1 и проходит AA, тёмный #0f172a — только 3.40:1. */
+  --dashflow-primary-fg: #ffffff;
+  --dashflow-secondary: #0891b2;
+  --dashflow-accent: #7c3aed;
 
-  --color-secondary: #0891b2;
-  --color-accent: #7c3aed;
+  --dashflow-fg: #0f172a;
+  --dashflow-fg-muted: #475569;
+  --dashflow-fg-dim: #94a3b8;
 
-  --color-text: #0f172a;
-  --color-text-muted: #475569;
-  --color-text-dim: #94a3b8;
+  --dashflow-line: rgb(0 0 0 / 0.08);
+  --dashflow-line-hover: rgb(0 0 0 / 0.2);
 
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-border-hover: rgba(0, 0, 0, 0.2);
-  --color-border-glow: rgba(37, 99, 235, 0.4);
+  --dashflow-primary-glow: rgb(37 99 235 / 0.2);
+  --dashflow-line-glow: rgb(37 99 235 / 0.4);
 
-  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 16px 50px rgba(0, 0, 0, 0.12);
-  --shadow-glow: 0 0 30px rgba(37, 99, 235, 0.15);
+  --dashflow-glass-bg: rgb(255 255 255 / 0.8);
+  --dashflow-glass-border: rgb(0 0 0 / 0.08);
 
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.08);
+  --shadow-1: 0 2px 10px rgb(0 0 0 / 0.04);
+  --shadow-2: 0 8px 30px rgb(0 0 0 / 0.08);
+  --shadow-3: 0 16px 50px rgb(0 0 0 / 0.12);
+}
+
+/* Обои и затемнение под ними — отдельный слой: тема их не трогает. */
+:root {
+  --app-bg-image: none;
+  --app-scrim: 0;
+}
+
+/* ── Слой 3. Псевдонимы старых имён ────────────────────────────────────── */
+
+:root {
+  --color-bg: var(--dashflow-canvas);
+  --color-surface: var(--dashflow-surface);
+  --color-surface-hover: var(--dashflow-surface-hover);
+  --color-surface-active: var(--dashflow-surface-active);
+  --color-primary: var(--dashflow-primary);
+  --color-primary-hover: var(--dashflow-primary-hover);
+  --color-primary-glow: var(--dashflow-primary-glow);
+  --color-secondary: var(--dashflow-secondary);
+  --color-accent: var(--dashflow-accent);
+  --color-text: var(--dashflow-fg);
+  --color-text-muted: var(--dashflow-fg-muted);
+  --color-text-dim: var(--dashflow-fg-dim);
+  --color-border: var(--dashflow-line);
+  --color-border-hover: var(--dashflow-line-hover);
+  --color-border-glow: var(--dashflow-line-glow);
+  --glass-bg: var(--dashflow-glass-bg);
+  --glass-border: var(--dashflow-glass-border);
+  --glass-blur: var(--dashflow-glass-blur);
+  --font-family-base: var(--dashflow-font-sans);
+  --font-family-mono: var(--dashflow-font-mono);
+  --shadow-sm: var(--shadow-1);
+  --shadow-md: var(--shadow-2);
+  --shadow-lg: var(--shadow-3);
+  --shadow-glow: 0 0 40px var(--dashflow-primary-glow);
+}
+
+/* ── Мост в Tailwind ───────────────────────────────────────────────────── */
+
+/**
+ * Типографическая шкала: 12/13/14/16/20/24/32/48/64 px с парными межстрочными.
+ * text-lg (18px) выведен из шкалы прямо сейчас — его единственный потребитель,
+ * заголовок Modal.tsx, становится 16 px, и это ожидаемое расхождение шага.
+ * Шаги text-3xl…text-9xl пока остаются: их шесть вхождений в трёх виджетах
+ * (Clock, Pomodoro, Weather) переписываются в этапе 4, и молча обнулять им
+ * размер здесь было бы регрессией, а не редизайном.
+ */
+@theme {
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-13: 0.8125rem;
+  --text-13--line-height: 1.125rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-display-sm: 2rem;
+  --text-display-sm--line-height: 2.5rem;
+  --text-display-md: 3rem;
+  --text-display-md--line-height: 3.25rem;
+  --text-display-lg: 4rem;
+  --text-display-lg--line-height: 4.25rem;
+
+  --text-lg: initial;
+}
+
+/**
+ * Статическая директива, а не обычная: --ease-expo нужен в :root во время
+ * выполнения, потому что на него ссылаются --transition-* из слоя 1 и значения
+ * --animate-* ниже. Обычная директива печатает только переменные, у которых в
+ * разметке нашлась утилита; класса ease-expo в проекте нет, переменная была бы
+ * вырезана, а все --transition-* стали бы невалидными.
+ */
+@theme static {
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/**
+ * Встроенная директива: значение подставляется в утилиту как ссылка, копия в
+ * :root не печатается. Именно это снимает коллизию --radius-* и делает цвета
+ * Tailwind живыми — bg-surface читает переменную темы, а не застывший литерал.
+ */
+@theme inline {
+  --color-canvas: var(--dashflow-canvas);
+  --color-surface: var(--dashflow-surface);
+  --color-surface-hover: var(--dashflow-surface-hover);
+  --color-surface-active: var(--dashflow-surface-active);
+  --color-primary: var(--dashflow-primary);
+  --color-primary-hover: var(--dashflow-primary-hover);
+  --color-primary-fg: var(--dashflow-primary-fg);
+  --color-secondary: var(--dashflow-secondary);
+  --color-accent: var(--dashflow-accent);
+  --color-fg: var(--dashflow-fg);
+  --color-fg-muted: var(--dashflow-fg-muted);
+  --color-fg-dim: var(--dashflow-fg-dim);
+  --color-line: var(--dashflow-line);
+  --color-line-hover: var(--dashflow-line-hover);
+  --color-danger: var(--dashflow-danger);
+  --color-warning: var(--dashflow-warning);
+  --color-success: var(--dashflow-success);
+  --color-info: var(--dashflow-info);
+  --color-glass: var(--dashflow-glass-bg);
+  --color-glass-line: var(--dashflow-glass-border);
+
+  --radius-xs: var(--dashflow-radius-xs);
+  --radius-sm: var(--dashflow-radius-sm);
+  --radius-md: var(--dashflow-radius-md);
+  --radius-lg: var(--dashflow-radius-lg);
+  --radius-xl: var(--dashflow-radius-xl);
+  --radius-2xl: var(--dashflow-radius-lg);
+  --radius-3xl: initial;
+  --radius-4xl: initial;
+
+  --font-sans: var(--dashflow-font-sans);
+  --font-mono: var(--dashflow-font-mono);
+
+  --animate-fade-in: fade-in var(--duration-normal) var(--ease-expo);
+  --animate-scale-in: scale-in var(--duration-normal) var(--ease-expo);
+  --animate-slide-in-right: slide-in-right var(--duration-slow) var(--ease-expo);
+  --animate-slide-in-up: slide-in-up var(--duration-normal) var(--ease-expo);
+}
+
+/* ── Кадры анимаций ────────────────────────────────────────────────────── */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/**
+ * Правило 19 и WCAG 2.3.3: пользователь с prefers-reduced-motion получает
+ * мгновенные переходы. Не отключаем анимации нулём — нулевая длительность
+ * не даёт сработать transitionend, а часть кода на него рассчитывает.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 1ms;
+    --duration-normal: 1ms;
+    --duration-slow: 1ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }
