@@ -2,16 +2,24 @@ import React from 'react';
 import { cn } from '@/ui/lib/cn';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
   icon?: React.ReactNode;
   error?: string;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, icon, error, id, ...props }, ref) => {
-    const errorId = id && error ? `${id}-error` : undefined;
+  ({ className, label, icon, error, id, ...props }, ref) => {
+    const generatedId = React.useId();
+    const inputId = id || (label ? generatedId : undefined);
+    const errorId = inputId && error ? `${inputId}-error` : undefined;
 
     return (
       <div className="w-full flex flex-col gap-1">
+        {label && (
+          <label htmlFor={inputId} className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
+            {label}
+          </label>
+        )}
         <div className="relative flex items-center">
           {icon && (
             <div className="absolute left-3 text-fg-muted pointer-events-none shrink-0">
@@ -20,7 +28,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
           <input
             ref={ref}
-            id={id}
+            id={inputId}
             aria-invalid={error ? 'true' : undefined}
             aria-describedby={errorId}
             className={cn(
