@@ -7,6 +7,80 @@
 
 ---
 
+## [2.0.0-stage2] - 2026-08-27
+
+### Этап 2: Контракты виджетов, хранилище данных, миграции и i18n-движок
+
+#### Добавлено / Изменено:
+1. **Модуль интернационализации (`src/core/i18n/`):**
+   - Русские (`ru.ts`) и английские (`en.ts`) словари со 100% паритетом ключей и переводом описания всех 12 виджетов.
+   - Рекурсивный вывод типов `TranslationKey` из `typeof ru`.
+   - Чистые функции `t()`, `interpolate()`, `getPluralForm()` (на базе `Intl.PluralRules`), `formatDate()` и `formatNumber()`.
+   - Защита от показа сырых ключей локализации (Правило 43.12).
+   - Zustand-стор `useI18nStore` и реактивный React-хук `useTranslation()`.
+
+2. **Модуль хранилища и адаптеров (`src/core/storage/`):**
+   - Строгий реестр `STORAGE_KEYS` (включая ключи резервных копий `DASHBOARD_BACKUP_V1` и `THEME_BACKUP_V1`).
+   - Иерархия типизированных ошибок: `StorageError`, `StorageQuotaExceededError`.
+   - `StorageAdapter` с автоматическим переключением `chrome.storage.local` $\leftrightarrow$ `localStorage` $\leftrightarrow$ `IndexedDB` (`setLarge`/`getLarge`).
+   - Распознавание квот хранилища через `isQuotaError`.
+
+3. **Контракты виджетов без `any` (`src/core/widget/`):**
+   - Обобщенный интерфейс манифеста `WidgetDefinition<S>` с поддержкой Code Splitting (`load: () => Promise<{ default: ComponentType<WidgetProps<S>> }>`).
+   - Строгие перечисления: `WidgetCategory`, `WidgetPermission` (`storage`, `network`, `bookmarks`, `geolocation`), `WidgetSurfaceType` (`chromeless`, `panel`, `tiles`).
+   - Типизированная схема настроек `WidgetSettingFieldSchema<S>[]`.
+   - Легковесный чистый валидатор `validateWidgetSettings<S>` с защитой от повреждения данных и fallback на `defaultValue`.
+   - Глобальный реестр виджетов `WidgetRegistry` с поддержкой изоляции сбоев (`getOrFallback`).
+   - Декларативный генератор форм настроек `WidgetSettingsForm` на базе дизайн-системы.
+
+4. **Адаптивные раскладки и миграция состояния дашборда (`src/stores/useDashboardStore.ts`):**
+   - Чистая миграция состояния Dashboard Store v1 $\to$ v2 (`migrateDashboardState`).
+   - Автоматический расчет адаптивных сеток `deriveResponsiveLayouts` для 5 брейкпоинтов (`xl`, `lg`, `md`, `sm`, `xs`).
+   - Обновление `useDashboardStore` с сохранением обратной совместимости (`widgets`, `columns`, `setColumns`).
+   - Автоматическое создание бэкапа `dashflow_backup_v1` перед миграцией (Правило 51).
+
+5. **Архитектурная документация и ADR:**
+   - Созданы `docs/WIDGET_CONTRACTS_ARCHITECTURE.md`, `docs/STORAGE_ARCHITECTURE.md`, `docs/I18N_ARCHITECTURE.md`.
+   - Созданы `docs/adr/ADR-008-widget-contracts.md`, `docs/adr/ADR-009-storage-strategy.md`, `docs/adr/ADR-010-i18n-strategy.md`.
+
+#### Изменённые / созданные файлы:
+- `src/core/i18n/types.ts`
+- `src/core/i18n/locales/ru.ts`
+- `src/core/i18n/locales/en.ts`
+- `src/core/i18n/i18n.ts`
+- `src/core/i18n/i18nStore.ts`
+- `src/core/i18n/useTranslation.ts`
+- `src/core/i18n/index.ts`
+- `src/core/storage/keys.ts`
+- `src/core/storage/errors.ts`
+- `src/core/storage/StorageAdapter.ts`
+- `src/core/storage/dashboardMigrations.ts`
+- `src/core/storage/index.ts`
+- `src/core/widget/types.ts`
+- `src/core/widget/validator.ts`
+- `src/core/widget/registry.ts`
+- `src/core/widget/WidgetSettingsForm.tsx`
+- `src/core/widget/index.ts`
+- `src/stores/useDashboardStore.ts`
+- `src/ui/primitives/Input.tsx`
+- `docs/WIDGET_CONTRACTS_ARCHITECTURE.md`
+- `docs/STORAGE_ARCHITECTURE.md`
+- `docs/I18N_ARCHITECTURE.md`
+- `docs/adr/ADR-008-widget-contracts.md`
+- `docs/adr/ADR-009-storage-strategy.md`
+- `docs/adr/ADR-010-i18n-strategy.md`
+- `tests/unit/core/i18n.test.ts`
+- `tests/unit/core/storageAdapter.test.ts`
+- `tests/unit/core/widgetTypes.test.ts`
+- `tests/unit/core/widgetValidator.test.ts`
+- `tests/unit/core/widgetRegistry.test.ts`
+- `tests/unit/core/dashboardMigrations.test.ts`
+- `tests/unit/core/useTranslation.test.ts`
+- `tests/unit/stores/dashboardStore.test.ts`
+- `tests/component/widget/WidgetSettingsForm.test.tsx`
+
+---
+
 ## [2.0.0-stage1] - 2026-08-27
 
 ### Этап 1: Дизайн-система и Theme Engine (Глобальный рефакторинг)
@@ -56,56 +130,3 @@
 8. **Очистка legacy кода:**
    - Полное удаление устаревших каталогов `src/components/ui/` и `src/features/themes/`.
    - Перевод всех потребителей (виджеты Todo, Pomodoro, Bookmarks, RSS, Toolbar, Modal-окна, App) на новые модули `@/ui/` и `@/core/theme`.
-
-#### Изменённые / созданные файлы:
-- `src/styles/tokens.css` [NEW]
-- `src/styles/globals.css` [MODIFY]
-- `src/ui/lib/cn.ts` [NEW]
-- `src/core/theme/color.ts` [NEW]
-- `src/core/theme/tokens.ts` [NEW]
-- `src/core/theme/presets.ts` [NEW]
-- `src/core/theme/cssValidator.ts` [NEW]
-- `src/core/theme/wallpaper.ts` [NEW]
-- `src/core/theme/applyTheme.ts` [NEW]
-- `src/core/theme/migrations.ts` [NEW]
-- `src/core/theme/themeStore.ts` [NEW]
-- `src/ui/primitives/*` [NEW]
-- `src/ui/overlays/*` [NEW]
-- `src/ui/feedback/*` [NEW]
-- `src/features/appearance/*` [NEW]
-- `src/entrypoints/newtab/App.tsx` [MODIFY]
-- `src/components/ui/*` [DELETE]
-- `src/features/themes/*` [DELETE]
-- `docs/THEME_ENGINE_ARCHITECTURE.md` [MODIFY]
-- `docs/adr/ADR-004-pure-color-math.md` [NEW]
-- `docs/adr/ADR-005-three-layer-tokens.md` [NEW]
-- `docs/adr/ADR-007-custom-css-security.md` [NEW]
-- `tests/unit/**/*` [NEW]
-- `tests/component/**/*` [NEW]
-
----
-
-## [1.2.0-release] - 2026-08-11
-
-### Добавлено / Исправлено (Hitab UI, Interactive Grid Engine, RSS Multi-Mix, Bookmarks 2-Way Sync)
-1. **Дизайн в стиле Hitab (web.hitab.me) & SuperStart:**
-   - Премиальная эстетика с радиальными свечениями, матовым стеклом `backdrop-blur-2xl`, тонкими переливами границ и отсутствием нагромождения контролов.
-2. **Интерактивный Drag & Drop / Resize Движок Сетки:**
-   - Интегрирована библиотека `react-grid-layout` для честного физического перетаскивания мышью и ресайза виджетов с угловыми ухваточными ручками в режиме `Edit Layout`.
-3. **Очищенный Фронтенд RSS & Мульти-микс Чекбоксами:**
-   - Фронтенд карточки RSS полностью очищен от выпадающих списков.
-   - Все настройки вынесены в `RssSettingsForm` в выкатной `Drawer`. Выбор нескольких каналов **чекбоксами** объединяет их новости в единый общий хронологический поток.
-4. **Закладки по 100% спецификации (3 Режима):**
-   - **Одиночная закладка:** отдельный элемент со своими настройками тумблеров.
-   - **Внутренняя папка:** добавление закладок вручную.
-   - **Синхронизация с папой Chrome:** реальная двусторонняя синхронизация через `chrome.bookmarks.onCreated`, `onRemoved`, `onChanged`, `onMoved` без зацикливания sync-потоков. Chrome остается источником данных, а расширение хранит настройки стиля представления (Плитка, Список, Таблица) отдельно.
-
----
-
-## [1.1.0-release] - 2026-08-11
-
-### Добавлено / Исправлено
-- Удаление мок-данных из галереи.
-- Конструктор кастомных тем и CSS Редактор.
-- Редизайн поиска Spotlight.
-- Закладки 1x1 и RSS ленты.

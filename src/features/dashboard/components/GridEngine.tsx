@@ -8,6 +8,7 @@ import { PluginHost } from '@/widgets/sandbox/PluginHost';
 import { WidgetSettingsDrawer } from './WidgetSettingsDrawer';
 
 // Подключение WidthProvider для вычисления ширины сетки
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const WidthProvider = (RGL as any).WidthProvider || (RGL as any).default?.WidthProvider;
 const ReactGridLayout = WidthProvider ? WidthProvider(RGL) : RGL;
 
@@ -55,14 +56,16 @@ export const GridEngine: React.FC = () => {
         draggableHandle=".widget-drag-handle"
       >
         {widgets.map((item) => {
-          const definition = WidgetRegistry.get(item.widgetId);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const definition = WidgetRegistry.get(item.widgetId) as any;
           const Component = definition?.component;
+          const widgetTitle = definition?.name || definition?.nameKey || item.widgetId.toUpperCase();
 
           return (
             <div key={item.instanceId}>
               <WidgetCard
                 instanceId={item.instanceId}
-                title={definition ? definition.name : item.widgetId.toUpperCase()}
+                title={String(widgetTitle)}
                 onOpenSettings={() => setActiveSettingsInstanceId(item.instanceId)}
               >
                 {Component ? (

@@ -1,26 +1,42 @@
-import { WidgetDefinition } from './types';
+import { WidgetRegistry as CoreWidgetRegistry } from '@/core/widget/registry';
+import type { WidgetDefinition } from './types';
 
-class WidgetRegistryService {
-  private widgets: Map<string, WidgetDefinition> = new Map();
+class LegacyWidgetRegistryService {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private legacyWidgets = new Map<string, any>();
 
-  public register(definition: WidgetDefinition): void {
-    if (this.widgets.has(definition.id)) {
-      console.warn(`[WidgetRegistry] Виджет с id "${definition.id}" уже зарегистрирован.`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public register(definition: WidgetDefinition | any): void {
+    this.legacyWidgets.set(definition.id, definition);
+    CoreWidgetRegistry.register(definition);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public get(id: string): any {
+    return this.legacyWidgets.get(id) || CoreWidgetRegistry.get(id);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public getAll(): any[] {
+    if (this.legacyWidgets.size > 0) {
+      return Array.from(this.legacyWidgets.values());
     }
-    this.widgets.set(definition.id, definition);
+    return CoreWidgetRegistry.getAll();
   }
 
-  public get(id: string): WidgetDefinition | undefined {
-    return this.widgets.get(id);
-  }
-
-  public getAll(): WidgetDefinition[] {
-    return Array.from(this.widgets.values());
-  }
-
-  public getByCategory(category: string): WidgetDefinition[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public getByCategory(category: string): any[] {
     return this.getAll().filter((w) => w.category === category);
+  }
+
+  public isRegistered(id: string): boolean {
+    return this.legacyWidgets.has(id) || CoreWidgetRegistry.isRegistered(id);
+  }
+
+  public clear(): void {
+    this.legacyWidgets.clear();
+    CoreWidgetRegistry.clear();
   }
 }
 
-export const WidgetRegistry = new WidgetRegistryService();
+export const WidgetRegistry = new LegacyWidgetRegistryService();

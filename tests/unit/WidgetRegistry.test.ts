@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { WidgetRegistry } from '../../src/widgets/core/WidgetRegistry';
 import { registerBuiltInWidgets } from '../../src/widgets/built-in';
+import type { WidgetDefinition } from '@/core/widget';
 
 describe('WidgetRegistry', () => {
   it('должен успешно регистрировать встроенные виджеты', () => {
@@ -15,7 +16,7 @@ describe('WidgetRegistry', () => {
 
   it('должен фильтровать виджеты по категории', () => {
     registerBuiltInWidgets();
-    const productivity = WidgetRegistry.getByCategory('productivity');
+    const productivity = WidgetRegistry.getByCategory('productivity') as WidgetDefinition[];
 
     expect(productivity.length).toBeGreaterThan(0);
     expect(productivity.some((w) => w.id === 'todo')).toBe(true);
