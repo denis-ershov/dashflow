@@ -7,6 +7,36 @@
 
 ---
 
+## [2.0.0-stage3] - 2026-08-27
+
+### Этап 3: Рефакторинг всех 12 виджетов под новые контракты и дизайн-систему
+
+#### Добавлено / Изменено:
+1. **Оболочка `WidgetShell` и изоляция сбоев (`src/core/widget/WidgetShell.tsx`):**
+   - Инкапсуляция изолированного `WidgetErrorBoundary` для предотвращения краха дашборда при падении отдельного виджета.
+   - Поддержка трех типов поверхностей: `chromeless`, `panel`, `tiles`.
+   - Безопасное логирование ошибок без утечки настроек пользователя (ADR-011).
+2. **Рефакторинг 12 встроенных виджетов (`src/widgets/built-in/`):**
+   - `ClockWidget`: цифровые часы с `Intl.DateTimeFormat`, локализацией и `surface: 'chromeless'`.
+   - `SearchWidget`: доступная поисковая строка Spotlight с переключателями поисковиков и `surface: 'chromeless'`.
+   - `WeatherWidget`: погода Open-Meteo с кешированием в IndexedDB, обработкой офлайн-режима и `aria-live`.
+   - `TodoWidget`: список задач с приоритетами, фильтрами и `STORAGE_KEYS.TODO_ITEMS`.
+   - `NotesWidget`: заметки с дебаунсированным автосохранением и счетчиком слов.
+   - `QuickLinksWidget`: плиточный вид любимых сайтов с фавиконками и `surface: 'tiles'`.
+   - `BookmarksWidget`: закладки Chrome с 2-way sync и Mobile First интерфейсом без HTML-таблиц (Правило 10).
+   - `IframeWidget`: безопасное встраивание HTTPS сайтов в песочнице без `allow-same-origin` (ADR-007).
+   - `PomodoroWidget`: таймер продуктивности с Web Audio API синтезатором шума фокуса.
+   - `QuotesWidget`: коллекция афоризмов с копированием в буфер обмена.
+   - `SystemMonitorWidget`: визуальный мониторинг сети и Battery API.
+   - `RssWidget`: единый хронологический поток, санитизация ссылок и изображений.
+3. **Единый реестр манифестов (`src/widgets/built-in/registry.ts`):**
+   - Регистрация метаданных всех 12 виджетов с ленивой загрузкой компонентов `load: () => import(...)` (Code Splitting, ADR-012).
+4. **Архитектурная документация и ADR:**
+   - Создан `docs/WIDGET_CATALOG_ARCHITECTURE.md`.
+   - Созданы `docs/adr/ADR-011-widget-shell-resilience.md` и `docs/adr/ADR-012-widget-code-splitting.md`.
+
+---
+
 ## [2.0.0-stage2] - 2026-08-27
 
 ### Этап 2: Контракты виджетов, хранилище данных, миграции и i18n-движок
