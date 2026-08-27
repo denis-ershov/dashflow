@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Обсуждения и идеи (Discussions)
+    url: https://github.com/your-username/dashflow/discussions
+    about: Задайте вопрос, поделитесь своими темами оформления или предложите идею сообществу.
+  - name: 🔒 Сообщение об уязвимости безопасности
+    url: https://github.com/your-username/dashflow/security/policy
+    about: Инструкция по конфиденциальному сообщению об уязвимостях.

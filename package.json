@@ -1,8 +1,20 @@
 {
   "name": "dashflow",
-  "version": "0.1.0",
+  "version": "2.0.1",
+  "description": "Современный, адаптивный и расширяемый дашборд новой вкладки для браузера (React 19, Tailwind CSS 4, WXT, Manifest V3)",
   "private": true,
   "type": "module",
+  "license": "GPL-3.0-only",
+  "keywords": [
+    "dashboard",
+    "newtab",
+    "chrome-extension",
+    "react19",
+    "tailwindcss4",
+    "wxt",
+    "manifest-v3",
+    "widgets"
+  ],
   "scripts": {
     "dev": "wxt",
     "build": "wxt build",

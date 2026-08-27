@@ -1,0 +1,48 @@
+name: CI Quality Gate
+
+on:
+  push:
+    branches: [ main, refactor/*, feature/*, fix/* ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit-and-build:
+    name: Typecheck, Lint, Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: TypeScript Typecheck
+        run: npm run compile
+
+      - name: ESLint Code Quality
+        run: npm run lint
+
+      - name: Unit & Component Tests
+        run: npm test
+
+      - name: WXT Chrome MV3 Production Build
+        run: npm run build
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-mv3-extension
+          path: .output/chrome-mv3/
+          retention-days: 7
