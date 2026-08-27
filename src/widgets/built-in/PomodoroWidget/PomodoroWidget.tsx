@@ -1,16 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Volume2, VolumeX, Flame } from 'lucide-react';
-import { Button } from '@/ui/primitives';
+import { Play, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import type { WidgetProps } from '@/core/widget';
+import { Button, Badge } from '@/ui/primitives';
+import type { PomodoroSettings } from './types';
 
-export interface PomodoroWidgetProps {
-  instanceId: string;
-  settings?: {
-    workTime?: number; // минуты
-    breakTime?: number;
-  };
-}
-
-export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ settings }) => {
+export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settings }) => {
   const workDuration = (settings?.workTime || 25) * 60;
   const breakDuration = (settings?.breakTime || 5) * 60;
 
@@ -20,10 +14,13 @@ export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ settings }) => {
   const [soundActive, setSoundActive] = useState(false);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const noiseNodeRef = useRef<AudioNode | null>(null);
 
   useEffect(() => {
-    let interval: any = null;
+    setTimeLeft(mode === 'work' ? workDuration : breakDuration);
+  }, [workDuration, breakDuration, mode]);
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
     if (isRunning && timeLeft > 0) {
       interval = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
@@ -38,17 +35,23 @@ export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ settings }) => {
       }
       setIsRunning(false);
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [isRunning, timeLeft, mode, workDuration, breakDuration]);
 
-  // Генерация синтеза фонового шума через Web Audio API
+  // Фоновый звук фокуса через Web Audio API
   const toggleSound = () => {
     if (soundActive) {
-      if (audioCtxRef.current) audioCtxRef.current.close();
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close().catch(() => {});
+        audioCtxRef.current = null;
+      }
       setSoundActive(false);
     } else {
       try {
-        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (!AudioCtx) return;
         const ctx = new AudioCtx();
         audioCtxRef.current = ctx;
 
@@ -65,20 +68,19 @@ export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ settings }) => {
 
         const filter = ctx.createBiquadFilter();
         filter.type = 'lowpass';
-        filter.frequency.value = 400; // Мягкий шум фокуса
+        filter.frequency.value = 400;
 
         const gain = ctx.createGain();
-        gain.gain.value = 0.05; // Легкая фоновая громкость
+        gain.gain.value = 0.05;
 
         noise.connect(filter);
         filter.connect(gain);
         gain.connect(ctx.destination);
         noise.start();
 
-        noiseNodeRef.current = noise;
         setSoundActive(true);
-      } catch (err) {
-        console.warn('Web Audio Context не поддерживается');
+      } catch {
+        // Игнорируем в окружениях без звуковой карты
       }
     }
   };
@@ -97,41 +99,47 @@ export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ settings }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-around h-full select-none">
-      <div className="flex items-center space-x-2">
-        <span
-          className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase ${
-            mode === 'work'
-              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-              : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-          }`}
-        >
-          {mode === 'work' ? '🔥 Фокус' : '☕ Отдых'}
-        </span>
-      </div>
+    <div className="flex flex-col items-center justify-around h-full p-2 select-none">
+      <Badge variant={mode === 'work' ? 'warning' : 'success'}>
+        {mode === 'work' ? '🔥 Фокус' : '☕ Отдых'}
+      </Badge>
 
-      <div className="text-4xl font-bold font-mono text-[var(--color-text)]">
+      <div
+        aria-live="polite"
+        className="text-4xl font-bold font-mono text-fg tracking-tight"
+      >
         {formatTime(timeLeft)}
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant={isRunning ? 'secondary' : 'primary'}
+          aria-label={isRunning ? 'Пауза' : 'Запустить таймер'}
           onClick={() => setIsRunning(!isRunning)}
         >
           {isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
         </Button>
 
-        <Button size="sm" variant="ghost" onClick={reset}>
-          <RotateCcw className="w-4 h-4 text-[var(--color-text-muted)]" />
+        <Button
+          size="sm"
+          variant="ghost"
+          aria-label="Сброс таймера"
+          onClick={reset}
+        >
+          <RotateCcw className="w-4 h-4 text-fg-muted" />
         </Button>
 
-        <Button size="sm" variant="ghost" onClick={toggleSound}>
+        <Button
+          size="sm"
+          variant="ghost"
+          aria-label={soundActive ? 'Выключить звук фокуса' : 'Включить звук фокуса'}
+          onClick={toggleSound}
+        >
           {soundActive ? (
-            <Volume2 className="w-4 h-4 text-[var(--color-primary)]" />
+            <Volume2 className="w-4 h-4 text-primary" />
           ) : (
-            <VolumeX className="w-4 h-4 text-[var(--color-text-muted)]" />
+            <VolumeX className="w-4 h-4 text-fg-muted" />
           )}
         </Button>
       </div>
