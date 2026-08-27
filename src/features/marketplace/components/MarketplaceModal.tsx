@@ -51,21 +51,22 @@ export const MarketplaceModal: React.FC = () => {
   const allBuiltin = useMemo(() => WidgetRegistry.getAll(), [isOpen]);
 
   const combinedItems = useMemo(() => {
-    const builtinItems = allBuiltin.map((w) => ({
-      id: w.id,
-      // @ts-expect-error key lookup
-      name: w.nameKey ? t(w.nameKey) : w.name || w.id,
-      // @ts-expect-error key lookup
-      description: w.descriptionKey ? t(w.descriptionKey) : w.description || '',
-      author: w.author || 'DashFlow Core',
-      version: w.version || '1.0.0',
-      category: w.category || 'utilities',
-      permissions: w.permissions || [],
-      w: w.size.defaultW,
-      h: w.size.defaultH,
-      surface: w.surface || 'panel',
-      isCustom: false,
-    }));
+    const builtinItems = allBuiltin.map((w) => {
+      const def = w as typeof w & { name?: string; description?: string; author?: string; version?: string };
+      return {
+        id: def.id,
+        name: def.nameKey ? t(def.nameKey) : def.name || def.id,
+        description: def.descriptionKey ? t(def.descriptionKey) : def.description || '',
+        author: def.author || 'DashFlow Core',
+        version: def.version || '1.0.0',
+        category: def.category || 'utilities',
+        permissions: def.permissions || [],
+        w: def.size.defaultW,
+        h: def.size.defaultH,
+        surface: def.surface || 'panel',
+        isCustom: false,
+      };
+    });
 
     const customItems = plugins.map((p) => ({
       id: p.id,

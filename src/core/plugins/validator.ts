@@ -65,8 +65,8 @@ export const validatePluginManifest = (input: unknown): ValidationResult => {
     errors.push('Поле permissions должно быть массивом строк');
   } else {
     for (const p of raw.permissions) {
-      if (!ALLOWED_PERMISSIONS.includes(p)) {
-        errors.push(`Недопустимое разрешение: ${p}. Допустимы: ${ALLOWED_PERMISSIONS.join(', ')}`);
+      if (!ALLOWED_PERMISSIONS.includes(p as PluginPermission)) {
+        errors.push(`Недопустимое разрешение: ${String(p)}. Допустимы: ${ALLOWED_PERMISSIONS.join(', ')}`);
       }
     }
   }
@@ -92,15 +92,18 @@ export const validatePluginManifest = (input: unknown): ValidationResult => {
     const pType = raw.type as DeclarativePluginType;
 
     if (pType === 'rss') {
-      if (!cfg.feedUrl || !isSecureUrl(String(cfg.feedUrl))) {
+      const feed = typeof cfg.feedUrl === 'string' ? cfg.feedUrl : '';
+      if (!feed || !isSecureUrl(feed)) {
         errors.push('config.feedUrl должен быть валидным HTTPS URL');
       }
     } else if (pType === 'embed') {
-      if (!cfg.url || !isSecureUrl(String(cfg.url))) {
+      const url = typeof cfg.url === 'string' ? cfg.url : '';
+      if (!url || !isSecureUrl(url)) {
         errors.push('config.url должен быть валидным HTTPS URL');
       }
     } else if (pType === 'api') {
-      if (!cfg.endpoint || !isSecureUrl(String(cfg.endpoint))) {
+      const ep = typeof cfg.endpoint === 'string' ? cfg.endpoint : '';
+      if (!ep || !isSecureUrl(ep)) {
         errors.push('config.endpoint должен быть валидным HTTPS URL');
       }
     } else if (pType === 'links') {
@@ -108,11 +111,15 @@ export const validatePluginManifest = (input: unknown): ValidationResult => {
         errors.push('config.links должен быть непустым массивом ссылок');
       } else {
         for (let i = 0; i < cfg.links.length; i++) {
-          const item = cfg.links[i];
+          const item: unknown = cfg.links[i];
           if (!item || typeof item !== 'object') {
             errors.push(`config.links[${i}] должен быть объектом`);
-          } else if (!isSecureUrl(String(item.url))) {
-            errors.push(`config.links[${i}].url должен быть валидным HTTPS URL`);
+          } else {
+            const itemObj = item as Record<string, unknown>;
+            const linkUrl = typeof itemObj.url === 'string' ? itemObj.url : '';
+            if (!linkUrl || !isSecureUrl(linkUrl)) {
+              errors.push(`config.links[${i}].url должен быть валидным HTTPS URL`);
+            }
           }
         }
       }

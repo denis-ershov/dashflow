@@ -74,7 +74,6 @@ export const CommandPalette: React.FC = () => {
   ];
 
   const widgetCommands = allWidgets.map((w) => {
-    // @ts-expect-error key lookup
     const title = w.nameKey ? t(w.nameKey) : w.name || w.id;
     return {
       id: `add-${w.id}`,

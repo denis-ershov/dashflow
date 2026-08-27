@@ -64,9 +64,7 @@ export const AddWidgetModal: React.FC = () => {
       const matchesCategory =
         selectedCategory === 'all' || w.category === selectedCategory;
 
-      // @ts-expect-error key lookup
       const title = String(w.nameKey ? t(w.nameKey) : w.name || w.id).toLowerCase();
-      // @ts-expect-error key lookup
       const desc = String(w.descriptionKey ? t(w.descriptionKey) : w.description || '').toLowerCase();
       const q = searchQuery.toLowerCase().trim();
 
@@ -130,9 +128,7 @@ export const AddWidgetModal: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[55vh] overflow-y-auto pr-1">
             {filteredWidgets.map((w) => {
-              // @ts-expect-error key lookup
               const title = w.nameKey ? t(w.nameKey) : w.name || w.id;
-              // @ts-expect-error key lookup
               const desc = w.descriptionKey ? t(w.descriptionKey) : w.description || '';
               const icon = WIDGET_ICONS[w.id] || <Boxes className="w-5 h-5 text-primary" />;
 

@@ -31,7 +31,6 @@ export const WidgetSettingsDrawer: React.FC<WidgetSettingsDrawerProps> = ({
     updateWidgetSettings(instanceId, newSettings);
   };
 
-  // @ts-expect-error key lookup
   const widgetName = definition?.nameKey ? t(definition.nameKey) : definition?.name || instance.widgetId;
   const hasSettings = definition?.settingsSchema && definition.settingsSchema.length > 0;
 

@@ -1,11 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import RGL, { LayoutItem, Layouts } from 'react-grid-layout';
+import RGL, { LayoutItem } from 'react-grid-layout';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { WidgetRegistry } from '@/core/widget/registry';
 import { WidgetShell } from '@/core/widget/WidgetShell';
 import { registerBuiltInWidgets } from '@/widgets/built-in';
 import { useTranslation } from '@/core/i18n';
-import { deriveResponsiveLayouts } from '@/core/storage/dashboardMigrations';
 import { LazyWidgetRenderer } from './LazyWidgetRenderer';
 import { WidgetSettingsDrawer } from './WidgetSettingsDrawer';
 import { useGridMetrics } from '../hooks/useGridMetrics';
@@ -35,6 +34,7 @@ export const GridEngine: React.FC = () => {
     columns,
     gap,
     widgets,
+    layouts,
     isEditMode,
     updateLayout,
     removeWidget,
@@ -56,9 +56,7 @@ export const GridEngine: React.FC = () => {
     margin: gap,
   });
 
-  const responsiveLayouts = deriveResponsiveLayouts(widgets, columns);
-
-  const handleLayoutChange = (currentLayout: LayoutItem[], _allLayouts: Layouts) => {
+  const handleLayoutChange = (currentLayout: LayoutItem[]) => {
     if (!isEditMode) return;
     const updated = currentLayout.map((item) => ({
       i: item.i,
@@ -96,7 +94,7 @@ export const GridEngine: React.FC = () => {
     >
       <ResponsiveGridLayout
         className="layout w-full"
-        layouts={responsiveLayouts}
+        layouts={layouts}
         breakpoints={BREAKPOINTS}
         cols={responsiveCols}
         rowHeight={rowHeight}
@@ -109,7 +107,6 @@ export const GridEngine: React.FC = () => {
       >
         {widgets.map((item) => {
           const definition = WidgetRegistry.get(item.widgetId);
-          // @ts-expect-error key lookup
           const widgetTitle = definition?.nameKey ? t(definition.nameKey) : definition?.name || item.widgetId;
 
           return (

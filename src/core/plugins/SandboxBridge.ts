@@ -32,7 +32,12 @@ export class SandboxBridge {
     expectedWindow: Window | null,
   ): Promise<PluginRpcResponse | null> {
     // 1. Проверка структуры сообщения
-    if (!event.data || event.data.source !== 'dashflow-plugin') {
+    if (!event.data || typeof event.data !== 'object') {
+      return null;
+    }
+
+    const payload = event.data as Partial<PluginRpcRequest>;
+    if (payload.source !== 'dashflow-plugin') {
       return null;
     }
 
@@ -41,7 +46,7 @@ export class SandboxBridge {
       return null;
     }
 
-    const { type, requestId, key, value } = event.data as PluginRpcRequest;
+    const { type, requestId, key, value } = payload;
     if (!requestId || !key || typeof key !== 'string') {
       return {
         source: 'dashflow-core',
@@ -111,7 +116,7 @@ export class SandboxBridge {
         source: 'dashflow-core',
         requestId,
         success: false,
-        error: `Неизвестный тип команды: ${type}`,
+        error: `Неизвестный тип команды: ${String(type)}`,
       };
     } catch (err) {
       return {

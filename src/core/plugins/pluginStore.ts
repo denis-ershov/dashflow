@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 import { StorageAdapter, STORAGE_KEYS } from '@/core/storage';
 import { WidgetRegistry } from '@/core/widget/registry';
-import { WidgetManifest } from '@/core/widget/types';
-import { DeclarativePluginManifest } from './types';
+import { WidgetManifest, WidgetProps } from '@/core/widget/types';
+import type { IframeSettings } from '@/widgets/built-in/IframeWidget/types';
+import type { RssSettings } from '@/widgets/built-in/RssWidget/types';
+import { DeclarativePluginManifest, EmbedPluginConfig, RssPluginConfig } from './types';
 import { validatePluginManifest } from './validator';
 
 export interface PluginState {
@@ -31,29 +33,35 @@ export const createWidgetManifestFromPlugin = (plugin: DeclarativePluginManifest
     load: async () => {
       // Ленивая загрузка соответствующего шаблонного компонента
       if (plugin.type === 'embed') {
-        const { default: IframeComponent } = await import('@/widgets/built-in/IframeWidget/IframeWidget');
+        const { IframeWidget: IframeComponent } = await import('@/widgets/built-in/IframeWidget/IframeWidget');
         return {
-          default: (props) => {
-            const embedCfg = plugin.config as { url: string; zoom?: number };
-            const mergedSettings = { url: embedCfg.url, ...props.settings };
+          default: (props: WidgetProps<Record<string, unknown>>) => {
+            const embedCfg = plugin.config as EmbedPluginConfig;
+            const mergedSettings: IframeSettings = {
+              ...(props.settings as unknown as Partial<IframeSettings>),
+              url: embedCfg.url,
+            };
             return IframeComponent({ ...props, settings: mergedSettings });
           },
         };
       }
       if (plugin.type === 'rss') {
-        const { default: RssComponent } = await import('@/widgets/built-in/RssWidget/RssWidget');
+        const { RssWidget: RssComponent } = await import('@/widgets/built-in/RssWidget/RssWidget');
         return {
-          default: (props) => {
-            const rssCfg = plugin.config as { feedUrl: string };
-            const mergedSettings = { customFeeds: [rssCfg.feedUrl], ...props.settings };
+          default: (props: WidgetProps<Record<string, unknown>>) => {
+            const rssCfg = plugin.config as RssPluginConfig;
+            const mergedSettings: RssSettings = {
+              ...(props.settings as unknown as Partial<RssSettings>),
+              feedUrl: rssCfg.feedUrl,
+            };
             return RssComponent({ ...props, settings: mergedSettings });
           },
         };
       }
       if (plugin.type === 'links') {
-        const { default: QuickLinksComponent } = await import('@/widgets/built-in/QuickLinksWidget/QuickLinksWidget');
+        const { QuickLinksWidget: QuickLinksComponent } = await import('@/widgets/built-in/QuickLinksWidget/QuickLinksWidget');
         return {
-          default: (props) => {
+          default: (props: WidgetProps<Record<string, unknown>>) => {
             return QuickLinksComponent(props);
           },
         };
@@ -62,7 +70,8 @@ export const createWidgetManifestFromPlugin = (plugin: DeclarativePluginManifest
       // По умолчанию fallback рендерер песочницы
       const { PluginHost } = await import('@/widgets/sandbox/PluginHost');
       return {
-        default: (props) => PluginHost({ pluginId: plugin.id, instanceId: props.instanceId }),
+        default: (props: WidgetProps<Record<string, unknown>>) =>
+          PluginHost({ pluginId: plugin.id, instanceId: props.instanceId }),
       };
     },
   };
