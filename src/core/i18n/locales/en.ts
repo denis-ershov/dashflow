@@ -117,6 +117,29 @@ export const en = {
     closeMenu: 'Close menu',
     activeItem: 'Active item',
     selectTheme: 'Select theme {{name}}',
-    resizeHandle: 'Resize widget handle',
+    resizeHandle: 'Resize widget',
+  },
+  permissions: {
+    title: 'Permission Request',
+    subtitle: 'This widget is requesting access to the following browser capabilities',
+    allow: 'Allow & Add',
+    deny: 'Deny',
+    warning: 'Only grant permissions to widgets and plugins from trusted sources.',
+    storage: {
+      title: 'Local Storage',
+      desc: 'Save settings and widget state',
+    },
+    network: {
+      title: 'Network Requests',
+      desc: 'Fetch external data via HTTPS',
+    },
+    bookmarks: {
+      title: 'Browser Bookmarks',
+      desc: 'Read and search Chrome bookmarks',
+    },
+    geolocation: {
+      title: 'Geolocation',
+      desc: 'Retrieve coordinates for weather forecast',
+    },
   },
 } as const;
