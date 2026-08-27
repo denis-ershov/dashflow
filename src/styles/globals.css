@@ -79,7 +79,7 @@
   box-shadow: 0 0 40px var(--dashflow-primary-glow);
 }
 
-/* ── Сетка виджетов: правки поверх стилей react-grid-layout ────────────── */
+/* ── Сетка виджетов: базовые стили и правки react-grid-layout ────────────── */
 
 .react-grid-layout {
   position: relative;
@@ -87,6 +87,8 @@
 }
 
 .react-grid-item {
+  position: absolute;
+  box-sizing: border-box;
   transition: var(--transition-normal);
   transition-property: left, top, width, height;
 }
@@ -104,6 +106,20 @@
   transition: none;
   z-index: var(--z-grid-item-active);
   will-change: transform;
+}
+
+.react-grid-item.dropping {
+  visibility: hidden;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: var(--dashflow-primary);
+  opacity: 0.15;
+  border-radius: var(--dashflow-radius-lg, 12px);
+  border: 2px dashed var(--dashflow-primary);
+  transition-duration: 100ms;
+  z-index: 2;
+  user-select: none;
 }
 
 /**

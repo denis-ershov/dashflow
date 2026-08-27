@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
-import RGL, { LayoutItem } from 'react-grid-layout';
+import React, { useState } from 'react';
+import { ResponsiveGridLayout, useContainerWidth, verticalCompactor } from 'react-grid-layout';
+import type { Layout } from 'react-grid-layout';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { WidgetRegistry } from '@/core/widget/registry';
 import { WidgetShell } from '@/core/widget/WidgetShell';
@@ -12,12 +13,6 @@ import { EmptyState } from '@/ui/feedback/EmptyState';
 
 // Синхронная гарантированная регистрация встроенных манифестов
 registerBuiltInWidgets();
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const RGLAny = RGL as any;
-const Responsive = RGLAny.Responsive || RGLAny.default?.Responsive || RGL;
-const WidthProvider = RGLAny.WidthProvider || RGLAny.default?.WidthProvider;
-const ResponsiveGridLayout = WidthProvider ? WidthProvider(Responsive) : Responsive;
 
 const BREAKPOINTS = { xl: 1200, lg: 900, md: 640, sm: 360, xs: 0 };
 
@@ -45,11 +40,7 @@ export const GridEngine: React.FC = () => {
   } = useDashboardStore();
 
   const [activeSettingsInstanceId, setActiveSettingsInstanceId] = useState<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    registerBuiltInWidgets();
-  }, []);
+  const { width, containerRef, mounted } = useContainerWidth();
 
   const responsiveCols = getResponsiveCols(columns);
 
@@ -59,7 +50,7 @@ export const GridEngine: React.FC = () => {
     margin: gap,
   });
 
-  const handleLayoutChange = (currentLayout: LayoutItem[]) => {
+  const handleLayoutChange = (currentLayout: Layout) => {
     if (!isEditMode) return;
     if (currentLayout && currentLayout.length > 0) {
       const updated = currentLayout.map((item) => ({
@@ -81,7 +72,7 @@ export const GridEngine: React.FC = () => {
       >
         <EmptyState
           title="Ваш дашборд пока пуст"
-          description="Добавьте виджеты, чтобы настроить удобное рабочее пространство"
+          description="Добавьте виджеты, чтобы настроить удобное рабоковое пространство"
           action={{
             label: 'Добавить первый виджет',
             onClick: () => setActiveModal('addWidget'),
@@ -91,6 +82,9 @@ export const GridEngine: React.FC = () => {
     );
   }
 
+  // Расчёт ширины для отрисовки сетки (fallback для первого тика / тестов = 1200)
+  const gridWidth = mounted && width > 0 ? width : 1200;
+
   return (
     <div
       ref={containerRef}
@@ -98,6 +92,7 @@ export const GridEngine: React.FC = () => {
       className="w-full relative"
     >
       <ResponsiveGridLayout
+        width={gridWidth}
         className="layout w-full"
         layouts={layouts}
         breakpoints={BREAKPOINTS}
@@ -105,12 +100,17 @@ export const GridEngine: React.FC = () => {
         rowHeight={rowHeight}
         margin={[gap, gap]}
         containerPadding={[0, 0]}
-        isDraggable={isEditMode}
-        isResizable={isEditMode}
-        compactType="vertical"
-        preventCollision={false}
+        dragConfig={{
+          enabled: isEditMode,
+          handle: '.widget-drag-handle',
+          threshold: 3,
+        }}
+        resizeConfig={{
+          enabled: isEditMode,
+          handles: ['se'],
+        }}
+        compactor={verticalCompactor}
         onLayoutChange={handleLayoutChange}
-        draggableHandle=".widget-drag-handle"
       >
         {widgets.map((item) => {
           const definition = WidgetRegistry.get(item.widgetId);
