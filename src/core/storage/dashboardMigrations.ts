@@ -3,6 +3,16 @@ import type { WidgetInstance } from '@/core/widget/types';
 export type Breakpoint = 'xl' | 'lg' | 'md' | 'sm' | 'xs';
 export type BaseColumns = 12 | 16 | 24;
 
+export type ActiveModal =
+  | 'add'
+  | 'addWidget'
+  | 'settings'
+  | 'themes'
+  | 'appearance'
+  | 'marketplace'
+  | 'importExport'
+  | null;
+
 export const BREAKPOINTS: Record<Breakpoint, number> = {
   xl: 1200,
   lg: 900,
@@ -37,7 +47,7 @@ export interface MigratedDashboardState {
   gap: number;
   isEditMode: boolean;
   isLocked: boolean;
-  activeModal: string | null;
+  activeModal: ActiveModal;
   instances: WidgetInstance[];
   layouts: ResponsiveLayouts;
 }
@@ -146,7 +156,7 @@ export function migrateDashboardState(rawState: unknown): MigratedDashboardState
         gap: typeof rawObj.gap === 'number' ? rawObj.gap : 16,
         isEditMode: Boolean(rawObj.isEditMode),
         isLocked: Boolean(rawObj.isLocked),
-        activeModal: typeof rawObj.activeModal === 'string' ? rawObj.activeModal : null,
+        activeModal: typeof rawObj.activeModal === 'string' ? (rawObj.activeModal as ActiveModal) : null,
         instances: rawObj.instances as WidgetInstance[],
         layouts: rawObj.layouts as ResponsiveLayouts,
       };

@@ -10,9 +10,9 @@ import { AddWidgetModal } from '@/features/dashboard/components/AddWidgetModal';
 import { MarketplaceModal } from '@/features/marketplace/components/MarketplaceModal';
 import { AppearanceModal } from '@/features/appearance';
 import { useThemeStore } from '@/core/theme/themeStore';
-import { Spinner } from '@/ui/feedback';
+import { Spinner, RootErrorBoundary } from '@/ui/feedback';
 
-export default function App() {
+function DashboardContent() {
   const { isInitialized, initialize: initApp } = useAppStore();
   const { activeModal, setActiveModal, initializeDashboard } = useDashboardStore();
   const initializeTheme = useThemeStore((state) => state.initialize);
@@ -54,5 +54,13 @@ export default function App() {
       <MarketplaceModal />
       <AppearanceModal isOpen={activeModal === 'themes'} onClose={() => setActiveModal(null)} />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <RootErrorBoundary>
+      <DashboardContent />
+    </RootErrorBoundary>
   );
 }

@@ -29,7 +29,7 @@ describe('NotesWidget Component & Manifest', () => {
     });
   });
 
-  it('должен сохранять текст в StorageAdapter при изменении', async () => {
+  it('должен сохранять текст в StorageAdapter при изменении', () => {
     vi.useFakeTimers();
     vi.spyOn(StorageAdapter, 'get').mockResolvedValue('');
     const setSpy = vi.spyOn(StorageAdapter, 'set').mockResolvedValue();

@@ -72,8 +72,28 @@ declare module "wxt/browser" {
       substitutions?: string | string[],
       options?: GetMessageOptions,
     ): string;
+    /**
+     * Название расширения
+     *
+     * "DashFlow — Персональный Dashboard"
+     */
     getMessage(
-      messageName: "@@extension_id" | "@@ui_locale" | "@@bidi_dir" | "@@bidi_reversed_dir" | "@@bidi_start_edge" | "@@bidi_end_edge",
+      messageName: "extensionName",
+      substitutions?: string | string[],
+      options?: GetMessageOptions,
+    ): string;
+    /**
+     * Описание расширения
+     *
+     * "Персональное рабочее пространство и Dashboard в новой вкладке Chrome."
+     */
+    getMessage(
+      messageName: "extensionDescription",
+      substitutions?: string | string[],
+      options?: GetMessageOptions,
+    ): string;
+    getMessage(
+      messageName: "@@extension_id" | "@@ui_locale" | "@@bidi_dir" | "@@bidi_reversed_dir" | "@@bidi_start_edge" | "@@bidi_end_edge" | "extensionName" | "extensionDescription",
       substitutions?: string | string[],
       options?: GetMessageOptions,
     ): string;

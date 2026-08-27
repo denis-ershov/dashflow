@@ -85,10 +85,13 @@ export interface WidgetProps<S = Record<string, unknown>> {
  */
 export interface WidgetDefinition<S = Record<string, unknown>> {
   id: string;
-  nameKey: TranslationKey;
-  descriptionKey: TranslationKey;
+  nameKey?: TranslationKey;
+  descriptionKey?: TranslationKey;
+  name?: string;
+  description?: string;
+  author?: string;
   version: string;
-  iconName: string;
+  iconName?: string;
   category: WidgetCategory;
   surface: WidgetSurfaceType;
   size: WidgetSize;
@@ -96,6 +99,8 @@ export interface WidgetDefinition<S = Record<string, unknown>> {
   settingsSchema?: WidgetSettingFieldSchema<S>[];
   load: () => Promise<{ default: React.ComponentType<WidgetProps<S>> }>;
 }
+
+export type WidgetManifest<S = Record<string, unknown>> = WidgetDefinition<S>;
 
 /**
  * Экземпляр установленного на дашборд виджета

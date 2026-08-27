@@ -32,7 +32,7 @@ describe('QuickLinksWidget Component & Manifest', () => {
     });
   });
 
-  it('должен открывать форму добавления и сохранять новую ссылку', async () => {
+  it('должен открывать форму добавления и сохранять новую ссылку', () => {
     vi.spyOn(StorageAdapter, 'get').mockResolvedValue([]);
     const setSpy = vi.spyOn(StorageAdapter, 'set').mockResolvedValue();
 

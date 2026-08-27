@@ -102,42 +102,37 @@
 
 ```text
 src/
-├── background/
-│   ├── index.ts
-│   ├── api/
-│   ├── storage/
-│   └── services/
-│
-├── content/
-│
-├── popup/
-│
-├── pages/
+├── entrypoints/
+│   ├── background.ts
 │   └── newtab/
-│       ├── components/
-│       │   ├── ui/
-│       │   ├── layout/
-│       │   ├── widgets/
-│       │   └── overlays/
-│       │
-│       ├── features/
-│       │   ├── dashboard/
-│       │   ├── widgets/
-│       │   ├── settings/
-│       │   ├── themes/
-│       │   └── marketplace/
-│       │
-│       ├── hooks/
-│       ├── stores/
-│       ├── providers/
-│       └── index.tsx
+│       ├── index.html
+│       ├── main.tsx
+│       └── App.tsx
+│
+├── core/
+│   ├── theme/
+│   ├── storage/
+│   ├── i18n/
+│   ├── widget/
+│   ├── plugins/
+│   └── permissions/
+│
+├── ui/
+│   ├── primitives/
+│   ├── overlays/
+│   └── feedback/
+│
+├── features/
+│   ├── dashboard/
+│   ├── appearance/
+│   ├── settings/
+│   ├── marketplace/
+│   ├── navigation/
+│   └── permissions/
 │
 ├── widgets/
-│   ├── core/
 │   ├── built-in/
-│   └── registry/
-│
-├── sdk/
+│   └── sandbox/
 │
 ├── services/
 │   ├── storage/

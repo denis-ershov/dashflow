@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WeatherWidget } from '@/widgets/built-in/WeatherWidget/WeatherWidget';
 import { weatherManifest } from '@/widgets/built-in/WeatherWidget/manifest';
 import { StorageAdapter } from '@/core/storage/StorageAdapter';
-import { STORAGE_KEYS } from '@/core/storage/keys';
 
 describe('WeatherWidget Component & Manifest', () => {
   let queryClient: QueryClient;
