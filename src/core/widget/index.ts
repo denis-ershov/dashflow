@@ -2,3 +2,4 @@ export * from './types';
 export * from './validator';
 export * from './registry';
 export * from './WidgetSettingsForm';
+export * from './WidgetShell';
