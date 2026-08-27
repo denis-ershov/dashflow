@@ -1,1 +1,0 @@
-{"manifest_version":3,"name":"DashFlow — Personal Start Page","description":"Персональное рабочее пространство и Dashboard в новой вкладке Chrome.","version":"0.1.0","permissions":["storage","bookmarks"],"host_permissions":["<all_urls>"],"action":{"default_title":"DashFlow"},"background":{"service_worker":"background.js"},"chrome_url_overrides":{"newtab":"newtab.html"}}
