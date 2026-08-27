@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "DashFlow — Персональный Dashboard",
+    "description": "Название расширения"
+  },
+  "extensionDescription": {
+    "message": "Персональное рабочее пространство и Dashboard в новой вкладке Chrome.",
+    "description": "Описание расширения"
+  }
+}

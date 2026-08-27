@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "DashFlow — Personal Start Page",
+    "description": "Extension name"
+  },
+  "extensionDescription": {
+    "message": "Personal customizable dashboard and productivity new tab page for Chrome.",
+    "description": "Extension description"
+  }
+}
