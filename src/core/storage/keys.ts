@@ -16,6 +16,16 @@ export const STORAGE_KEYS = {
   WALLPAPER_BLOB: 'dashflow_wallpaper_blob',
   /** Кеш прогноза погоды (IndexedDB) */
   WEATHER_CACHE: 'dashflow_weather_cache',
+  /** Данные виджета Todo */
+  TODO_ITEMS: 'dashflow_widget_todo_items',
+  /** Данные виджета Заметок */
+  NOTES_CONTENT: 'dashflow_widget_notes_content',
+  /** Данные виджета Быстрых Ссылок */
+  QUICK_LINKS: 'dashflow_widget_quick_links',
+  /** Состояние виджета Помодоро */
+  POMODORO_STATE: 'dashflow_widget_pomodoro_state',
+  /** Данные и кеш RSS лент */
+  RSS_FEEDS: 'dashflow_widget_rss_feeds',
   /** Префикс данных плагинов */
   PLUGIN_DATA_PREFIX: 'dashflow_plugin_',
 } as const;
