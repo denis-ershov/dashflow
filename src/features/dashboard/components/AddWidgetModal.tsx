@@ -1,104 +1,185 @@
-import React from 'react';
-import { Modal } from '@/ui/overlays';
+import React, { useState, useMemo } from 'react';
+import {
+  Clock,
+  CloudSun,
+  Search,
+  CheckSquare,
+  FileText,
+  Link2,
+  Bookmark,
+  Globe,
+  Timer,
+  Quote,
+  Cpu,
+  Rss,
+  Plus,
+  Boxes,
+} from 'lucide-react';
+import { Modal } from '@/ui/overlays/Modal';
 import { useDashboardStore } from '@/stores/useDashboardStore';
-import { useAppStore } from '@/stores/useAppStore';
-import { getTranslation } from '@/services/localization/i18n';
-import { Clock, CloudSun, Search, CheckSquare, FileText, Bookmark, Link, Plus } from 'lucide-react';
-import { Button } from '@/ui/primitives';
+import { useTranslation } from '@/core/i18n';
+import { WidgetRegistry } from '@/core/widget/registry';
+import type { WidgetCategory } from '@/core/widget/types';
+import { Button } from '@/ui/primitives/Button';
+import { Input } from '@/ui/primitives/Input';
+import { Badge } from '@/ui/primitives/Badge';
+import { EmptyState } from '@/ui/feedback/EmptyState';
+
+const WIDGET_ICONS: Record<string, React.ReactNode> = {
+  clock: <Clock className="w-5 h-5 text-primary" />,
+  search: <Search className="w-5 h-5 text-secondary" />,
+  weather: <CloudSun className="w-5 h-5 text-warning" />,
+  todo: <CheckSquare className="w-5 h-5 text-success" />,
+  notes: <FileText className="w-5 h-5 text-info" />,
+  quickLinks: <Link2 className="w-5 h-5 text-primary" />,
+  bookmarks: <Bookmark className="w-5 h-5 text-warning" />,
+  iframe: <Globe className="w-5 h-5 text-secondary" />,
+  pomodoro: <Timer className="w-5 h-5 text-danger" />,
+  quotes: <Quote className="w-5 h-5 text-info" />,
+  systemMonitor: <Cpu className="w-5 h-5 text-success" />,
+  rssReader: <Rss className="w-5 h-5 text-warning" />,
+};
+
+const CATEGORIES: { key: WidgetCategory | 'all'; label: string }[] = [
+  { key: 'all', label: 'Все' },
+  { key: 'utilities', label: 'Утилиты' },
+  { key: 'productivity', label: 'Продуктивность' },
+  { key: 'news', label: 'Новости' },
+  { key: 'entertainment', label: 'Развлечения' },
+  { key: 'developer', label: 'Разработчику' },
+];
 
 export const AddWidgetModal: React.FC = () => {
+  const { t } = useTranslation();
   const { activeModal, setActiveModal, addWidget } = useDashboardStore();
-  const { language } = useAppStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<WidgetCategory | 'all'>('all');
 
   const isOpen = activeModal === 'addWidget';
 
-  const availableWidgets = [
-    {
-      id: 'clock',
-      title: getTranslation(language, 'widgets.clock'),
-      desc: 'Цифровые часы, дата и часовой пояс',
-      icon: <Clock className="w-6 h-6 text-blue-400" />,
-      w: 4,
-      h: 2,
-    },
-    {
-      id: 'weather',
-      title: getTranslation(language, 'widgets.weather'),
-      desc: 'Прогноз погоды и температура',
-      icon: <CloudSun className="w-6 h-6 text-amber-400" />,
-      w: 4,
-      h: 2,
-    },
-    {
-      id: 'search',
-      title: getTranslation(language, 'widgets.search'),
-      desc: 'Строка поиска Google / DuckDuckGo',
-      icon: <Search className="w-6 h-6 text-emerald-400" />,
-      w: 4,
-      h: 2,
-    },
-    {
-      id: 'todo',
-      title: getTranslation(language, 'widgets.todo'),
-      desc: 'Список задач с дедлайнами и приоритетами',
-      icon: <CheckSquare className="w-6 h-6 text-indigo-400" />,
-      w: 6,
-      h: 4,
-    },
-    {
-      id: 'notes',
-      title: getTranslation(language, 'widgets.notes'),
-      desc: 'Быстрые заметки с автосохранением',
-      icon: <FileText className="w-6 h-6 text-purple-400" />,
-      w: 6,
-      h: 4,
-    },
-    {
-      id: 'bookmarks',
-      title: getTranslation(language, 'widgets.bookmarks'),
-      desc: 'Закладки браузера и папки',
-      icon: <Bookmark className="w-6 h-6 text-rose-400" />,
-      w: 6,
-      h: 4,
-    },
-  ];
+  const allWidgets = useMemo(() => WidgetRegistry.getAll(), [isOpen]);
+
+  const filteredWidgets = useMemo(() => {
+    return allWidgets.filter((w) => {
+      const matchesCategory =
+        selectedCategory === 'all' || w.category === selectedCategory;
+
+      // @ts-expect-error key lookup
+      const title = String(w.nameKey ? t(w.nameKey) : w.name || w.id).toLowerCase();
+      // @ts-expect-error key lookup
+      const desc = String(w.descriptionKey ? t(w.descriptionKey) : w.description || '').toLowerCase();
+      const q = searchQuery.toLowerCase().trim();
+
+      const matchesSearch = !q || title.includes(q) || desc.includes(q) || w.id.toLowerCase().includes(q);
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [allWidgets, selectedCategory, searchQuery, t]);
+
+  const handleAdd = (widgetId: string, defaultW?: number, defaultH?: number) => {
+    addWidget(widgetId, defaultW, defaultH);
+    setActiveModal(null);
+    setSearchQuery('');
+  };
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={() => setActiveModal(null)}
-      title={getTranslation(language, 'toolbar.addWidget')}
-      maxWidth="2xl"
+      title={t('toolbar.addWidget')}
+      subtitle="Выберите виджет для добавления на рабочий стол"
+      size="lg"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {availableWidgets.map((w) => (
-          <div
-            key={w.id}
-            className="flex items-center justify-between p-4 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] hover:border-[var(--color-primary)] transition-all"
-          >
-            <div className="flex items-center space-x-3.5">
-              <div className="p-2.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]">
-                {w.icon}
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold text-[var(--color-text)]">{w.title}</h4>
-                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{w.desc}</p>
-              </div>
-            </div>
+      <div className="space-y-4">
+        {/* Поиск и категории */}
+        <div className="space-y-3">
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Поиск виджетов по названию или описанию..."
+            aria-label="Поиск виджетов"
+            icon={<Search className="w-4 h-4 text-fg-muted" />}
+          />
 
-            <Button
-              size="sm"
-              variant="primary"
-              icon={<Plus className="w-4 h-4" />}
-              onClick={() => {
-                addWidget(w.id, w.w, w.h);
-                setActiveModal(null);
-              }}
-            >
-              Добавить
-            </Button>
+          {/* Фильтры категорий */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 select-none">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.key}
+                type="button"
+                onClick={() => setSelectedCategory(cat.key)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer shrink-0 ${
+                  selectedCategory === cat.key
+                    ? 'bg-primary text-primary-fg'
+                    : 'bg-surface text-fg-muted hover:text-fg hover:bg-surface-hover border border-line'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
           </div>
-        ))}
+        </div>
+
+        {/* Сетка доступных виджетов */}
+        {filteredWidgets.length === 0 ? (
+          <div className="py-8">
+            <EmptyState
+              title="Ничего не найдено"
+              description="Попробуйте изменить поисковый запрос или категорию"
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[55vh] overflow-y-auto pr-1">
+            {filteredWidgets.map((w) => {
+              // @ts-expect-error key lookup
+              const title = w.nameKey ? t(w.nameKey) : w.name || w.id;
+              // @ts-expect-error key lookup
+              const desc = w.descriptionKey ? t(w.descriptionKey) : w.description || '';
+              const icon = WIDGET_ICONS[w.id] || <Boxes className="w-5 h-5 text-primary" />;
+
+              return (
+                <div
+                  key={w.id}
+                  className="flex flex-col justify-between p-3.5 rounded-lg bg-surface/60 border border-line hover:border-primary transition-all duration-normal group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2.5 rounded-lg bg-surface border border-line/60 shrink-0">
+                      {icon}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="text-xs font-semibold text-fg truncate">
+                          {title}
+                        </h4>
+                        <Badge variant="default" size="sm">
+                          {w.size.defaultW}×{w.size.defaultH}
+                        </Badge>
+                      </div>
+                      <p className="text-[11px] text-fg-muted mt-1 line-clamp-2">
+                        {desc}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 pt-2.5 border-t border-line/40 flex items-center justify-between">
+                    <span className="text-[10px] text-fg-muted font-mono capitalize">
+                      {w.surface}
+                    </span>
+
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => handleAdd(w.id, w.size.defaultW, w.size.defaultH)}
+                    >
+                      <Plus className="w-3.5 h-3.5 mr-1" />
+                      Добавить
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </Modal>
   );
