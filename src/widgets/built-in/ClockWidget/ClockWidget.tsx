@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import type { WidgetProps } from '@/core/widget';
+import { useTranslation } from '@/core/i18n';
+import type { ClockSettings } from './types';
 
-export interface ClockWidgetProps {
-  instanceId: string;
-  settings?: {
-    is24Hour?: boolean;
-    showSeconds?: boolean;
-  };
-}
-
-export const ClockWidget: React.FC<ClockWidgetProps> = ({ settings }) => {
+export const ClockWidget: React.FC<WidgetProps<ClockSettings>> = ({ settings }) => {
   const is24Hour = settings?.is24Hour ?? true;
   const showSeconds = settings?.showSeconds ?? true;
+  const showDate = settings?.showDate ?? true;
 
-  const [time, setTime] = useState<Date>(new Date());
+  const { language } = useTranslation();
+  const [time, setTime] = useState<Date>(() => new Date());
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -20,37 +17,38 @@ export const ClockWidget: React.FC<ClockWidgetProps> = ({ settings }) => {
   }, []);
 
   const formatTime = () => {
-    let hours = time.getHours();
-    const minutes = time.getMinutes().toString().padStart(2, '0');
-    const seconds = time.getSeconds().toString().padStart(2, '0');
-    let ampm = '';
-
-    if (!is24Hour) {
-      ampm = hours >= 12 ? ' PM' : ' AM';
-      hours = hours % 12 || 12;
-    }
-
-    const hoursStr = hours.toString().padStart(2, '0');
-    return `${hoursStr}:${minutes}${showSeconds ? `:${seconds}` : ''}${ampm}`;
+    const locale = language === 'ru' ? 'ru-RU' : 'en-US';
+    return new Intl.DateTimeFormat(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: showSeconds ? '2-digit' : undefined,
+      hour12: !is24Hour,
+    }).format(time);
   };
 
   const formatDate = () => {
-    return time.toLocaleDateString('ru-RU', {
+    const locale = language === 'ru' ? 'ru-RU' : 'en-US';
+    return new Intl.DateTimeFormat(locale, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-    });
+    }).format(time);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center select-none">
-      <div className="text-4xl sm:text-5xl font-bold font-mono text-[var(--color-primary)] tracking-tight">
+    <div className="flex flex-col items-center justify-center h-full text-center select-none p-2">
+      <time
+        dateTime={time.toISOString()}
+        className="text-4xl sm:text-5xl font-bold font-mono text-primary tracking-tight"
+      >
         {formatTime()}
-      </div>
-      <div className="text-xs text-[var(--color-text-muted)] mt-2 font-medium capitalize">
-        {formatDate()}
-      </div>
+      </time>
+      {showDate && (
+        <span className="text-xs text-fg-muted mt-2 font-medium capitalize">
+          {formatDate()}
+        </span>
+      )}
     </div>
   );
 };
