@@ -7,6 +7,35 @@
 
 ---
 
+## [2.0.0-stage5] - 2026-08-27
+
+### Этап 5: Декларативная система плагинов, Marketplace, Permissions Flow и безопасность песочницы
+
+#### Добавлено / Изменено:
+1. **Декларативная система плагинов (`src/core/plugins/`):**
+   - Полный отказ от удаленного JS-кода в пользу строго валидируемых JSON-манифестов (`rss`, `embed`, `links`, `api`) в соответствии с политикой Chrome Manifest V3 (ADR-001, ADR-014).
+   - Строгий валидатор манифестов `validatePluginManifest` с проверкой протоколов `https:`, допустимых размеров и разрешений.
+   - Хранилище и автоматическая регистрация плагинов в `WidgetRegistry` через `usePluginStore`.
+2. **Безопасность песочницы (`SandboxBridge` & `PluginHost`):**
+   - Защищенный RPC-мост с проверкой отправителя строго по ссылке на окно `event.source === iframe.contentWindow`.
+   - Изоляция ключей хранилища `STORAGE_KEYS.PLUGIN_DATA_PREFIX` и защита от инъекций / Path Traversal.
+   - Фреймы песочницы изолированы с `sandbox="allow-scripts"` без `allow-same-origin` (origin `'null'`).
+3. **Гранулярный менеджер разрешений и диалог согласия (`PermissionConsentModal`):**
+   - Модуль `PermissionManager` для проверки и персистентного хранения согласий в `STORAGE_KEYS.PERMISSION_GRANTS` (ADR-015).
+   - Интерактивный диалог согласия `PermissionConsentModal` перед установкой виджетов/плагинов, запрашивающих чувствительные права (`network`, `bookmarks`, `geolocation`).
+4. **Рефакторинг каталога Marketplace (`src/features/marketplace/`):**
+   - Синхронизация с единым источником правды `WidgetRegistry.getAll()` и кастомными плагинами.
+   - Вкладка импорта пользовательских JSON-манифестов с мгновенной валидацией.
+   - Фильтрация по категориям и поиск.
+5. **Безопасность Manifest V3 и CSP (`wxt.config.ts`):**
+   - Сужение `host_permissions` до конкретных доменов (`api.open-meteo.com`, `images.unsplash.com`).
+   - Настройка строгой Content Security Policy и добавление локалей Chrome (`_locales`).
+6. **Архитектурная документация и ADR:**
+   - Создан `docs/PLUGINS_AND_SECURITY_ARCHITECTURE.md`.
+   - Созданы `docs/adr/ADR-014-declarative-plugins-and-sandbox-bridge.md` и `docs/adr/ADR-015-permissions-consent-flow.md`.
+
+---
+
 ## [2.0.0-stage4] - 2026-08-27
 
 ### Этап 4: Сетка дашборда (ResponsiveGridLayout), навигационный рельс/док, режим правки и навигация с клавиатуры
