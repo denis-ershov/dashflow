@@ -24,8 +24,10 @@ export const STORAGE_KEYS = {
   QUICK_LINKS: 'dashflow_widget_quick_links',
   /** Состояние виджета Помодоро */
   POMODORO_STATE: 'dashflow_widget_pomodoro_state',
-  /** Данные и кеш RSS лент */
-  RSS_FEEDS: 'dashflow_widget_rss_feeds',
+  /** Пользовательские декларативные плагины */
+  CUSTOM_PLUGINS: 'dashflow_custom_plugins',
+  /** Предоставленные права доступа для виджетов и плагинов */
+  PERMISSION_GRANTS: 'dashflow_permission_grants',
   /** Префикс данных плагинов */
   PLUGIN_DATA_PREFIX: 'dashflow_plugin_',
 } as const;

@@ -4,13 +4,13 @@ import type { WidgetCategory, WidgetDefinition } from './types';
  * Реестр определений виджетов DashFlow
  */
 export class WidgetRegistry {
-  private static readonly widgets = new Map<string, WidgetDefinition<never>>();
+  private static readonly widgets = new Map<string, WidgetDefinition<unknown>>();
 
   /**
    * Регистрация манифеста виджета в реестре
    */
   public static register<S>(definition: WidgetDefinition<S>): void {
-    this.widgets.set(definition.id, definition as unknown as WidgetDefinition<never>);
+    this.widgets.set(definition.id, definition as unknown as WidgetDefinition<unknown>);
   }
 
   /**
@@ -25,6 +25,20 @@ export class WidgetRegistry {
    */
   public static isRegistered(id: string): boolean {
     return this.widgets.has(id);
+  }
+
+  /**
+   * Алиас для isRegistered
+   */
+  public static has(id: string): boolean {
+    return this.widgets.has(id);
+  }
+
+  /**
+   * Удаление виджета / плагина из реестра
+   */
+  public static unregister(id: string): boolean {
+    return this.widgets.delete(id);
   }
 
   /**
