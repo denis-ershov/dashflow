@@ -1,126 +1,268 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { StorageAdapter } from '@/services/storage/StorageAdapter';
+import {
+  StorageAdapter,
+  STORAGE_KEYS,
+  migrateDashboardState,
+  deriveResponsiveLayouts,
+  createDefaultDashboardState,
+  type Breakpoint,
+  type BaseColumns,
+  type LayoutItem,
+  type ResponsiveLayouts,
+  type ActiveModal,
+} from '@/core/storage';
+import type { WidgetInstance } from '@/core/widget';
 
-export interface WidgetItem {
+export type { ActiveModal };
+
+export interface LegacyWidgetItem {
   instanceId: string;
   widgetId: string;
   x: number;
   y: number;
   w: number;
   h: number;
-  settings?: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  settings?: any;
 }
 
-export type ActiveModal = 'add' | 'addWidget' | 'settings' | 'themes' | 'marketplace' | 'importExport' | null;
-
-interface DashboardState {
+export interface DashboardState {
+  version: 2;
   isEditMode: boolean;
   isLocked: boolean;
   isCommandPaletteOpen: boolean;
-  columns: 12 | 16 | 24;
+  baseColumns: BaseColumns;
+  /** Псевдоним baseColumns для обратной совместимости с v1 */
+  columns: BaseColumns;
   gap: number;
   activeModal: ActiveModal;
-  widgets: WidgetItem[];
+  instances: WidgetInstance[];
+  layouts: ResponsiveLayouts;
+  /** Плоский массив виджетов для обратной совместимости с компонентами v1 */
+  widgets: LegacyWidgetItem[];
 
+  // Actions
   toggleEditMode: () => void;
   setEditMode: (val: boolean) => void;
   setLocked: (val: boolean) => void;
   setCommandPaletteOpen: (val: boolean) => void;
-  setColumns: (cols: 12 | 16 | 24) => void;
+  setBaseColumns: (cols: BaseColumns) => void;
+  setColumns: (cols: BaseColumns) => void;
   setGap: (gap: number) => void;
   setActiveModal: (modal: ActiveModal) => void;
   initializeDashboard: () => void;
 
-  addWidget: (widgetId: string, defaultW?: number, defaultH?: number) => void;
+  addWidget: (
+    widgetId: string,
+    defaultW?: number,
+    defaultH?: number,
+    initialSettings?: Record<string, unknown>,
+  ) => void;
   removeWidget: (instanceId: string) => void;
-  updateWidgetSettings: (instanceId: string, settings: Record<string, any>) => void;
-  updateLayout: (layoutItems: Array<{ i: string; x: number; y: number; w: number; h: number }>) => void;
+  updateWidgetSettings: (instanceId: string, settings: Record<string, unknown>) => void;
+  updateLayout: (
+    breakpointOrItems: Breakpoint | Array<{ i: string; x: number; y: number; w: number; h: number }>,
+    maybeItems?: Array<{ i: string; x: number; y: number; w: number; h: number }>,
+  ) => void;
+  reorderWidgets: (breakpoint: Breakpoint, activeId: string, overId: string) => void;
+  resetDashboard: () => void;
 }
+
+function computeLegacyWidgets(instances: WidgetInstance[], layouts: ResponsiveLayouts): LegacyWidgetItem[] {
+  return instances.map((inst) => {
+    const l = layouts.xl.find((i) => i.i === inst.instanceId);
+    return {
+      instanceId: inst.instanceId,
+      widgetId: inst.widgetId,
+      x: l?.x ?? 0,
+      y: l?.y ?? 0,
+      w: l?.w ?? 4,
+      h: l?.h ?? 2,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      settings: inst.settings as any,
+    };
+  });
+}
+
+const defaultInitial = createDefaultDashboardState();
 
 export const useDashboardStore = create<DashboardState>()(
   persist(
     (set, get) => ({
-      isEditMode: false,
-      isLocked: false,
+      ...defaultInitial,
+      columns: defaultInitial.baseColumns,
+      widgets: computeLegacyWidgets(defaultInitial.instances, defaultInitial.layouts),
       isCommandPaletteOpen: false,
-      columns: 12,
-      gap: 16,
-      activeModal: null,
-      widgets: [
-        { instanceId: 'clock-1', widgetId: 'clock', x: 0, y: 0, w: 4, h: 2 },
-        { instanceId: 'weather-1', widgetId: 'weather', x: 4, y: 0, w: 4, h: 2 },
-        { instanceId: 'search-1', widgetId: 'search', x: 8, y: 0, w: 4, h: 2 },
-        { instanceId: 'rss-1', widgetId: 'rssReader', x: 0, y: 2, w: 6, h: 4 },
-        { instanceId: 'bookmarks-1', widgetId: 'bookmarks', x: 6, y: 2, w: 6, h: 4 },
-      ],
 
       toggleEditMode: () => set((state) => ({ isEditMode: !state.isEditMode })),
       setEditMode: (val) => set({ isEditMode: val }),
       setLocked: (val) => set({ isLocked: val }),
       setCommandPaletteOpen: (val) => set({ isCommandPaletteOpen: val }),
-      setColumns: (cols) => set({ columns: cols }),
+      setBaseColumns: (cols) =>
+        set((state) => {
+          const newLayouts = deriveResponsiveLayouts(state.layouts.xl, cols);
+          return {
+            baseColumns: cols,
+            columns: cols,
+            layouts: newLayouts,
+            widgets: computeLegacyWidgets(state.instances, newLayouts),
+          };
+        }),
+      setColumns: (cols) => get().setBaseColumns(cols),
       setGap: (gap) => set({ gap }),
       setActiveModal: (modal) => set({ activeModal: modal }),
       initializeDashboard: () => {},
 
-      addWidget: (widgetId, defaultW = 4, defaultH = 3) =>
+      addWidget: (widgetId, defaultW = 4, defaultH = 3, initialSettings = {}) =>
         set((state) => {
-          const newInstanceId = `${widgetId}-${Date.now()}`;
+          const instanceId = `${widgetId}-${Date.now()}`;
+          const newInstance: WidgetInstance = {
+            instanceId,
+            widgetId,
+            settings: initialSettings,
+          };
+
+          const cols = state.baseColumns;
+          const currentXl = state.layouts.xl;
+          const newLayoutItem: LayoutItem = {
+            i: instanceId,
+            x: (currentXl.length * defaultW) % cols,
+            y: Math.floor((currentXl.length * defaultW) / cols) * defaultH,
+            w: Math.min(defaultW, cols),
+            h: defaultH,
+          };
+
+          const updatedXl = [...currentXl, newLayoutItem];
+          const newLayouts = deriveResponsiveLayouts(updatedXl, state.baseColumns);
+          const newInstances = [...state.instances, newInstance];
+
           return {
-            widgets: [
-              ...state.widgets,
-              {
-                instanceId: newInstanceId,
-                widgetId,
-                x: (state.widgets.length * 4) % state.columns,
-                y: Math.floor((state.widgets.length * 4) / state.columns) * 3,
-                w: defaultW,
-                h: defaultH,
-              },
-            ],
+            instances: newInstances,
+            layouts: newLayouts,
+            widgets: computeLegacyWidgets(newInstances, newLayouts),
           };
         }),
 
       removeWidget: (instanceId) =>
-        set((state) => ({
-          widgets: state.widgets.filter((w) => w.instanceId !== instanceId),
-        })),
+        set((state) => {
+          const removeFilter = (items: LayoutItem[]) => items.filter((item) => item.i !== instanceId);
+          const newInstances = state.instances.filter((w) => w.instanceId !== instanceId);
+          const newLayouts: ResponsiveLayouts = {
+            xl: removeFilter(state.layouts.xl),
+            lg: removeFilter(state.layouts.lg),
+            md: removeFilter(state.layouts.md),
+            sm: removeFilter(state.layouts.sm),
+            xs: removeFilter(state.layouts.xs),
+          };
+
+          return {
+            instances: newInstances,
+            layouts: newLayouts,
+            widgets: computeLegacyWidgets(newInstances, newLayouts),
+          };
+        }),
 
       updateWidgetSettings: (instanceId, newSettings) =>
-        set((state) => ({
-          widgets: state.widgets.map((w) =>
+        set((state) => {
+          const newInstances = state.instances.map((w) =>
             w.instanceId === instanceId
               ? { ...w, settings: { ...w.settings, ...newSettings } }
-              : w
-          ),
-        })),
+              : w,
+          );
+          return {
+            instances: newInstances,
+            widgets: computeLegacyWidgets(newInstances, state.layouts),
+          };
+        }),
 
-      updateLayout: (layoutItems) =>
-        set((state) => ({
-          widgets: state.widgets.map((w) => {
-            const item = layoutItems.find((l) => l.i === w.instanceId);
-            if (item) {
-              return { ...w, x: item.x, y: item.y, w: item.w, h: item.h };
-            }
-            return w;
-          }),
-        })),
+      updateLayout: (breakpointOrItems, maybeItems) =>
+        set((state) => {
+          if (Array.isArray(breakpointOrItems)) {
+            // v1 вызов с 1 аргументом layoutItems (подразумевает xl)
+            const xlItems = breakpointOrItems;
+            const newLayouts = deriveResponsiveLayouts(xlItems, state.baseColumns);
+            return {
+              layouts: newLayouts,
+              widgets: computeLegacyWidgets(state.instances, newLayouts),
+            };
+          }
+
+          const breakpoint = breakpointOrItems;
+          const layoutItems = maybeItems || [];
+          const newLayouts: ResponsiveLayouts = {
+            ...state.layouts,
+            [breakpoint]: layoutItems,
+          };
+
+          return {
+            layouts: newLayouts,
+            widgets: computeLegacyWidgets(state.instances, newLayouts),
+          };
+        }),
+
+      reorderWidgets: (breakpoint, activeId, overId) =>
+        set((state) => {
+          const currentLayout = [...state.layouts[breakpoint]];
+          const activeIndex = currentLayout.findIndex((item) => item.i === activeId);
+          const overIndex = currentLayout.findIndex((item) => item.i === overId);
+
+          if (activeIndex === -1 || overIndex === -1) return state;
+
+          const [movedItem] = currentLayout.splice(activeIndex, 1);
+          currentLayout.splice(overIndex, 0, movedItem);
+
+          const newLayouts: ResponsiveLayouts = {
+            ...state.layouts,
+            [breakpoint]: currentLayout,
+          };
+
+          return {
+            layouts: newLayouts,
+            widgets: computeLegacyWidgets(state.instances, newLayouts),
+          };
+        }),
+
+      resetDashboard: () => {
+        const fresh = createDefaultDashboardState();
+        set({
+          ...fresh,
+          columns: fresh.baseColumns,
+          widgets: computeLegacyWidgets(fresh.instances, fresh.layouts),
+        });
+      },
     }),
     {
-      name: 'dashflow_dashboard_store',
+      name: STORAGE_KEYS.DASHBOARD,
+      version: 2,
+      migrate: (persistedState: unknown) => {
+        // Резервное копирование состояния v1 перед миграцией (Правило 51)
+        if (persistedState && typeof persistedState === 'object' && !('version' in persistedState)) {
+          void StorageAdapter.set(STORAGE_KEYS.DASHBOARD_BACKUP_V1, persistedState);
+        }
+        const migrated = migrateDashboardState(persistedState);
+        return {
+          ...migrated,
+          columns: migrated.baseColumns,
+          widgets: computeLegacyWidgets(migrated.instances, migrated.layouts),
+        };
+      },
       storage: createJSONStorage(() => ({
         getItem: async (name) => {
           const val = await StorageAdapter.get(name, null);
           return val ? JSON.stringify(val) : null;
         },
         setItem: async (name, value) => {
-          await StorageAdapter.set(name, JSON.parse(value));
+          try {
+            await StorageAdapter.set(name, JSON.parse(value));
+          } catch {
+            // Ошибки квот обрабатываются в StorageAdapter
+          }
         },
         removeItem: async (name) => {
           await StorageAdapter.remove(name);
         },
       })),
-    }
-  )
+    },
+  ),
 );
