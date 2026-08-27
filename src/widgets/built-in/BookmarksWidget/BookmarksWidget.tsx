@@ -1,28 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Bookmark, Folder, ExternalLink, Search, Plus, Trash2, Edit3, Grid, LayoutList, Table as TableIcon } from 'lucide-react';
+import { Folder, Search, Plus, Trash2 } from 'lucide-react';
+import type { WidgetProps } from '@/core/widget';
 import { SingleBookmarkTile } from './SingleBookmarkTile';
 import { useChromeBookmarksStore, BookmarkNode } from '@/services/storage/ChromeBookmarksSync';
+import { Button } from '@/ui/primitives';
+import { EmptyState } from '@/ui/feedback';
+import { cn } from '@/ui/lib/cn';
+import type { BookmarkSettings } from './types';
 
-export interface BookmarksWidgetProps {
-  instanceId: string;
-  settings?: {
-    mode?: 'single' | 'folder' | 'internal';
-    selectedFolderId?: string;
-    viewMode?: 'tiles' | 'list' | 'table';
-    singleTitle?: string;
-    singleUrl?: string;
-    singleIconUrl?: string;
-    showTitle?: boolean;
-    showIcon?: boolean;
-  };
-}
-
-export const BookmarksWidget: React.FC<BookmarksWidgetProps> = ({ instanceId, settings }) => {
+export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({ instanceId, settings }) => {
   const mode = settings?.mode || 'folder';
   const viewMode = settings?.viewMode || 'tiles';
   const selectedFolderId = settings?.selectedFolderId || '1';
 
-  const { tree, isLoaded, loadTree, createBookmark, deleteBookmark, renameBookmark, createFolder } =
+  const { tree, loadTree, createBookmark, deleteBookmark, createFolder } =
     useChromeBookmarksStore();
 
   const [currentFolderId, setCurrentFolderId] = useState<string>(selectedFolderId);
@@ -34,7 +25,7 @@ export const BookmarksWidget: React.FC<BookmarksWidgetProps> = ({ instanceId, se
 
   useEffect(() => {
     loadTree();
-  }, []);
+  }, [loadTree]);
 
   useEffect(() => {
     setCurrentFolderId(selectedFolderId);
@@ -73,7 +64,7 @@ export const BookmarksWidget: React.FC<BookmarksWidgetProps> = ({ instanceId, se
   // Фильтрация поиска
   const items = rawItems.filter((item) =>
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (item.url && item.url.toLowerCase().includes(searchQuery.toLowerCase()))
+    (item.url && item.url.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   const getFaviconUrl = (url?: string) => {
@@ -93,7 +84,11 @@ export const BookmarksWidget: React.FC<BookmarksWidgetProps> = ({ instanceId, se
     if (isFolderType) {
       await createFolder(currentFolderId, newTitle.trim());
     } else if (newUrl.trim()) {
-      await createBookmark(currentFolderId, newTitle.trim(), newUrl.trim());
+      let formattedUrl = newUrl.trim();
+      if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+        formattedUrl = `https://${formattedUrl}`;
+      }
+      await createBookmark(currentFolderId, newTitle.trim(), formattedUrl);
     }
 
     setNewTitle('');
@@ -102,67 +97,68 @@ export const BookmarksWidget: React.FC<BookmarksWidgetProps> = ({ instanceId, se
   };
 
   return (
-    <div className="flex flex-col h-full w-full space-y-2">
+    <div className="flex flex-col h-full w-full gap-2 p-2 select-none">
       {/* Навигация и поиск */}
-      <div className="flex items-center justify-between space-x-2 pb-2 border-b border-[var(--color-border)]">
-        <div className="flex items-center space-x-2 min-w-0">
+      <div className="flex items-center justify-between gap-2 pb-2 border-b border-line/40">
+        <div className="flex items-center gap-2 min-w-0">
           {currentFolder && currentFolder.id !== selectedFolderId && (
             <button
+              type="button"
               onClick={() => setCurrentFolderId(currentFolder.parentId || selectedFolderId)}
-              className="text-xs font-semibold text-[var(--color-primary)] hover:underline truncate"
+              className="text-xs font-semibold text-primary hover:underline truncate"
             >
               ← Назад
             </button>
           )}
-          <span className="text-xs font-semibold text-[var(--color-text)] truncate">
+          <span className="text-xs font-semibold text-fg truncate">
             {currentFolder ? currentFolder.title : 'Закладки'}
           </span>
         </div>
 
         {/* Поиск и Добавление */}
-        <div className="flex items-center space-x-1.5">
+        <div className="flex items-center gap-1.5">
           <div className="relative flex items-center">
-            <Search className="w-3.5 h-3.5 text-[var(--color-text-muted)] absolute left-2" />
+            <Search className="w-3.5 h-3.5 text-fg-muted absolute left-2 pointer-events-none" />
             <input
               type="text"
               placeholder="Поиск..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-[var(--color-surface)] text-[11px] text-[var(--color-text)] placeholder-[var(--color-text-muted)] border border-[var(--color-border)] rounded-lg pl-7 pr-2 py-1 w-28 focus:w-36 transition-all focus:outline-none"
+              className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded pl-7 pr-2 py-1 w-24 sm:w-32 focus:w-40 transition-all focus-visible:outline-none focus-visible:border-primary"
             />
           </div>
 
-          <button
+          <Button
+            size="sm"
+            variant="primary"
+            aria-label="Добавить закладку"
             onClick={() => setIsAddingItem(!isAddingItem)}
-            className="p-1 rounded-lg bg-[var(--color-primary)] text-white hover:opacity-90 transition-opacity cursor-pointer"
-            title="Добавить закладку или папку"
-          >
-            <Plus className="w-3.5 h-3.5" />
-          </button>
+            icon={<Plus className="w-3.5 h-3.5" />}
+          />
         </div>
       </div>
 
-      {/* Форма добавления (2-way sync с Chrome API) */}
+      {/* Форма добавления */}
       {isAddingItem && (
-        <form onSubmit={handleCreate} className="p-3 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] space-y-2">
-          <div className="flex items-center space-x-3 text-xs text-[var(--color-text)]">
-            <label className="flex items-center space-x-1 cursor-pointer">
+        <form onSubmit={handleCreate} className="p-3 rounded-lg bg-surface border border-line space-y-2">
+          <div className="flex items-center gap-3 text-xs text-fg">
+            <label className="flex items-center gap-1 cursor-pointer">
               <input
                 type="radio"
                 name="type"
                 checked={!isFolderType}
                 onChange={() => setIsFolderType(false)}
-                className="text-[var(--color-primary)]"
+                className="text-primary"
               />
               <span>Ссылка</span>
             </label>
-            <label className="flex items-center space-x-1 cursor-pointer">
+            <label className="flex items-center gap-1 cursor-pointer">
               <input
                 type="radio"
                 name="type"
                 checked={isFolderType}
                 onChange={() => setIsFolderType(true)}
-                className="text-[var(--color-primary)]"
+                className="text-primary"
               />
               <span>Папка</span>
             </label>
@@ -173,7 +169,7 @@ export const BookmarksWidget: React.FC<BookmarksWidgetProps> = ({ instanceId, se
             placeholder="Название"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            className="w-full bg-[var(--color-surface)] text-xs text-[var(--color-text)] border border-[var(--color-border)] rounded-lg px-2.5 py-1.5 focus:outline-none"
+            className="w-full bg-surface text-xs text-fg border border-line rounded px-2.5 py-1.5 focus-visible:outline-none focus-visible:border-primary"
           />
 
           {!isFolderType && (
@@ -182,134 +178,119 @@ export const BookmarksWidget: React.FC<BookmarksWidgetProps> = ({ instanceId, se
               placeholder="URL (https://...)"
               value={newUrl}
               onChange={(e) => setNewUrl(e.target.value)}
-              className="w-full bg-[var(--color-surface)] text-xs text-[var(--color-text)] border border-[var(--color-border)] rounded-lg px-2.5 py-1.5 focus:outline-none"
+              className="w-full bg-surface text-xs text-fg border border-line rounded px-2.5 py-1.5 focus-visible:outline-none focus-visible:border-primary"
             />
           )}
 
-          <div className="flex justify-end space-x-2 pt-1">
-            <button type="button" onClick={() => setIsAddingItem(false)} className="text-xs text-[var(--color-text-muted)]">
+          <div className="flex justify-end gap-2 pt-1">
+            <Button size="sm" variant="ghost" type="button" onClick={() => setIsAddingItem(false)}>
               Отмена
-            </button>
-            <button type="submit" className="px-3 py-1 text-xs text-white bg-[var(--color-primary)] rounded-lg font-semibold">
+            </Button>
+            <Button size="sm" variant="primary" type="submit">
               Создать
-            </button>
+            </Button>
           </div>
         </form>
       )}
 
-      {/* Вывод списка закладок в заданном viewMode */}
+      {/* Вывод списка закладок в заданном viewMode (Mobile First: без HTML table на узких экранах) */}
       <div className="flex-1 overflow-y-auto pr-1">
         {items.length === 0 ? (
-          <div className="text-center text-xs text-[var(--color-text-muted)] py-6">
-            Нет закладок в этой папке
-          </div>
+          <EmptyState
+            title="Нет закладок"
+            description="В этой папке нет закладок. Добавьте первую выше!"
+          />
         ) : viewMode === 'tiles' ? (
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
             {items.map((item) => (
               <div
                 key={item.id}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    if (item.children) setCurrentFolderId(item.id);
+                    else if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer');
+                  }
+                }}
                 onClick={() => {
                   if (item.children) setCurrentFolderId(item.id);
-                  else if (item.url) window.location.href = item.url;
+                  else if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer');
                 }}
-                className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[var(--color-surface)]/60 border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:bg-[var(--color-surface-hover)] transition-all cursor-pointer text-center group relative overflow-hidden"
+                className="flex flex-col items-center justify-center p-2 rounded-lg bg-surface/70 border border-line/60 hover:border-primary hover:bg-surface-hover transition-all cursor-pointer text-center group relative min-h-[58px]"
               >
                 <button
+                  type="button"
+                  aria-label={`Удалить закладку ${item.title}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     deleteBookmark(item.id);
                   }}
-                  className="absolute top-1 right-1 p-0.5 rounded bg-rose-500/10 text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Удалить"
+                  className="absolute top-1 right-1 p-0.5 rounded text-fg-muted hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>
 
                 {item.children ? (
-                  <Folder className="w-6 h-6 text-amber-400 mb-1" />
+                  <Folder className="w-6 h-6 text-warning mb-1" />
                 ) : (
                   <img
                     src={getFaviconUrl(item.url)}
                     alt=""
-                    className="w-6 h-6 rounded mb-1 object-contain group-hover:scale-110 transition-transform"
+                    aria-hidden="true"
+                    className="w-6 h-6 rounded mb-1 object-contain group-hover:scale-105 transition-transform"
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
                   />
                 )}
-                <span className="text-[11px] font-medium text-[var(--color-text)] truncate w-full">
+                <span className="text-[11px] font-medium text-fg truncate w-full px-1">
                   {item.title}
                 </span>
               </div>
             ))}
           </div>
-        ) : viewMode === 'table' ? (
-          <table className="w-full text-xs text-left border-collapse">
-            <thead>
-              <tr className="border-b border-[var(--color-border)] text-[var(--color-text-muted)]">
-                <th className="pb-1 font-semibold">Название</th>
-                <th className="pb-1 font-semibold text-right">Действие</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr
-                  key={item.id}
-                  onClick={() => {
-                    if (item.children) setCurrentFolderId(item.id);
-                    else if (item.url) window.location.href = item.url;
-                  }}
-                  className="border-b border-[var(--color-border)]/40 hover:bg-[var(--color-surface-hover)] cursor-pointer group"
-                >
-                  <td className="py-2 flex items-center space-x-2">
-                    {item.children ? (
-                      <Folder className="w-4 h-4 text-amber-400 shrink-0" />
-                    ) : (
-                      <img src={getFaviconUrl(item.url)} alt="" className="w-4 h-4 rounded shrink-0" />
-                    )}
-                    <span className="truncate font-medium text-[var(--color-text)]">{item.title}</span>
-                  </td>
-                  <td className="py-2 text-right">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteBookmark(item.id);
-                      }}
-                      className="p-1 rounded text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         ) : (
           <div className="space-y-1.5">
             {items.map((item) => (
               <div
                 key={item.id}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    if (item.children) setCurrentFolderId(item.id);
+                    else if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer');
+                  }
+                }}
                 onClick={() => {
                   if (item.children) setCurrentFolderId(item.id);
-                  else if (item.url) window.location.href = item.url;
+                  else if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer');
                 }}
-                className="flex items-center justify-between p-2 rounded-xl bg-[var(--color-surface)]/60 border border-[var(--color-border)] hover:border-[var(--color-primary)] transition-all cursor-pointer group"
+                className="flex items-center justify-between p-2 rounded-lg bg-surface/70 border border-line/60 hover:border-primary hover:bg-surface-hover transition-all cursor-pointer group min-h-[40px]"
               >
-                <div className="flex items-center space-x-2.5 min-w-0">
+                <div className="flex items-center gap-2.5 min-w-0">
                   {item.children ? (
-                    <Folder className="w-4 h-4 text-amber-400 shrink-0" />
+                    <Folder className="w-4 h-4 text-warning shrink-0" />
                   ) : (
-                    <img src={getFaviconUrl(item.url)} alt="" className="w-4 h-4 rounded shrink-0" />
+                    <img
+                      src={getFaviconUrl(item.url)}
+                      alt=""
+                      aria-hidden="true"
+                      className="w-4 h-4 rounded shrink-0"
+                    />
                   )}
-                  <span className="text-xs font-medium text-[var(--color-text)] truncate">{item.title}</span>
+                  <span className="text-xs font-medium text-fg truncate">{item.title}</span>
                 </div>
 
                 <button
+                  type="button"
+                  aria-label={`Удалить закладку ${item.title}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     deleteBookmark(item.id);
                   }}
-                  className="p-1 text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-1 text-fg-muted hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
