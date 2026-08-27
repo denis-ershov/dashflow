@@ -1,10 +1,10 @@
 import React from 'react';
-import { Modal } from '@/components/ui/Modal';
+import { Modal } from '@/ui/overlays';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useAppStore } from '@/stores/useAppStore';
 import { getTranslation } from '@/services/localization/i18n';
 import { Clock, CloudSun, Search, CheckSquare, FileText, Bookmark, Link, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/ui/primitives';
 
 export const AddWidgetModal: React.FC = () => {
   const { activeModal, setActiveModal, addWidget } = useDashboardStore();

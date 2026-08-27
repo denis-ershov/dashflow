@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StorageAdapter } from '@/services/storage/StorageAdapter';
 import { useDashboardStore } from '@/stores/useDashboardStore';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/ui/primitives';
 import { Plus, Trash2, Check } from 'lucide-react';
 
 export interface CustomFeed {

@@ -12,7 +12,7 @@ import {
   Lock,
   Unlock,
 } from 'lucide-react';
-import { Tooltip } from '@/components/ui/Tooltip';
+import { Tooltip } from '@/ui/primitives';
 
 export const FloatingToolbar: React.FC = () => {
   const { language } = useAppStore();

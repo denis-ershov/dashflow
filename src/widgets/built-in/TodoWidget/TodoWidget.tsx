@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StorageAdapter } from '@/services/storage/StorageAdapter';
 import { Plus, Trash2, CheckCircle2, Circle } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/ui/primitives';
 
 export interface TodoItem {
   id: string;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Volume2, VolumeX, Flame } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/ui/primitives';
 
 export interface PomodoroWidgetProps {
   instanceId: string;

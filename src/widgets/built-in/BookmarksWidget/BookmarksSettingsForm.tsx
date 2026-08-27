@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useChromeBookmarksStore, BookmarkNode } from '@/services/storage/ChromeBookmarksSync';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/ui/primitives';
 
 export interface BookmarksSettingsFormProps {
   instanceId: string;

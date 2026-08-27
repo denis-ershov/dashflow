@@ -1,8 +1,8 @@
 import React from 'react';
-import { Drawer } from '@/components/ui/Drawer';
+import { Drawer } from '@/ui/overlays';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { WidgetRegistry } from '@/widgets/core/WidgetRegistry';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/ui/primitives';
 import { RssSettingsForm } from '@/plugins/rss-reader/RssSettingsForm';
 import { BookmarksSettingsForm } from '@/widgets/built-in/BookmarksWidget/BookmarksSettingsForm';
 

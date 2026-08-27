@@ -9,13 +9,14 @@ import { CommandPalette } from '@/features/dashboard/components/CommandPalette';
 import { SettingsModal } from '@/features/settings/components/SettingsModal';
 import { AddWidgetModal } from '@/features/dashboard/components/AddWidgetModal';
 import { MarketplaceModal } from '@/features/marketplace/components/MarketplaceModal';
-import { ThemesModal } from '@/features/themes/components/ThemesModal';
-import { useThemeStore } from '@/features/themes/stores/useThemeStore';
+import { AppearanceModal } from '@/features/appearance';
+import { useThemeStore } from '@/core/theme/themeStore';
+import { Spinner } from '@/ui/feedback';
 
 export default function App() {
   const { language, isInitialized, initialize: initApp } = useAppStore();
-  const { initializeDashboard } = useDashboardStore();
-  const { initializeTheme } = useThemeStore();
+  const { activeModal, setActiveModal, initializeDashboard } = useDashboardStore();
+  const initializeTheme = useThemeStore((state) => state.initialize);
 
   useEffect(() => {
     initApp();
@@ -25,10 +26,10 @@ export default function App() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)] text-[var(--color-text)]">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-10 h-10 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm font-medium tracking-wide opacity-80">
+      <div className="min-h-screen flex items-center justify-center bg-canvas text-fg">
+        <div className="flex flex-col items-center gap-4">
+          <Spinner size="lg" />
+          <p className="text-sm font-medium tracking-wide text-fg-muted">
             {getTranslation(language, 'common.loading')}
           </p>
         </div>
@@ -37,24 +38,24 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--color-bg)] text-[var(--color-text)] p-6 transition-colors duration-200 relative pb-24">
+    <div className="min-h-screen flex flex-col bg-canvas text-fg p-6 transition-colors duration-normal relative pb-24">
       {/* Шапка приложения */}
-      <header className="flex items-center justify-between pb-6 mb-6 border-b border-[var(--color-border)]">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[var(--color-primary)] to-[var(--color-secondary)] flex items-center justify-center shadow-lg">
-            <Sparkles className="w-5 h-5 text-white" />
+      <header className="flex items-center justify-between pb-6 mb-6 border-b border-line">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-md bg-gradient-to-tr from-primary to-secondary flex items-center justify-center shadow-1 text-primary-fg">
+            <Sparkles className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight">{getTranslation(language, 'app.title')}</h1>
-            <p className="text-xs text-[var(--color-text-muted)]">
+            <p className="text-xs text-fg-muted">
               {getTranslation(language, 'app.subtitle')}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[var(--color-surface)] text-[var(--color-secondary)] border border-[var(--color-border)]">
-            <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-surface text-secondary border border-line">
+            <ShieldCheck className="w-4 h-4 mr-1.5" />
             UI System & Grid Engine Active
           </span>
         </div>
@@ -71,7 +72,7 @@ export default function App() {
       <SettingsModal />
       <AddWidgetModal />
       <MarketplaceModal />
-      <ThemesModal />
+      <AppearanceModal isOpen={activeModal === 'themes'} onClose={() => setActiveModal(null)} />
     </div>
   );
 }

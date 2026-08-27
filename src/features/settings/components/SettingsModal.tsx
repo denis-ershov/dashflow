@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { Modal } from '@/components/ui/Modal';
+import { Modal } from '@/ui/overlays';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useAppStore } from '@/stores/useAppStore';
 import { getTranslation } from '@/services/localization/i18n';
-import { Switch } from '@/components/ui/Switch';
-import { Slider } from '@/components/ui/Slider';
-import { Button } from '@/components/ui/Button';
+import { Switch, Slider, Button } from '@/ui/primitives';
 import { ImportExportModal } from './ImportExportModal';
 import { Settings, Globe, Layout, Palette, Sparkles } from 'lucide-react';
 

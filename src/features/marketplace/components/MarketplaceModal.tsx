@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Modal } from '@/components/ui/Modal';
+import { Modal } from '@/ui/overlays';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useAppStore } from '@/stores/useAppStore';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/ui/primitives';
 import {
   Download,
   ShieldAlert,
