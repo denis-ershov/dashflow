@@ -1,44 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { StorageAdapter } from '@/services/storage/StorageAdapter';
 import { Plus, X, Globe } from 'lucide-react';
+import type { WidgetProps } from '@/core/widget';
+import { StorageAdapter } from '@/core/storage/StorageAdapter';
+import { STORAGE_KEYS } from '@/core/storage/keys';
+import { Button } from '@/ui/primitives';
+import { cn } from '@/ui/lib/cn';
+import type { QuickLinkItem, QuickLinksSettings } from './types';
 
-export interface QuickLinkItem {
-  id: string;
-  title: string;
-  url: string;
-}
+const DEFAULT_LINKS: QuickLinkItem[] = [
+  { id: '1', title: 'GitHub', url: 'https://github.com' },
+  { id: '2', title: 'Google', url: 'https://google.com' },
+  { id: '3', title: 'YouTube', url: 'https://youtube.com' },
+];
 
-export const QuickLinksWidget: React.FC = () => {
+export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ settings }) => {
+  const showTitles = settings?.showTitles ?? true;
   const [links, setLinks] = useState<QuickLinkItem[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
 
   useEffect(() => {
-    StorageAdapter.get<QuickLinkItem[]>('widget_quick_links', [
-      { id: '1', title: 'GitHub', url: 'https://github.com' },
-      { id: '2', title: 'Google', url: 'https://google.com' },
-      { id: '3', title: 'YouTube', url: 'https://youtube.com' },
-    ]).then(setLinks);
+    StorageAdapter.get<QuickLinkItem[]>(STORAGE_KEYS.QUICK_LINKS, DEFAULT_LINKS).then(setLinks);
   }, []);
 
   const saveLinks = async (newLinks: QuickLinkItem[]) => {
     setLinks(newLinks);
-    await StorageAdapter.set('widget_quick_links', newLinks);
+    await StorageAdapter.set(STORAGE_KEYS.QUICK_LINKS, newLinks);
   };
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !url.trim()) return;
+    const cleanTitle = title.trim();
+    const cleanUrl = url.trim();
+    if (!cleanTitle || !cleanUrl) return;
 
-    let formattedUrl = url.trim();
+    let formattedUrl = cleanUrl;
     if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
       formattedUrl = `https://${formattedUrl}`;
     }
 
     const newItem: QuickLinkItem = {
       id: Date.now().toString(),
-      title: title.trim(),
+      title: cleanTitle,
       url: formattedUrl,
     };
 
@@ -62,76 +66,88 @@ export const QuickLinksWidget: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full space-y-3">
+    <div className="flex flex-col h-full gap-2.5 p-1 select-none">
       {isAdding ? (
-        <form onSubmit={handleAdd} className="flex flex-col space-y-2 p-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]">
+        <form onSubmit={handleAdd} className="flex flex-col gap-2 p-3 rounded-lg bg-surface border border-line">
           <input
             type="text"
             placeholder="Название ссылки"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="bg-[var(--color-bg)] text-xs text-[var(--color-text)] border border-[var(--color-border)] rounded-lg px-2.5 py-1.5 focus:outline-none"
+            className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded px-2.5 py-1.5 focus-visible:outline-none focus-visible:border-primary"
           />
           <input
             type="text"
             placeholder="URL (напр. github.com)"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="bg-[var(--color-bg)] text-xs text-[var(--color-text)] border border-[var(--color-border)] rounded-lg px-2.5 py-1.5 focus:outline-none"
+            className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded px-2.5 py-1.5 focus-visible:outline-none focus-visible:border-primary"
           />
-          <div className="flex justify-end space-x-2 pt-1">
-            <button
+          <div className="flex justify-end gap-2 pt-1">
+            <Button
+              size="sm"
+              variant="ghost"
               type="button"
               onClick={() => setIsAdding(false)}
-              className="px-2.5 py-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
             >
               Отмена
-            </button>
-            <button
-              type="submit"
-              className="px-3 py-1 text-xs text-white bg-[var(--color-primary)] rounded-lg font-semibold"
-            >
+            </Button>
+            <Button size="sm" variant="primary" type="submit">
               Сохранить
-            </button>
+            </Button>
           </div>
         </form>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 overflow-y-auto">
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 overflow-y-auto p-1">
           {links.map((link) => (
             <div
               key={link.id}
-              className="group relative flex flex-col items-center justify-center p-2.5 rounded-xl bg-[var(--color-surface)]/60 border border-[var(--color-border)]/60 hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-primary)] transition-all text-center cursor-pointer"
-              onClick={() => (window.location.href = link.url)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  window.open(link.url, '_blank', 'noopener,noreferrer');
+                }
+              }}
+              onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
+              className="group relative flex flex-col items-center justify-center p-2 rounded-lg bg-surface/70 border border-line/60 hover:bg-surface-hover hover:border-primary transition-all text-center cursor-pointer min-h-[58px]"
             >
               <button
+                type="button"
+                aria-label={`Удалить ссылку ${link.title}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   removeLink(link.id);
                 }}
-                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-0.5 rounded-full text-[var(--color-text-muted)] hover:text-red-400 transition-opacity"
+                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-0.5 rounded text-fg-muted hover:text-danger hover:bg-danger/10 transition-opacity"
               >
                 <X className="w-3 h-3" />
               </button>
 
               <img
                 src={getFaviconUrl(link.url)}
-                alt={link.title}
-                className="w-7 h-7 mb-1.5 rounded-md object-contain"
+                alt=""
+                aria-hidden="true"
+                className="w-6 h-6 mb-1 rounded object-contain"
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = 'none';
                 }}
               />
-              <span className="text-[11px] font-medium text-[var(--color-text)] truncate w-full">
-                {link.title}
-              </span>
+              {showTitles && (
+                <span className="text-[11px] font-medium text-fg truncate w-full px-1">
+                  {link.title}
+                </span>
+              )}
             </div>
           ))}
 
           <button
+            type="button"
+            aria-label="Добавить ссылку"
             onClick={() => setIsAdding(true)}
-            className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-dashed border-[var(--color-border)] hover:border-[var(--color-primary)] text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors text-center cursor-pointer min-h-[70px]"
+            className="flex flex-col items-center justify-center p-2 rounded-lg border border-dashed border-line hover:border-primary text-fg-muted hover:text-primary transition-colors text-center cursor-pointer min-h-[58px]"
           >
-            <Plus className="w-5 h-5 mb-1" />
+            <Plus className="w-4 h-4 mb-0.5" />
             <span className="text-[10px] font-medium">Добавить</span>
           </button>
         </div>
