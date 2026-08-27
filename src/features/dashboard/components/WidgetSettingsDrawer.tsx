@@ -41,8 +41,6 @@ export const WidgetSettingsDrawer: React.FC<WidgetSettingsDrawerProps> = ({
       onClose={onClose}
       title={`Настройки: ${widgetName}`}
       subtitle="Индивидуальная конфигурация параметров виджета"
-      position="right"
-      size="md"
     >
       <div className="p-4 flex flex-col justify-between h-full">
         <div className="space-y-4">

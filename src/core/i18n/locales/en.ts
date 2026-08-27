@@ -15,6 +15,7 @@ export const en = {
     lockLayout: 'Lock Layout',
     saveLayout: 'Save Layout',
     reset: 'Reset',
+    marketplace: 'Widgets Catalog',
   },
   settings: {
     title: 'DashFlow Settings',

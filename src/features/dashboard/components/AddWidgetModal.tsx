@@ -87,8 +87,7 @@ export const AddWidgetModal: React.FC = () => {
       isOpen={isOpen}
       onClose={() => setActiveModal(null)}
       title={t('toolbar.addWidget')}
-      subtitle="Выберите виджет для добавления на рабочий стол"
-      size="lg"
+      maxWidth="lg"
     >
       <div className="space-y-4">
         {/* Поиск и категории */}
@@ -151,7 +150,7 @@ export const AddWidgetModal: React.FC = () => {
                         <h4 className="text-xs font-semibold text-fg truncate">
                           {title}
                         </h4>
-                        <Badge variant="default" size="sm">
+                        <Badge variant="default">
                           {w.size.defaultW}×{w.size.defaultH}
                         </Badge>
                       </div>

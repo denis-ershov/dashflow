@@ -15,6 +15,7 @@ export const ru = {
     lockLayout: 'Зафиксировать сетку',
     saveLayout: 'Сохранить сетку',
     reset: 'Сбросить',
+    marketplace: 'Каталог виджетов',
   },
   settings: {
     title: 'Настройки DashFlow',
