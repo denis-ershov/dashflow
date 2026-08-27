@@ -37,3 +37,6 @@ export function registerBuiltInWidgets(): void {
     WidgetRegistry.register(manifest);
   }
 }
+
+// Автоматическая регистрация при загрузке реестра
+registerBuiltInWidgets();

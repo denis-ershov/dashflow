@@ -69,6 +69,85 @@ const DEFAULT_BASE_LAYOUT: LayoutItem[] = [
 ];
 
 /**
+ * Проверяет, пересекаются ли два прямоугольника на сетке
+ */
+export function isRectangleColliding(
+  a: { x: number; y: number; w: number; h: number },
+  b: { x: number; y: number; w: number; h: number },
+): boolean {
+  return !(
+    a.x + a.w <= b.x ||
+    a.x >= b.x + b.w ||
+    a.y + a.h <= b.y ||
+    a.y >= b.y + b.h
+  );
+}
+
+/**
+ * Находит первую свободную позицию (x, y) на сетке заданного числа колонок для виджета размером (w, h)
+ */
+export function findFirstAvailablePosition(
+  existingLayout: LayoutItem[],
+  cols: number = 12,
+  w: number = 4,
+  h: number = 3,
+): { x: number; y: number } {
+  const clampedW = Math.min(Math.max(1, w), cols);
+  const clampedH = Math.max(1, h);
+  let y = 0;
+
+  // Ограничитель поиска строк (предотвращение бесконечного цикла)
+  while (y < 1000) {
+    for (let x = 0; x <= cols - clampedW; x++) {
+      const candidate = { x, y, w: clampedW, h: clampedH };
+      const hasCollision = existingLayout.some((item) => isRectangleColliding(candidate, item));
+
+      if (!hasCollision) {
+        return { x, y };
+      }
+    }
+    y++;
+  }
+
+  return { x: 0, y };
+}
+
+/**
+ * Устраняет любые наложения (коллизии) между элементами раскладки,
+ * вытесняя перекрывающиеся элементы вниз (vertical compaction & collision resolution)
+ */
+export function resolveLayoutCollisions(
+  layout: LayoutItem[],
+  cols: number = 12,
+): LayoutItem[] {
+  const resolved: LayoutItem[] = [];
+
+  for (const item of layout) {
+    const w = Math.min(Math.max(1, item.w || 4), cols);
+    const h = Math.max(1, item.h || 2);
+    const x = Math.min(Math.max(0, item.x ?? 0), cols - w);
+    let y = Math.max(0, item.y ?? 0);
+
+    // Пока текущая позиция (x, y, w, h) перекрывает любой уже размещенный элемент, смещаем y вниз
+    while (
+      resolved.some((placed) => isRectangleColliding({ x, y, w, h }, placed))
+    ) {
+      y++;
+    }
+
+    resolved.push({
+      ...item,
+      x,
+      y,
+      w,
+      h,
+    });
+  }
+
+  return resolved;
+}
+
+/**
  * Автоматически рассчитывает адаптивные раскладки для всех брейкпоинтов из базовой раскладки
  */
 export function deriveResponsiveLayouts(
@@ -76,13 +155,14 @@ export function deriveResponsiveLayouts(
   baseCols: BaseColumns = 12,
 ): ResponsiveLayouts {
   const colMap = BREAKPOINT_COLUMNS[baseCols] || BREAKPOINT_COLUMNS[12];
+  const cleanBaseLayout = resolveLayoutCollisions(baseLayout, baseCols);
 
   const createLayoutForCols = (cols: number): LayoutItem[] => {
     let currentY = 0;
     let currentX = 0;
     let rowMaxH = 0;
 
-    return baseLayout.map((item) => {
+    const raw = cleanBaseLayout.map((item) => {
       const w = Math.min(item.w, cols);
       const h = item.h;
 
@@ -109,10 +189,12 @@ export function deriveResponsiveLayouts(
 
       return layoutItem;
     });
+
+    return resolveLayoutCollisions(raw, cols);
   };
 
   return {
-    xl: baseLayout.map((item) => ({ ...item })),
+    xl: cleanBaseLayout,
     lg: createLayoutForCols(colMap.lg),
     md: createLayoutForCols(colMap.md),
     sm: createLayoutForCols(colMap.sm),
@@ -150,15 +232,22 @@ export function migrateDashboardState(rawState: unknown): MigratedDashboardState
   if (rawObj.version === 2 && Array.isArray(rawObj.instances) && rawObj.layouts) {
     const rawLayouts = rawObj.layouts as Record<string, unknown>;
     if (Array.isArray(rawLayouts.xl)) {
+      const baseCols: BaseColumns =
+        rawObj.baseColumns === 16 || rawObj.baseColumns === 24 ? rawObj.baseColumns : 12;
+      const sanitizedLayouts = deriveResponsiveLayouts(
+        rawLayouts.xl as LayoutItem[],
+        baseCols,
+      );
+
       return {
         version: 2,
-        baseColumns: (rawObj.baseColumns as BaseColumns) || 12,
+        baseColumns: baseCols,
         gap: typeof rawObj.gap === 'number' ? rawObj.gap : 16,
         isEditMode: Boolean(rawObj.isEditMode),
         isLocked: Boolean(rawObj.isLocked),
         activeModal: typeof rawObj.activeModal === 'string' ? (rawObj.activeModal as ActiveModal) : null,
         instances: rawObj.instances as WidgetInstance[],
-        layouts: rawObj.layouts as ResponsiveLayouts,
+        layouts: sanitizedLayouts,
       };
     }
   }

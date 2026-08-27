@@ -16,7 +16,7 @@ describe('useDashboardStore (v2)', () => {
     expect(state.layouts.sm).toHaveLength(5);
   });
 
-  it('должен добавлять новый виджет и рассчитывать позицию в раскладках', () => {
+  it('должен добавлять новый виджет и рассчитывать позицию в раскладках без наложений', () => {
     const store = useDashboardStore.getState();
     store.addWidget('pomodoro', 4, 3);
 
@@ -27,6 +27,27 @@ describe('useDashboardStore (v2)', () => {
 
     expect(updated.layouts.xl).toHaveLength(6);
     expect(updated.layouts.xl.some((l) => l.i === added?.instanceId)).toBe(true);
+
+    // Добавляем еще 2 виджета и проверяем отсутствие коллизий на всех раскладках
+    store.addWidget('quotes', 4, 3);
+    store.addWidget('notes', 6, 4);
+
+    const xlLayout = useDashboardStore.getState().layouts.xl;
+    expect(xlLayout).toHaveLength(8);
+
+    for (let i = 0; i < xlLayout.length; i++) {
+      for (let j = i + 1; j < xlLayout.length; j++) {
+        const itemA = xlLayout[i];
+        const itemB = xlLayout[j];
+        const collides = !(
+          itemA.x + itemA.w <= itemB.x ||
+          itemA.x >= itemB.x + itemB.w ||
+          itemA.y + itemA.h <= itemB.y ||
+          itemA.y >= itemB.y + itemB.h
+        );
+        expect(collides).toBe(false);
+      }
+    }
   });
 
   it('должен удалять виджет из instances и всех раскладок layouts', () => {

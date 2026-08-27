@@ -6,6 +6,8 @@ import {
   migrateDashboardState,
   deriveResponsiveLayouts,
   createDefaultDashboardState,
+  findFirstAvailablePosition,
+  resolveLayoutCollisions,
   type Breakpoint,
   type BaseColumns,
   type LayoutItem,
@@ -124,11 +126,15 @@ export const useDashboardStore = create<DashboardState>()(
           };
 
           const cols = state.baseColumns;
-          const currentXl = state.layouts.xl;
+          const currentXl = state.layouts.xl || [];
+          
+          // Математически гарантированная первая свободная позиция без наложений
+          const { x, y } = findFirstAvailablePosition(currentXl, cols, defaultW, defaultH);
+
           const newLayoutItem: LayoutItem = {
             i: instanceId,
-            x: (currentXl.length * defaultW) % cols,
-            y: Math.floor((currentXl.length * defaultW) / cols) * defaultH,
+            x,
+            y,
             w: Math.min(defaultW, cols),
             h: defaultH,
           };
@@ -180,7 +186,7 @@ export const useDashboardStore = create<DashboardState>()(
         set((state) => {
           if (Array.isArray(breakpointOrItems)) {
             // v1 вызов с 1 аргументом layoutItems (подразумевает xl)
-            const xlItems = breakpointOrItems;
+            const xlItems = resolveLayoutCollisions(breakpointOrItems, state.baseColumns);
             const newLayouts = deriveResponsiveLayouts(xlItems, state.baseColumns);
             return {
               layouts: newLayouts,
@@ -189,7 +195,7 @@ export const useDashboardStore = create<DashboardState>()(
           }
 
           const breakpoint = breakpointOrItems;
-          const layoutItems = maybeItems || [];
+          const layoutItems = resolveLayoutCollisions(maybeItems || [], state.baseColumns);
           const newLayouts: ResponsiveLayouts = {
             ...state.layouts,
             [breakpoint]: layoutItems,

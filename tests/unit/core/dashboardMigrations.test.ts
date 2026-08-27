@@ -1,8 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { migrateDashboardState, deriveResponsiveLayouts } from '@/core/storage/dashboardMigrations';
+import {
+  migrateDashboardState,
+  deriveResponsiveLayouts,
+  isRectangleColliding,
+  findFirstAvailablePosition,
+  resolveLayoutCollisions,
+} from '@/core/storage/dashboardMigrations';
 import type { LayoutItem } from '@/core/storage/dashboardMigrations';
 
-describe('Dashboard State Migrations (v1 -> v2)', () => {
+describe('Dashboard State Migrations & Collision Resolution', () => {
   const v1State = {
     isEditMode: true,
     isLocked: false,
@@ -80,8 +86,55 @@ describe('Dashboard State Migrations (v1 -> v2)', () => {
     expect(result.instances[0].instanceId).toBe('test-1');
   });
 
+  describe('isRectangleColliding', () => {
+    it('должен правильно определять пересечение прямоугольников', () => {
+      const a = { x: 0, y: 0, w: 4, h: 2 };
+      const b = { x: 2, y: 1, w: 4, h: 2 }; // пересекается
+      const c = { x: 4, y: 0, w: 4, h: 2 }; // смежный по x (не пересекается)
+      const d = { x: 0, y: 2, w: 4, h: 2 }; // смежный по y (не пересекается)
+
+      expect(isRectangleColliding(a, b)).toBe(true);
+      expect(isRectangleColliding(a, c)).toBe(false);
+      expect(isRectangleColliding(a, d)).toBe(false);
+    });
+  });
+
+  describe('findFirstAvailablePosition', () => {
+    it('должен находить свободную позицию на первом ряду при наличии места', () => {
+      const layout: LayoutItem[] = [
+        { i: 'w1', x: 0, y: 0, w: 4, h: 2 },
+      ];
+      const pos = findFirstAvailablePosition(layout, 12, 4, 2);
+      expect(pos).toEqual({ x: 4, y: 0 });
+    });
+
+    it('должен переносить на следующий ряд, если на текущем ряду нет места', () => {
+      const layout: LayoutItem[] = [
+        { i: 'w1', x: 0, y: 0, w: 6, h: 3 },
+        { i: 'w2', x: 6, y: 0, w: 6, h: 3 },
+      ];
+      const pos = findFirstAvailablePosition(layout, 12, 4, 2);
+      expect(pos).toEqual({ x: 0, y: 3 });
+    });
+  });
+
+  describe('resolveLayoutCollisions', () => {
+    it('должен сдвигать перекрывающиеся виджеты вниз', () => {
+      const overlapping: LayoutItem[] = [
+        { i: 'w1', x: 0, y: 0, w: 6, h: 3 },
+        { i: 'w2', x: 2, y: 1, w: 6, h: 3 }, // перекрывает w1
+      ];
+
+      const resolved = resolveLayoutCollisions(overlapping, 12);
+      expect(resolved).toHaveLength(2);
+      expect(resolved[0]).toEqual({ i: 'w1', x: 0, y: 0, w: 6, h: 3 });
+      expect(resolved[1].y).toBeGreaterThanOrEqual(3);
+      expect(isRectangleColliding(resolved[0], resolved[1])).toBe(false);
+    });
+  });
+
   describe('deriveResponsiveLayouts', () => {
-    it('должен безопасно масштабировать позиции и размеры для всех 5 брейкпоинтов', () => {
+    it('должен безопасно масштабировать позиции и размеры для всех 5 брейкпоинтов без коллизий', () => {
       const baseLayout: LayoutItem[] = [
         { i: 'w1', x: 0, y: 0, w: 8, h: 3 },
         { i: 'w2', x: 8, y: 0, w: 4, h: 3 },
@@ -99,6 +152,7 @@ describe('Dashboard State Migrations (v1 -> v2)', () => {
         expect(item.w).toBeLessThanOrEqual(2);
         expect(item.x + item.w).toBeLessThanOrEqual(2);
       }
+      expect(isRectangleColliding(layouts.xs[0], layouts.xs[1])).toBe(false);
     });
   });
 });

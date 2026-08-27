@@ -10,6 +10,9 @@ import { WidgetSettingsDrawer } from './WidgetSettingsDrawer';
 import { useGridMetrics } from '../hooks/useGridMetrics';
 import { EmptyState } from '@/ui/feedback/EmptyState';
 
+// Синхронная гарантированная регистрация встроенных манифестов
+registerBuiltInWidgets();
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const RGLAny = RGL as any;
 const Responsive = RGLAny.Responsive || RGLAny.default?.Responsive || RGL;
@@ -58,14 +61,16 @@ export const GridEngine: React.FC = () => {
 
   const handleLayoutChange = (currentLayout: LayoutItem[]) => {
     if (!isEditMode) return;
-    const updated = currentLayout.map((item) => ({
-      i: item.i,
-      x: item.x,
-      y: item.y,
-      w: item.w,
-      h: item.h,
-    }));
-    updateLayout(updated);
+    if (currentLayout && currentLayout.length > 0) {
+      const updated = currentLayout.map((item) => ({
+        i: item.i,
+        x: item.x,
+        y: item.y,
+        w: item.w,
+        h: item.h,
+      }));
+      updateLayout(updated);
+    }
   };
 
   if (widgets.length === 0) {
@@ -102,6 +107,8 @@ export const GridEngine: React.FC = () => {
         containerPadding={[0, 0]}
         isDraggable={isEditMode}
         isResizable={isEditMode}
+        compactType="vertical"
+        preventCollision={false}
         onLayoutChange={handleLayoutChange}
         draggableHandle=".widget-drag-handle"
       >
@@ -110,7 +117,7 @@ export const GridEngine: React.FC = () => {
           const widgetTitle = definition?.nameKey ? t(definition.nameKey) : definition?.name || item.widgetId;
 
           return (
-            <div key={item.instanceId} data-grid={{ x: item.x, y: item.y, w: item.w, h: item.h }}>
+            <div key={item.instanceId}>
               <WidgetShell
                 instanceId={item.instanceId}
                 title={String(widgetTitle)}
