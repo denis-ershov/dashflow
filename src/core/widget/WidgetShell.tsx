@@ -114,7 +114,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
             !isChromeless && 'border-b border-line/40',
           )}
         >
-          <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
             {isEditMode && (
               <button
                 type="button"
@@ -145,7 +145,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
                 className="flex items-center justify-center w-8 h-8 rounded text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"
                 aria-label="Настройки виджета"
               >
-                <Settings className="w-3.5 h-3.5" />
+                <Settings className="w-4 h-4" />
               </button>
             )}
 
@@ -156,7 +156,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
                 className="flex items-center justify-center w-8 h-8 rounded text-danger hover:bg-danger/10 transition-colors"
                 aria-label="Удалить виджет"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="w-4 h-4" />
               </button>
             )}
           </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { SearchWidget } from '@/widgets/built-in/SearchWidget/SearchWidget';
 import { searchManifest } from '@/widgets/built-in/SearchWidget/manifest';
@@ -31,10 +31,21 @@ describe('SearchWidget Component & Manifest', () => {
   });
 
   it('должен отправлять форму с введенным запросом', () => {
-    const originalLocation = window.location;
-    const locationAssignMock = vi.fn();
-    delete (window as any).location;
-    window.location = { ...originalLocation, href: '', assign: locationAssignMock } as any;
+    const originalHref = window.location.href;
+    let assignedHref = '';
+    Object.defineProperty(window, 'location', {
+      value: {
+        ...window.location,
+        set href(val: string) {
+          assignedHref = val;
+        },
+        get href() {
+          return assignedHref || originalHref;
+        },
+      },
+      writable: true,
+      configurable: true,
+    });
 
     render(<SearchWidget instanceId="search-1" settings={{ engine: 'google' }} />);
 
@@ -44,8 +55,6 @@ describe('SearchWidget Component & Manifest', () => {
     const submitBtn = screen.getByRole('button', { name: /найти/i });
     fireEvent.click(submitBtn);
 
-    expect(window.location.href).toContain('https://www.google.com/search?q=React%2019');
-
-    window.location = originalLocation;
+    expect(assignedHref).toContain('https://www.google.com/search?q=React%2019');
   });
 });

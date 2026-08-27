@@ -1,4 +1,5 @@
 import { WidgetRegistry } from '@/core/widget/registry';
+import type { WidgetDefinition } from '@/core/widget/types';
 import { clockManifest } from './ClockWidget/manifest';
 import { searchManifest } from './SearchWidget/manifest';
 import { weatherManifest } from './WeatherWidget/manifest';
@@ -12,7 +13,8 @@ import { quotesManifest } from './QuotesWidget/manifest';
 import { systemMonitorManifest } from './SystemMonitorWidget/manifest';
 import { rssManifest } from './RssWidget/manifest';
 
-export const BUILT_IN_MANIFESTS = [
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const BUILT_IN_MANIFESTS: Array<WidgetDefinition<any>> = [
   clockManifest,
   searchManifest,
   weatherManifest,
