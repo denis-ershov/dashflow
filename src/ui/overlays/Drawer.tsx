@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/ui/lib/cn';
 import { Button } from '@/ui/primitives/Button';
@@ -26,7 +27,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  const drawerContent = (
     <div className="fixed inset-0 z-[var(--z-modal)] overflow-hidden">
       {/* Backdrop */}
       <button
@@ -74,4 +75,8 @@ export const Drawer: React.FC<DrawerProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined'
+    ? createPortal(drawerContent, document.body)
+    : drawerContent;
 };

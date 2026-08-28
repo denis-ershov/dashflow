@@ -95,7 +95,8 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
       data-instance-id={instanceId}
       data-surface={surface}
       className={cn(
-        'relative group w-full h-full flex flex-col transition-all duration-normal overflow-hidden',
+        'relative group w-full h-full flex flex-col transition-all duration-normal',
+        isChromeless ? 'overflow-visible' : 'overflow-hidden',
         // Стили поверхности Glassmorphism
         isChromeless && 'bg-transparent border-transparent',
         !isChromeless && !isTiles && 'glass-card border border-line rounded-2xl shadow-2 hover:shadow-3',
@@ -164,7 +165,12 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
       )}
 
       {/* Тело виджета, защищенное ErrorBoundary */}
-      <div className="flex-1 min-h-0 w-full overflow-auto p-1">
+      <div
+        className={cn(
+          'flex-1 min-h-0 w-full p-1',
+          isChromeless ? 'overflow-visible' : 'overflow-auto',
+        )}
+      >
         <WidgetErrorBoundary fallbackTitle={title} onRemove={onRemove}>
           {children}
         </WidgetErrorBoundary>

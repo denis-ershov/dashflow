@@ -93,7 +93,7 @@ export const SingleBookmarkTile: React.FC<SingleBookmarkTileProps> = ({ settings
         </div>
       )}
 
-      <ExternalLink className="w-3.5 h-3.5 text-fg-muted opacity-0 group-hover:opacity-100 absolute top-1.5 right-1.5 transition-opacity" />
+      <ExternalLink className="w-3.5 h-3.5 text-fg-muted opacity-0 group-hover/tile:opacity-100 absolute top-1.5 right-1.5 transition-opacity" />
     </div>
   );
 };

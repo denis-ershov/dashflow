@@ -38,6 +38,7 @@ export interface WidgetDefinition<S = Record<string, unknown>> {
   permissions?: WidgetPermission[];
   settingsSchema?: WidgetSettingFieldSchema<S>[];
   load: () => Promise<{ default: React.ComponentType<WidgetProps<S>> }>;
+  loadSettings?: () => Promise<{ default: React.ComponentType<{ settings: S; onChange: (newSettings: S) => void }> }>;
 }
 ```
 
@@ -58,6 +59,7 @@ export interface WidgetDefinition<S = Record<string, unknown>> {
 - `'storage'`: Доступ к изолированному хранилищу настроек.
 - `'network'`: Право выполнять сетевые запросы `fetch`.
 - `'bookmarks'`: Доступ к синхронизации с закладками Chrome.
+- `'geolocation'`: Доступ к определению текущего местоположения пользователя (`navigator.geolocation`).
 - `'geolocation'`: Доступ к координатам пользователя для прогноза погоды.
 
 ---

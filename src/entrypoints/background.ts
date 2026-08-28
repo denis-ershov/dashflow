@@ -10,18 +10,32 @@ export default defineBackground(() => {
   });
 
   // Фоновый прокси для безошибочного парсинга RSS лент без ограничений CORS
-  browser.runtime.onMessage.addListener((message: any, sender, sendResponse: any) => {
+  chrome.runtime.onMessage.addListener((message: any, _sender, sendResponse: (response?: any) => void) => {
     if (message && message.type === 'FETCH_RSS_FEED' && message.url) {
-      fetch(message.url)
-        .then((res) => res.text())
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      fetch(message.url, {
+        signal: controller.signal,
+        headers: {
+          Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
+        },
+      })
+        .then((res) => {
+          clearTimeout(timeoutId);
+          if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+          return res.text();
+        })
         .then((xmlText) => {
           sendResponse({ success: true, xml: xmlText });
         })
         .catch((err) => {
+          clearTimeout(timeoutId);
           sendResponse({ success: false, error: err.toString() });
         });
+
       return true;
     }
-    return true;
+    return false;
   });
 });

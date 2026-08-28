@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, Globe, Youtube, Github, ArrowRight, Sparkles, Code, ChevronDown, X } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { Search, Globe, Youtube, Github, ArrowRight, Sparkles, Code, ChevronDown, X, Check } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { cn } from '@/ui/lib/cn';
 import type { SearchEngineId, SearchSettings } from './types';
@@ -75,13 +76,18 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
   );
   const [query, setQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number }>({
+    top: 0,
+    left: 0,
+  });
 
   const searchStyle = settings?.searchStyle || 'bar';
   const showEngineSelector = settings?.showEngineSelector !== false;
   const openInNewTab = Boolean(settings?.openInNewTab);
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (settings?.engine) {
@@ -89,20 +95,67 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
     }
   }, [settings?.engine]);
 
-  // Закрытие выпадающего списка при клике вне компонента
+  // Вычисление координат для портального меню
+  const updateDropdownPos = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + 6,
+        left: Math.max(8, Math.min(rect.left, window.innerWidth - 240)),
+      });
+    }
+  }, []);
+
+  const toggleDropdown = () => {
+    if (!isDropdownOpen) {
+      updateDropdownPos();
+      setIsDropdownOpen(true);
+    } else {
+      setIsDropdownOpen(false);
+    }
+  };
+
+  // Закрытие выпадающего списка при клике вне компонента, скролле или Escape
   useEffect(() => {
+    if (!isDropdownOpen) return;
+
+    updateDropdownPos();
+
     const handleOutsideClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(target) &&
+        dropdownMenuRef.current &&
+        !dropdownMenuRef.current.contains(target)
+      ) {
         setIsDropdownOpen(false);
       }
     };
-    if (isDropdownOpen) {
-      document.addEventListener('mousedown', handleOutsideClick);
-    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsDropdownOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
+
+    const handleScrollOrResize = () => {
+      updateDropdownPos();
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+    window.addEventListener('resize', handleScrollOrResize);
+
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
     };
-  }, [isDropdownOpen]);
+  }, [isDropdownOpen, updateDropdownPos]);
 
   const currentEngine = ENGINES[activeEngine] || ENGINES.google;
 
@@ -153,47 +206,77 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
           >
             {/* Селектор поисковика */}
             {showEngineSelector && (
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative">
                 <button
+                  ref={buttonRef}
                   type="button"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onClick={toggleDropdown}
+                  aria-haspopup="true"
+                  aria-expanded={isDropdownOpen}
                   aria-label={`Выбрать поисковую систему (текущая: ${currentEngine.name})`}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl hover:bg-surface-hover transition-colors text-xs font-semibold text-fg cursor-pointer"
+                  className={cn(
+                    'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition-colors text-xs font-semibold text-fg cursor-pointer',
+                    isDropdownOpen ? 'bg-surface-hover text-primary' : 'hover:bg-surface-hover',
+                  )}
                 >
                   <span className="shrink-0">{currentEngine.icon}</span>
                   <span className="hidden sm:inline-block max-w-[80px] truncate">
                     {currentEngine.name}
                   </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-fg-muted shrink-0" />
+                  <ChevronDown
+                    className={cn(
+                      'w-3.5 h-3.5 text-fg-muted shrink-0 transition-transform duration-fast',
+                      isDropdownOpen && 'rotate-180 text-primary',
+                    )}
+                  />
                 </button>
 
-                {/* Выпадающее меню выбора */}
-                {isDropdownOpen && (
-                  <div
-                    className="absolute top-full left-0 mt-2 z-50 w-52 p-1.5 rounded-2xl shadow-3 border border-line animate-fade-in"
-                    style={{ backgroundColor: 'var(--dashflow-surface-elevated, #18181b)' }}
-                  >
-                    <div className="text-[10px] font-semibold text-fg-dim px-2.5 py-1 uppercase tracking-wider">
-                      Поисковая система
-                    </div>
-                    {ENGINES_LIST.map((eng) => (
-                      <button
-                        key={eng.id}
-                        type="button"
-                        onClick={() => handleSelectEngine(eng.id)}
-                        className={cn(
-                          'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer text-left',
-                          activeEngine === eng.id
-                            ? 'bg-primary text-primary-fg font-semibold'
-                            : 'hover:bg-surface-hover text-fg',
-                        )}
-                      >
-                        <span className="shrink-0">{eng.icon}</span>
-                        <span className="truncate">{eng.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {/* Выпадающее меню выбора через Portal без ограничений overflow/скролла */}
+                {isDropdownOpen &&
+                  typeof document !== 'undefined' &&
+                  createPortal(
+                    <div
+                      ref={dropdownMenuRef}
+                      className="fixed z-[99999] w-56 p-1.5 rounded-2xl shadow-3 border border-line animate-fade-in backdrop-blur-xl"
+                      style={{
+                        top: `${dropdownPos.top}px`,
+                        left: `${dropdownPos.left}px`,
+                        backgroundColor: 'var(--dashflow-surface-elevated, rgba(24, 24, 27, 0.96))',
+                      }}
+                      role="menu"
+                      aria-label="Поисковая система"
+                    >
+                      <div className="text-[10px] font-semibold text-fg-dim px-2.5 py-1 uppercase tracking-wider select-none">
+                        Поисковая система
+                      </div>
+                      <div className="flex flex-col gap-0.5 mt-0.5">
+                        {ENGINES_LIST.map((eng) => {
+                          const isSelected = activeEngine === eng.id;
+                          return (
+                            <button
+                              key={eng.id}
+                              type="button"
+                              role="menuitem"
+                              onClick={() => handleSelectEngine(eng.id)}
+                              className={cn(
+                                'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer text-left',
+                                isSelected
+                                  ? 'bg-primary text-primary-fg font-semibold shadow-1'
+                                  : 'hover:bg-surface-hover text-fg',
+                              )}
+                            >
+                              <span className="shrink-0">{eng.icon}</span>
+                              <span className="truncate flex-1">{eng.name}</span>
+                              {isSelected && (
+                                <Check className="w-3.5 h-3.5 shrink-0 opacity-90 stroke-[2.5]" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>,
+                    document.body,
+                  )}
               </div>
             )}
 

@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/ui/lib/cn';
 import { Button } from '@/ui/primitives/Button';
@@ -34,7 +35,7 @@ export const Modal: React.FC<ModalProps> = ({
     '2xl': 'max-w-2xl',
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-3 sm:p-4">
       {/* Backdrop */}
       <button
@@ -54,7 +55,7 @@ export const Modal: React.FC<ModalProps> = ({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'relative w-full bg-surface text-fg border border-line rounded-lg shadow-3 overflow-hidden flex flex-col max-h-[90vh] animate-scale-in duration-normal focus-visible:outline-none',
+          'relative w-full bg-surface text-fg border border-line rounded-xl shadow-3 overflow-hidden flex flex-col max-h-[90vh] animate-scale-in duration-normal focus-visible:outline-none',
           widthClasses[maxWidth],
           className,
         )}
@@ -80,4 +81,8 @@ export const Modal: React.FC<ModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined'
+    ? createPortal(modalContent, document.body)
+    : modalContent;
 };

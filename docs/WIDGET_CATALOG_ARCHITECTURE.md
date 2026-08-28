@@ -8,7 +8,7 @@
 |---|---|---|---|---|---|
 | `clock` | `widgets.clock` | `utilities` | `chromeless` | — | Цифровые часы и дата с Intl форматированием 12/24ч, секунды и выбор шрифта |
 | `search` | `widgets.search` | `utilities` | `chromeless` | — | Поисковая строка Spotlight с переключателями систем (Google, Yandex, DuckDuckGo, Bing, YouTube, GitHub) |
-| `weather` | `widgets.weather` | `utilities` | `panel` | `network`, `storage` | Погода Open-Meteo 2.0 с почасовым прогнозом на 6 часов, влажностью, ветром и автоопределением геопозиции |
+| `weather` | `widgets.weather` | `utilities` | `panel` | `network`, `storage`, `geolocation` | Умная метеостанция 3.0 с авто-геолокацией, 4 макетами (dashboard, compact, hourly, weekly), 24ч прогнозом, 7-дневными Apple-style термо-барами, сеткой атмосферных метрик и кастомными настройками |
 | `todo` | `widgets.todo` | `productivity` | `panel` | `storage` | Менеджер задач 2.0 со счетчиком прогресса дня, очисткой выполненных, приоритетами и фильтрами |
 | `notes` | `widgets.notes` | `productivity` | `panel` | `storage` | Заметки Pro с переключением Правка / Markdown предпросмотр, счетчиком слов и символов |
 | `quickLinks` | `widgets.quickLinks` | `productivity` | `tiles` | `storage` | Плитки быстрых ссылок со стеклянным нео-оформлением и авто-фавиконками |

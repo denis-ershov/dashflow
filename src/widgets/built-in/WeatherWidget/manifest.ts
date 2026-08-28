@@ -5,15 +5,15 @@ export const weatherManifest: WidgetDefinition<WeatherSettings> = {
   id: 'weather',
   nameKey: 'widgets.weather',
   descriptionKey: 'widgetDesc.weather',
-  version: '2.5.0',
+  version: '3.7.0',
   iconName: 'CloudSun',
   category: 'utilities',
   surface: 'panel',
-  permissions: ['network', 'storage'],
+  permissions: ['network', 'storage', 'geolocation'],
   size: {
     defaultW: 4,
     defaultH: 2,
-    minW: 3,
+    minW: 2,
     minH: 2,
   },
   settingsSchema: [
@@ -25,7 +25,7 @@ export const weatherManifest: WidgetDefinition<WeatherSettings> = {
     },
     {
       key: 'tempUnit',
-      labelKey: 'Единицы измерения',
+      labelKey: 'Единицы измерения температуры',
       type: 'select',
       defaultValue: 'celsius',
       options: [
@@ -34,29 +34,18 @@ export const weatherManifest: WidgetDefinition<WeatherSettings> = {
       ],
     },
     {
-      key: 'showHourly',
-      labelKey: 'Показывать почасовой прогноз',
-      type: 'boolean',
-      defaultValue: true,
-    },
-    {
-      key: 'showFeelsLike',
-      labelKey: 'Показывать ощущаемую температуру',
-      type: 'boolean',
-      defaultValue: true,
-    },
-    {
-      key: 'showHumidity',
-      labelKey: 'Показывать влажность',
-      type: 'boolean',
-      defaultValue: true,
-    },
-    {
-      key: 'showWind',
-      labelKey: 'Показывать скорость ветра',
-      type: 'boolean',
-      defaultValue: true,
+      key: 'viewMode',
+      labelKey: 'Режим отображения',
+      type: 'select',
+      defaultValue: 'dashboard',
+      options: [
+        { labelKey: 'Метеостанция (Дашборд)', value: 'dashboard' },
+        { labelKey: 'Компактный', value: 'compact' },
+        { labelKey: 'По часам (24 часа)', value: 'hourly' },
+        { labelKey: 'На 7 дней', value: 'weekly' },
+      ],
     },
   ],
   load: () => import('./WeatherWidget').then((m) => ({ default: m.WeatherWidget })),
+  loadSettings: () => import('./WeatherSettingsForm').then((m) => ({ default: m.WeatherSettingsForm })),
 };

@@ -325,7 +325,7 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
   const isSpeedDial = shape === 'square' || shape === 'circle';
 
   const containerClass = cn(
-    'group transition-all duration-200 cursor-pointer select-none',
+    'group/tile transition-all duration-200 ease-out cursor-pointer select-none',
     shapeClass,
     !isSpeedDial && 'border',
     !isSpeedDial && cardStyleClasses,
@@ -336,18 +336,21 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
   return {
     containerClass,
     iconContainerClass: cn(
-      'flex items-center justify-center shrink-0 border transition-all duration-200 overflow-hidden relative',
+      'flex items-center justify-center shrink-0 border transition-all duration-200 ease-out overflow-hidden relative',
       isSpeedDial
-        ? cn(cardStyleClasses, 'group-hover:scale-105 group-active:scale-95')
-        : 'bg-surface-hover/80 border-line/40 group-hover:scale-105',
+        ? cn(
+            cardStyleClasses,
+            'group-hover/tile:scale-110 group-hover/tile:-translate-y-1 group-hover/tile:shadow-2 group-hover/tile:border-primary/60 group-active/tile:scale-95',
+          )
+        : 'bg-surface-hover/80 border-line/40 group-hover/tile:scale-105',
       iconContainerClass,
     ),
-    iconImgClass: cn('object-contain shrink-0', iconImgClass),
+    iconImgClass: cn('object-contain shrink-0 transition-transform duration-200', iconImgClass),
     titleClass: cn(
-      'text-fg truncate block group-hover:text-primary transition-colors',
+      'text-fg truncate block group-hover/tile:text-primary transition-colors duration-200',
       titleClass,
     ),
-    urlClass: cn('truncate block text-fg-muted', urlClass),
+    urlClass: cn('truncate block text-fg-muted transition-colors duration-200', urlClass),
   };
 }
 

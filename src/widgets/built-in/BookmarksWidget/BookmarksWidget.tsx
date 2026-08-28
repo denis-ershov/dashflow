@@ -985,7 +985,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
 
                   {/* Иконка внешней ссылки при наведении для карточек */}
                   {!isEditMode && !isSpeedDialShape && item.url && (
-                    <ExternalLink className="w-3.5 h-3.5 text-fg-muted opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-1" />
+                    <ExternalLink className="w-3.5 h-3.5 text-fg-muted opacity-0 group-hover/tile:opacity-100 transition-opacity shrink-0 ml-1" />
                   )}
                 </div>
               ))}
@@ -997,10 +997,10 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                 <div
                   key={item.id}
                   onClick={() => handleItemClick(item)}
-                  className="group flex items-center justify-between p-2.5 rounded-xl bg-surface/70 hover:bg-surface border border-line hover:border-primary/50 transition-all cursor-pointer select-none backdrop-blur-sm"
+                  className="group/tile flex items-center justify-between p-2.5 rounded-xl bg-surface/70 hover:bg-surface border border-line hover:border-primary/50 transition-all duration-200 ease-out cursor-pointer select-none backdrop-blur-sm hover:translate-x-0.5 hover:shadow-1"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-surface-hover flex items-center justify-center shrink-0 border border-line/40 overflow-hidden">
+                    <div className="w-8 h-8 rounded-lg bg-surface-hover flex items-center justify-center shrink-0 border border-line/40 overflow-hidden group-hover/tile:scale-105 transition-transform duration-200">
                       <BookmarkFavicon
                         title={item.title}
                         url={item.url}
@@ -1009,7 +1009,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                       />
                     </div>
                     <div className="min-w-0">
-                      <span className="text-xs font-semibold text-fg truncate block group-hover:text-primary transition-colors">
+                      <span className="text-xs font-semibold text-fg truncate block group-hover/tile:text-primary transition-colors duration-200">
                         {item.title}
                       </span>
                       <span className="text-[10px] text-fg-muted truncate block">
@@ -1039,7 +1039,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   ) : (
-                    <ExternalLink className="w-3.5 h-3.5 text-fg-muted opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                    <ExternalLink className="w-3.5 h-3.5 text-fg-muted opacity-0 group-hover/tile:opacity-100 transition-opacity shrink-0" />
                   )}
                 </div>
               ))}
@@ -1099,10 +1099,10 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                 <div
                   key={tab.id}
                   onClick={() => switchToOpenTab(tab.id)}
-                  className="group flex items-center justify-between p-2.5 rounded-xl bg-surface/70 hover:bg-surface border border-line hover:border-primary/50 transition-all cursor-pointer select-none"
+                  className="group/tile flex items-center justify-between p-2.5 rounded-xl bg-surface/70 hover:bg-surface border border-line hover:border-primary/50 transition-all duration-200 ease-out cursor-pointer select-none hover:translate-x-0.5 hover:shadow-1"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-surface-hover flex items-center justify-center shrink-0 border border-line/40 overflow-hidden">
+                    <div className="w-8 h-8 rounded-lg bg-surface-hover flex items-center justify-center shrink-0 border border-line/40 overflow-hidden group-hover/tile:scale-105 transition-transform duration-200">
                       <BookmarkFavicon
                         title={tab.title}
                         url={tab.url}
@@ -1111,7 +1111,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                       />
                     </div>
                     <div className="min-w-0">
-                      <span className="text-xs font-semibold text-fg truncate block group-hover:text-primary transition-colors">
+                      <span className="text-xs font-semibold text-fg truncate block group-hover/tile:text-primary transition-colors duration-200">
                         {tab.title}
                       </span>
                       <span className="text-[10px] text-fg-muted truncate block">{tab.url}</span>
@@ -1189,14 +1189,14 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                 <div
                   key={item.id}
                   onClick={() => restoreTab(item)}
-                  className="group flex items-center justify-between p-2.5 rounded-xl bg-surface/70 hover:bg-surface border border-line hover:border-primary/50 transition-all cursor-pointer select-none"
+                  className="group/tile flex items-center justify-between p-2.5 rounded-xl bg-surface/70 hover:bg-surface border border-line hover:border-primary/50 transition-all duration-200 ease-out cursor-pointer select-none hover:translate-x-0.5 hover:shadow-1"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-surface-hover flex items-center justify-center shrink-0 border border-line/40 overflow-hidden">
+                    <div className="w-8 h-8 rounded-lg bg-surface-hover flex items-center justify-center shrink-0 border border-line/40 overflow-hidden group-hover/tile:scale-105 transition-transform duration-200">
                       <BookmarkFavicon title={item.title} url={item.url} imgClass="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <span className="text-xs font-semibold text-fg truncate block group-hover:text-primary transition-colors">
+                      <span className="text-xs font-semibold text-fg truncate block group-hover/tile:text-primary transition-colors duration-200">
                         {item.title}
                       </span>
                       <span className="text-[10px] text-fg-muted truncate block">{item.url}</span>

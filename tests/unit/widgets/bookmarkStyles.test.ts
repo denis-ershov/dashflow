@@ -99,6 +99,13 @@ describe('bookmarkStyles helper', () => {
     expect(getBookmarkGridClass(3, 'rectangle-horizontal')).toContain('lg:grid-cols-3');
     expect(getBookmarkGridClass('auto', 'rectangle-horizontal')).toContain('xl:grid-cols-5');
   });
+
+  it('должен использовать изолированную группу group/tile для предотвращения ложных ховеров всего виджета', () => {
+    const classes = getBookmarkTileClasses({ tileShape: 'square' });
+    expect(classes.containerClass).toContain('group/tile');
+    expect(classes.iconContainerClass).toContain('group-hover/tile:');
+    expect(classes.titleClass).toContain('group-hover/tile:');
+  });
 });
 
 
