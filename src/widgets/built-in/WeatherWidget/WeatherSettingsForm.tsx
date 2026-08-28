@@ -40,6 +40,7 @@ const VIEW_MODES: { id: WeatherViewMode; title: string; desc: string; icon: Reac
 
 export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settings, onChange }) => {
   const [cityInput, setCityInput] = useState(settings.city || 'Москва');
+  const [isUserEditing, setIsUserEditing] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
 
@@ -51,12 +52,14 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
 
   useEffect(() => {
     setCityInput(settings.city || 'Москва');
+    setIsUserEditing(false);
   }, [settings.city]);
 
-  // Дебаунс живого поиска городов
+  // Дебаунс живого поиска городов (только если пользователь сам вводит текст)
   useEffect(() => {
-    if (!cityInput || cityInput.trim().length < 2 || settings.autoLocation) {
+    if (!isUserEditing || !cityInput || cityInput.trim().length < 2 || settings.autoLocation) {
       setSuggestions([]);
+      setShowSuggestions(false);
       return;
     }
 
@@ -72,7 +75,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [cityInput, settings.autoLocation]);
+  }, [cityInput, settings.autoLocation, isUserEditing]);
 
   // Закрытие подсказок при клике вне поля
   useEffect(() => {
@@ -88,6 +91,8 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
   const handleDetectGeo = async () => {
     setIsDetectingLocation(true);
     setLocationError(null);
+    setIsUserEditing(false);
+    setShowSuggestions(false);
     try {
       const coords = await detectUserLocation();
       onChange({
@@ -106,7 +111,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
   };
 
   const handleSelectCity = (item: CitySearchResult) => {
-    const displayName = `${item.name}${item.country ? `, ${item.country}` : ''}`;
+    setIsUserEditing(false);
     setCityInput(item.name);
     setShowSuggestions(false);
     onChange({
@@ -153,13 +158,14 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
               type="text"
               value={cityInput}
               onChange={(e) => {
+                setIsUserEditing(true);
                 setCityInput(e.target.value);
                 if (settings.autoLocation) {
                   onChange({ ...settings, autoLocation: false });
                 }
               }}
               onFocus={() => {
-                if (suggestions.length > 0) setShowSuggestions(true);
+                if (isUserEditing && suggestions.length > 0) setShowSuggestions(true);
               }}
               placeholder="Введите город (напр. Москва, Сочи, Лондон)..."
               className="w-full bg-surface border border-line rounded-xl pl-9 pr-8 py-2 text-sm text-fg placeholder:text-fg-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
