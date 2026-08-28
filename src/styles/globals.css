@@ -62,21 +62,115 @@
   }
 }
 
+/* ── Glassmorphism 2.0 Utilities ────────────────────────────────────────── */
+
 .glass-panel {
   background-color: var(--dashflow-glass-bg);
-  backdrop-filter: blur(var(--dashflow-glass-blur));
-  -webkit-backdrop-filter: blur(var(--dashflow-glass-blur));
+  backdrop-filter: blur(var(--dashflow-glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--dashflow-glass-blur)) saturate(180%);
   border: 1px solid var(--dashflow-glass-border);
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--dashflow-glass-shadow), var(--shadow-2);
   transition:
     border-color var(--transition-normal),
     box-shadow var(--transition-normal),
+    background-color var(--transition-normal),
     transform var(--transition-normal);
 }
 
 .glass-panel:hover {
+  border-color: var(--dashflow-glass-border-hover);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.45), 0 0 30px var(--dashflow-primary-glow);
+}
+
+.glass-card {
+  background-color: var(--dashflow-surface);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid var(--dashflow-line);
+  box-shadow: var(--shadow-1);
+  border-radius: var(--dashflow-radius-lg, 16px);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.glass-card:hover {
+  background-color: var(--dashflow-surface-hover);
   border-color: var(--dashflow-line-hover);
-  box-shadow: 0 0 40px var(--dashflow-primary-glow);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-1px);
+}
+
+.glass-pill {
+  background-color: var(--dashflow-glass-bg);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid var(--dashflow-glass-border);
+  border-radius: 9999px;
+  box-shadow: 0 4px 20px rgb(0 0 0 / 0.25);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.glass-pill:hover {
+  background-color: var(--dashflow-glass-bg-hover);
+  border-color: var(--dashflow-glass-border-hover);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.35), 0 0 20px var(--dashflow-primary-glow);
+  transform: translateY(-1px);
+}
+
+.glass-input {
+  background-color: var(--dashflow-glass-bg-subtle);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--dashflow-line);
+  color: var(--dashflow-fg);
+  border-radius: var(--dashflow-radius-md, 12px);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.glass-input:focus {
+  background-color: var(--dashflow-glass-bg-hover);
+  border-color: var(--dashflow-primary);
+  box-shadow: 0 0 0 3px var(--dashflow-primary-glow);
+  outline: none;
+}
+
+.glass-subtle {
+  background-color: rgb(255 255 255 / 0.04);
+  border: 1px solid rgb(255 255 255 / 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ── Typography Helper Classes ─────────────────────────────────────────── */
+
+.font-sofia {
+  font-family: var(--dashflow-font-sofia);
+}
+
+.font-display {
+  font-family: var(--dashflow-font-display);
+}
+
+.font-serif {
+  font-family: var(--dashflow-font-serif);
+}
+
+.font-mono {
+  font-family: var(--dashflow-font-mono);
+}
+
+.font-friendly {
+  font-family: var(--dashflow-font-friendly);
 }
 
 /* ── Сетка виджетов: базовые стили и правки react-grid-layout ────────────── */

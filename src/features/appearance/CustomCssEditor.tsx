@@ -53,8 +53,8 @@ export const CustomCssEditor: React.FC = () => {
             setCode(e.target.value);
             if (error) setError(null);
           }}
-          placeholder="/* Пример: .glass-panel { border-radius: 12px; } */"
-          className="w-full h-56 bg-canvas text-fg font-mono text-xs border border-line rounded-md p-4 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 resize-y"
+          placeholder="/* Пример: .glass-panel { border-radius: 16px; } */"
+          className="w-full h-56 bg-canvas text-fg font-mono text-xs border border-line rounded-xl p-4 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 resize-y"
         />
 
         <div className="flex items-center justify-between text-xs text-fg-muted px-1">
@@ -63,14 +63,14 @@ export const CustomCssEditor: React.FC = () => {
       </div>
 
       {error && (
-        <div role="alert" className="p-3 rounded-md bg-danger/10 border border-danger/20 text-danger text-xs flex items-center gap-2">
+        <div role="alert" className="p-3 rounded-xl bg-danger/10 border border-danger/20 text-danger text-xs flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Переключатель внешних ресурсов */}
-      <div className="p-3 rounded-md bg-surface border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="p-3 rounded-xl bg-surface border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="space-y-1">
           <p className="text-xs font-semibold text-fg">Разрешить внешние ресурсы (https)</p>
           <p className="text-xs text-fg-muted">

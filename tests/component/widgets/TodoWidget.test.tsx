@@ -18,9 +18,14 @@ describe('TodoWidget Component & Manifest', () => {
   });
 
   it('должен отображать задачи из хранилища', async () => {
-    vi.spyOn(StorageAdapter, 'get').mockResolvedValue([
-      { id: '1', text: 'Первая задача', completed: false, priority: 'high' },
-    ]);
+    vi.spyOn(StorageAdapter, 'get').mockImplementation((key) => {
+      if (key === 'dashflow_widget_todo_items') {
+        return Promise.resolve([
+          { id: '1', text: 'Первая задача', completed: false, priority: 'high' },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
 
     render(<TodoWidget instanceId="todo-1" settings={{ filter: 'all' }} />);
 
@@ -54,9 +59,14 @@ describe('TodoWidget Component & Manifest', () => {
   });
 
   it('должен переключать статус выполнения задачи', async () => {
-    vi.spyOn(StorageAdapter, 'get').mockResolvedValue([
-      { id: '1', text: 'Сделать рефакторинг', completed: false, priority: 'medium' },
-    ]);
+    vi.spyOn(StorageAdapter, 'get').mockImplementation((key) => {
+      if (key === 'dashflow_widget_todo_items') {
+        return Promise.resolve([
+          { id: '1', text: 'Сделать рефакторинг', completed: false, priority: 'medium' },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
     const setSpy = vi.spyOn(StorageAdapter, 'set').mockResolvedValue();
 
     render(<TodoWidget instanceId="todo-1" settings={{ filter: 'all' }} />);
@@ -72,6 +82,34 @@ describe('TodoWidget Component & Manifest', () => {
       'dashflow_widget_todo_items',
       expect.arrayContaining([
         expect.objectContaining({ id: '1', completed: true }),
+      ]),
+    );
+  });
+
+  it('должен переключаться на вкладку привычек и отмечать день', async () => {
+    vi.spyOn(StorageAdapter, 'get').mockImplementation((key) => {
+      if (key === 'dashflow_widget_habit_items') {
+        return Promise.resolve([
+          { id: 'h1', title: 'Пить воду', history: {} },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
+    const setSpy = vi.spyOn(StorageAdapter, 'set').mockResolvedValue();
+
+    render(<TodoWidget instanceId="todo-1" settings={{ defaultTab: 'habits' }} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Пить воду')).toBeInTheDocument();
+    });
+
+    const dayBtn = screen.getByRole('button', { name: /отметить пн для пить воду/i });
+    fireEvent.click(dayBtn);
+
+    expect(setSpy).toHaveBeenCalledWith(
+      'dashflow_widget_habit_items',
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'h1' }),
       ]),
     );
   });

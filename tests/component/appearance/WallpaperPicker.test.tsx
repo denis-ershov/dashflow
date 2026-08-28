@@ -20,7 +20,7 @@ describe('WallpaperPicker', () => {
     const user = userEvent.setup();
     render(<WallpaperPicker />);
 
-    const presetBtn = screen.getByRole('button', { name: /Unsplash Nature/i });
+    const presetBtn = screen.getByRole('button', { name: /Горное озеро/i });
     await user.click(presetBtn);
 
     expect(useThemeStore.getState().wallpaperUrl).toContain('unsplash.com');

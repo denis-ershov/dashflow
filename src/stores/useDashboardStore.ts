@@ -33,6 +33,9 @@ export interface DashboardState {
   version: 2;
   isEditMode: boolean;
   isLocked: boolean;
+  layoutMode: 'zen' | 'modular';
+  heroSettings: import('@/core/storage').HeroSettings;
+  speedDialLinks: import('@/core/storage').SpeedDialLink[];
   isCommandPaletteOpen: boolean;
   baseColumns: BaseColumns;
   /** Псевдоним baseColumns для обратной совместимости с v1 */
@@ -48,6 +51,11 @@ export interface DashboardState {
   toggleEditMode: () => void;
   setEditMode: (val: boolean) => void;
   setLocked: (val: boolean) => void;
+  setLayoutMode: (mode: 'zen' | 'modular') => void;
+  updateHeroSettings: (settings: Partial<import('@/core/storage').HeroSettings>) => void;
+  addSpeedDialLink: (link: Omit<import('@/core/storage').SpeedDialLink, 'id'>) => void;
+  removeSpeedDialLink: (id: string) => void;
+  updateSpeedDialLink: (id: string, link: Partial<import('@/core/storage').SpeedDialLink>) => void;
   setCommandPaletteOpen: (val: boolean) => void;
   setBaseColumns: (cols: BaseColumns) => void;
   setColumns: (cols: BaseColumns) => void;
@@ -100,6 +108,26 @@ export const useDashboardStore = create<DashboardState>()(
       toggleEditMode: () => set((state) => ({ isEditMode: !state.isEditMode })),
       setEditMode: (val) => set({ isEditMode: val }),
       setLocked: (val) => set({ isLocked: val }),
+      setLayoutMode: (mode) => set({ layoutMode: mode }),
+      updateHeroSettings: (settings) =>
+        set((state) => ({
+          heroSettings: { ...state.heroSettings, ...settings },
+        })),
+      addSpeedDialLink: (link) =>
+        set((state) => ({
+          speedDialLinks: [
+            ...state.speedDialLinks,
+            { ...link, id: `sd-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` },
+          ],
+        })),
+      removeSpeedDialLink: (id) =>
+        set((state) => ({
+          speedDialLinks: state.speedDialLinks.filter((l) => l.id !== id),
+        })),
+      updateSpeedDialLink: (id, link) =>
+        set((state) => ({
+          speedDialLinks: state.speedDialLinks.map((l) => (l.id === id ? { ...l, ...link } : l)),
+        })),
       setCommandPaletteOpen: (val) => set({ isCommandPaletteOpen: val }),
       setBaseColumns: (cols) =>
         set((state) => {

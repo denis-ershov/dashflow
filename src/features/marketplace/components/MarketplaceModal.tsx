@@ -8,10 +8,8 @@ import { Button, Input, Badge } from '@/ui/primitives';
 import { EmptyState } from '@/ui/feedback';
 import { PermissionConsentModal } from '@/features/permissions/PermissionConsentModal';
 import { PermissionManager } from '@/core/permissions/permissionManager';
-import { validatePluginManifest } from '@/core/plugins/validator';
 import type { WidgetCategory } from '@/core/widget/types';
 import {
-  Download,
   ShieldAlert,
   Search,
   Code2,
@@ -177,42 +175,46 @@ export const MarketplaceModal: React.FC = () => {
       >
         <div className="space-y-4 select-none">
           {/* Главные вкладки типов */}
-          <div className="flex items-center gap-1.5 bg-surface/50 p-1 rounded-xl border border-line">
+          <div className="flex items-center gap-2 bg-surface/50 p-1 rounded-xl border border-line">
             <button
+              type="button"
               onClick={() => setActiveTab('all')}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'all'
-                  ? 'bg-primary text-primary-fg shadow-sm'
+                  ? 'bg-primary text-primary-fg shadow-1'
                   : 'text-fg-muted hover:text-fg'
               }`}
             >
               Все ({combinedItems.length})
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('builtin')}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'builtin'
-                  ? 'bg-primary text-primary-fg shadow-sm'
+                  ? 'bg-primary text-primary-fg shadow-1'
                   : 'text-fg-muted hover:text-fg'
               }`}
             >
               Встроенные ({allBuiltin.length})
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('custom')}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'custom'
-                  ? 'bg-primary text-primary-fg shadow-sm'
+                  ? 'bg-primary text-primary-fg shadow-1'
                   : 'text-fg-muted hover:text-fg'
               }`}
             >
               Плагины ({plugins.length})
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('import')}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'import'
-                  ? 'bg-secondary text-secondary-fg shadow-sm'
+                  ? 'bg-secondary text-secondary-fg shadow-1'
                   : 'text-fg-muted hover:text-fg'
               }`}
             >
@@ -223,7 +225,7 @@ export const MarketplaceModal: React.FC = () => {
           {activeTab === 'import' ? (
             /* Вкладка импорта декларативного JSON-плагина */
             <div className="space-y-4 p-2">
-              <div className="flex items-start gap-3 p-3.5 rounded-xl bg-surface/60 border border-line">
+              <div className="flex items-start gap-3 p-3 rounded-xl glass-panel border border-line">
                 <FileJson className="w-6 h-6 text-primary shrink-0 mt-0.5" />
                 <div className="text-xs text-fg-muted leading-relaxed">
                   <span className="font-semibold text-fg block mb-1">
@@ -242,7 +244,7 @@ export const MarketplaceModal: React.FC = () => {
 
               {importStatus && (
                 <div
-                  className={`p-3 rounded-lg text-xs flex items-center gap-2 ${
+                  className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
                     importStatus.success
                       ? 'bg-success/10 text-success border border-success/20'
                       : 'bg-danger/10 text-danger border border-danger/20'
@@ -278,14 +280,15 @@ export const MarketplaceModal: React.FC = () => {
                   aria-label="Поиск по каталогу"
                 />
 
-                <div className="flex space-x-1.5 overflow-x-auto pb-1 select-none">
+                <div className="flex gap-2 overflow-x-auto pb-1 select-none">
                   {categories.map((cat) => (
                     <button
                       key={cat.key}
+                      type="button"
                       onClick={() => setSelectedCategory(cat.key)}
                       className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer shrink-0 ${
                         selectedCategory === cat.key
-                          ? 'bg-primary text-primary-fg shadow-sm'
+                          ? 'bg-primary text-primary-fg shadow-1'
                           : 'bg-surface text-fg-muted hover:text-fg hover:bg-surface-hover border border-line'
                       }`}
                     >
@@ -311,12 +314,12 @@ export const MarketplaceModal: React.FC = () => {
                     return (
                       <div
                         key={item.id}
-                        className="flex flex-col justify-between p-4 rounded-xl bg-surface/60 border border-line hover:border-primary/50 transition-all duration-normal"
+                        className="flex flex-col justify-between p-4 rounded-xl glass-panel border border-line hover:border-primary/50 transition-all duration-normal"
                       >
                         <div>
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex items-center gap-3">
-                              <div className="p-2.5 rounded-lg bg-surface border border-line shrink-0">
+                              <div className="p-2 rounded-xl bg-surface border border-line shrink-0">
                                 {item.isCustom ? (
                                   <Code2 className="w-5 h-5 text-secondary" />
                                 ) : (
@@ -338,13 +341,13 @@ export const MarketplaceModal: React.FC = () => {
                             </Badge>
                           </div>
 
-                          <p className="text-xs text-fg-muted mt-2.5 leading-relaxed line-clamp-2">
+                          <p className="text-xs text-fg-muted mt-2 leading-relaxed line-clamp-2">
                             {item.description}
                           </p>
 
                           {/* Разрешения */}
-                          <div className="flex items-center gap-1.5 mt-2.5">
-                            <ShieldAlert className="w-3.5 h-3.5 text-warning shrink-0" />
+                          <div className="flex items-center gap-2 mt-2">
+                            <ShieldAlert className="w-4 h-4 text-warning shrink-0" />
                             <span className="text-[10px] text-fg-muted truncate">
                               Права: {item.permissions.length > 0 ? item.permissions.join(', ') : 'Не требуются'}
                             </span>
@@ -361,7 +364,7 @@ export const MarketplaceModal: React.FC = () => {
                               <Button
                                 size="sm"
                                 variant="danger"
-                                icon={<Trash2 className="w-3.5 h-3.5" />}
+                                icon={<Trash2 className="w-4 h-4" />}
                                 onClick={() => uninstallPlugin(item.id)}
                                 aria-label="Удалить плагин"
                               />
@@ -382,7 +385,7 @@ export const MarketplaceModal: React.FC = () => {
                               <Button
                                 size="sm"
                                 variant="primary"
-                                icon={<Plus className="w-3.5 h-3.5" />}
+                                icon={<Plus className="w-4 h-4" />}
                                 onClick={() => handleAddClick(item)}
                               >
                                 Добавить на экран

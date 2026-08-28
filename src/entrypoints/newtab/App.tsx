@@ -1,22 +1,45 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '@/stores/useAppStore';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useTranslation } from '@/core/i18n';
 import { GridEngine } from '@/features/dashboard/components/GridEngine';
-import { NavRail } from '@/features/navigation/NavRail';
 import { CommandPalette } from '@/features/dashboard/components/CommandPalette';
 import { SettingsModal } from '@/features/settings/components/SettingsModal';
 import { AddWidgetModal } from '@/features/dashboard/components/AddWidgetModal';
 import { MarketplaceModal } from '@/features/marketplace/components/MarketplaceModal';
 import { AppearanceModal } from '@/features/appearance';
+import { HeroSection } from '@/features/hero';
+import { SpeedDialGrid, AddLinkModal } from '@/features/speedDial';
+import { FloatingDock } from '@/features/dock';
+import { AmbientSoundDrawer } from '@/features/audio';
+import { useAudioStore } from '@/core/audio';
 import { useThemeStore } from '@/core/theme/themeStore';
 import { Spinner, RootErrorBoundary } from '@/ui/feedback';
+import { ToastContainer } from '@/ui/primitives/Toast';
 
 function DashboardContent() {
   const { isInitialized, initialize: initApp } = useAppStore();
-  const { activeModal, setActiveModal, initializeDashboard } = useDashboardStore();
+  const {
+    activeModal,
+    setActiveModal,
+    initializeDashboard,
+    layoutMode,
+    setLayoutMode,
+    heroSettings,
+    updateHeroSettings,
+    speedDialLinks,
+    addSpeedDialLink,
+    removeSpeedDialLink,
+    isEditMode,
+    toggleEditMode,
+    setCommandPaletteOpen,
+  } = useDashboardStore();
   const initializeTheme = useThemeStore((state) => state.initialize);
+  const isAudioPlaying = useAudioStore((state) => Object.values(state.activeTracks).some(Boolean));
   const { t } = useTranslation();
+
+  const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
+  const [isAudioDrawerOpen, setIsAudioDrawerOpen] = useState(false);
 
   useEffect(() => {
     initApp();
@@ -38,21 +61,57 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-canvas text-fg transition-colors duration-normal relative sm:pl-16 pb-20 sm:pb-6">
-      {/* Навигационный рельс (Desktop: слева, Mobile: снизу) */}
-      <NavRail />
+    <div className="min-h-screen flex flex-col bg-canvas text-fg transition-colors duration-normal relative pb-28">
+      {/* Центральная Hero-зона */}
+      <section className="w-full pt-8 pb-4">
+        <HeroSection
+          settings={heroSettings}
+          onEngineChange={(eng) => updateHeroSettings({ defaultSearchEngine: eng })}
+        />
+        <SpeedDialGrid
+          links={speedDialLinks}
+          onAddClick={() => setIsAddLinkOpen(true)}
+          onRemoveLink={removeSpeedDialLink}
+        />
+      </section>
 
-      {/* Основная рабочая область дашборда */}
-      <main className="flex-1 w-full px-3 sm:px-6 py-4 sm:py-6">
-        <GridEngine />
-      </main>
+      {/* Модульная сетка виджетов (только в режиме Modular Dashboard) */}
+      {layoutMode === 'modular' && (
+        <main className="flex-1 w-full px-3 sm:px-6 py-4">
+          <GridEngine />
+        </main>
+      )}
+
+      {/* Плавающий нижний бар управления (Floating Dock) */}
+      <FloatingDock
+        layoutMode={layoutMode}
+        onToggleLayoutMode={() => setLayoutMode(layoutMode === 'zen' ? 'modular' : 'zen')}
+        onOpenAddWidget={() => setActiveModal('addWidget')}
+        onOpenAppearance={() => setActiveModal('themes')}
+        onOpenAudio={() => setIsAudioDrawerOpen(true)}
+        onOpenSettings={() => setActiveModal('settings')}
+        onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+        isEditMode={isEditMode}
+        onToggleEditMode={toggleEditMode}
+        isAudioPlaying={isAudioPlaying}
+      />
 
       {/* Модальные окна и оверлеи */}
       <CommandPalette />
       <SettingsModal />
       <AddWidgetModal />
       <MarketplaceModal />
-      <AppearanceModal isOpen={activeModal === 'themes'} onClose={() => setActiveModal(null)} />
+      <AppearanceModal isOpen={activeModal === 'themes' || activeModal === 'appearance'} onClose={() => setActiveModal(null)} />
+      <AddLinkModal
+        isOpen={isAddLinkOpen}
+        onClose={() => setIsAddLinkOpen(false)}
+        onAdd={addSpeedDialLink}
+      />
+      <AmbientSoundDrawer
+        isOpen={isAudioDrawerOpen}
+        onClose={() => setIsAudioDrawerOpen(false)}
+      />
+      <ToastContainer />
     </div>
   );
 }

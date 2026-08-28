@@ -42,7 +42,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         <div
           role="tooltip"
           className={cn(
-            'absolute z-[var(--z-overlay)] px-3 py-1 text-xs font-medium text-fg bg-surface border border-line rounded-md shadow-2 whitespace-nowrap pointer-events-none animate-fade-in duration-fast',
+            'absolute z-[var(--z-overlay)] px-3 py-1 text-xs font-medium text-fg bg-surface border border-line rounded-lg shadow-2 whitespace-nowrap pointer-events-none duration-fast',
             positionClasses[position],
             className,
           )}

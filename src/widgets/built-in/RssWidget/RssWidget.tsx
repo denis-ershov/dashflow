@@ -3,7 +3,6 @@ import { ExternalLink, RefreshCw } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { Skeleton } from '@/ui/feedback/Skeleton';
 import { EmptyState, ErrorState } from '@/ui/feedback';
-import { cn } from '@/ui/lib/cn';
 import type { RssItem, RssSettings } from './types';
 
 const DEFAULT_FEED_URL = 'https://habr.com/ru/rss/best/daily/';
@@ -106,7 +105,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({ settings }) => {
       // Единый хронологический поток (Spec Секция 9)
       allItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
       setItems(allItems);
-    } catch (err) {
+    } catch {
       setError('Не удалось загрузить RSS ленту');
     } finally {
       setLoading(false);
@@ -120,9 +119,9 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({ settings }) => {
   if (loading && items.length === 0) {
     return (
       <div className="p-3 space-y-3">
-        <Skeleton className="w-full h-16 rounded-lg" />
-        <Skeleton className="w-full h-16 rounded-lg" />
-        <Skeleton className="w-full h-16 rounded-lg" />
+        <Skeleton className="w-full h-16 rounded-xl" />
+        <Skeleton className="w-full h-16 rounded-xl" />
+        <Skeleton className="w-full h-16 rounded-xl" />
       </div>
     );
   }
@@ -160,14 +159,14 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({ settings }) => {
             target="_blank"
             rel="noopener noreferrer"
             referrerPolicy="no-referrer"
-            className="group flex flex-col p-2.5 rounded-lg bg-surface/70 border border-line/60 hover:border-primary hover:bg-surface-hover transition-all overflow-hidden"
+            className="group flex flex-col p-3 rounded-xl bg-surface border border-line hover:border-primary hover:bg-surface-hover transition-all overflow-hidden"
           >
             {viewMode === 'thumbnails' && item.thumbnail && (
               <img
                 src={item.thumbnail}
                 alt=""
                 referrerPolicy="no-referrer"
-                className="w-full h-24 object-cover rounded-md mb-2 border border-line/40"
+                className="w-full h-24 object-cover rounded-lg mb-2 border border-line"
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = 'none';
                 }}
@@ -178,7 +177,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({ settings }) => {
               <span className="text-xs font-semibold text-fg group-hover:text-primary line-clamp-2 transition-colors">
                 {item.title}
               </span>
-              <ExternalLink className="w-3.5 h-3.5 text-fg-muted shrink-0 mt-0.5" />
+              <ExternalLink className="w-4 h-4 text-fg-muted shrink-0 mt-0.5" />
             </div>
 
             {viewMode === 'cards' && item.description && (
@@ -187,7 +186,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({ settings }) => {
               </p>
             )}
 
-            <div className="flex items-center justify-between mt-2 pt-1 border-t border-line/30 text-[10px]">
+            <div className="flex items-center justify-between mt-2 pt-1 border-t border-line text-[10px]">
               <span className="text-secondary font-mono truncate max-w-[140px]">
                 {item.feedName}
               </span>

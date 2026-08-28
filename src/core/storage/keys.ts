@@ -18,6 +18,8 @@ export const STORAGE_KEYS = {
   WEATHER_CACHE: 'dashflow_weather_cache',
   /** Данные виджета Todo */
   TODO_ITEMS: 'dashflow_widget_todo_items',
+  /** Данные трекера привычек */
+  HABIT_ITEMS: 'dashflow_widget_habit_items',
   /** Данные виджета Заметок */
   NOTES_CONTENT: 'dashflow_widget_notes_content',
   /** Данные виджета Быстрых Ссылок */

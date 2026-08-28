@@ -6,10 +6,14 @@ import type { QuoteItem, QuotesSettings } from './types';
 const QUOTES_COLLECTION: QuoteItem[] = [
   { id: '1', text: 'Простота — необходимое условие надежности.', author: 'Эдсгер Дейкстра', category: 'code' },
   { id: '2', text: 'Сначала решите проблему. Затем пишите код.', author: 'Джон Джонсон', category: 'code' },
-  { id: '3', text: 'Код — это поэзия, создающая логику из хаоса.', author: 'DashFlow', category: 'code' },
+  { id: '3', text: 'Совершенство достигается не тогда, когда нечего добавить, а когда нечего убрать.', author: 'Антуан де Сент-Экзюпери', category: 'wisdom' },
   { id: '4', text: 'Делайте так просто, как только возможно, но не проще.', author: 'Альберт Эйнштейн', category: 'wisdom' },
   { id: '5', text: 'Лучший способ предсказать будущее — создать его.', author: 'Алан Кей', category: 'wisdom' },
   { id: '6', text: 'Преждевременная оптимизация — корень всех зол.', author: 'Дональд Кнут', category: 'code' },
+  { id: '7', text: 'Ваше время ограничено, не тратьте его, живя чужой жизнью.', author: 'Стив Джобс', category: 'motivation' },
+  { id: '8', text: 'У вас есть власть над своим разумом, а не над внешними событиями.', author: 'Марк Аврелий', category: 'wisdom' },
+  { id: '9', text: 'Разговоры стоят дешево. Покажите мне код.', author: 'Линус Торвальдс', category: 'code' },
+  { id: '10', text: 'Не то, что вы имеете, а то, кем вы являетесь, определяет ваше счастье.', author: 'Сенека', category: 'wisdom' },
 ];
 
 export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }) => {
@@ -42,14 +46,14 @@ export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }
   };
 
   return (
-    <div className="flex flex-col justify-between h-full p-2.5 relative group select-none">
+    <div className="flex flex-col justify-between h-full p-3 relative group select-none">
       <Quote className="w-6 h-6 text-primary opacity-20 absolute top-2 left-2 pointer-events-none" />
 
       <div className="flex-1 flex flex-col justify-center px-4 pt-1">
         <p className="text-xs sm:text-sm font-medium italic text-fg leading-relaxed">
           «{current.text}»
         </p>
-        <span className="text-[11px] font-semibold text-secondary mt-1.5 self-end">
+        <span className="text-xs font-semibold text-secondary mt-2 self-end">
           — {current.author}
         </span>
       </div>
@@ -59,18 +63,18 @@ export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }
           type="button"
           aria-label="Копировать цитату"
           onClick={copyQuote}
-          className="p-1 rounded text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors cursor-pointer"
+          className="p-1 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors cursor-pointer"
         >
-          {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
         </button>
 
         <button
           type="button"
           aria-label="Следующая цитата"
           onClick={nextQuote}
-          className="p-1 rounded text-fg-muted hover:text-primary hover:bg-surface-hover transition-colors cursor-pointer"
+          className="p-1 rounded-lg text-fg-muted hover:text-primary hover:bg-surface-hover transition-colors cursor-pointer"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
+          <RefreshCw className="w-4 h-4" />
         </button>
       </div>
     </div>

@@ -41,6 +41,17 @@
   --shadow-1: 0 2px 10px rgb(0 0 0 / 0.3);
   --shadow-2: 0 8px 30px rgb(0 0 0 / 0.45);
   --shadow-3: 0 16px 50px rgb(0 0 0 / 0.6);
+
+  --dashflow-glass-shadow: 0 8px 32px 0 rgb(0 0 0 / 0.35);
+
+  --dashflow-font-sofia:
+    'Sofia Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --dashflow-font-display:
+    'Outfit', 'Sofia Sans', 'Inter', system-ui, sans-serif;
+  --dashflow-font-serif:
+    'Roboto Slab', Georgia, Cambria, 'Times New Roman', serif;
+  --dashflow-font-friendly:
+    'Nunito', 'Inter', system-ui, sans-serif;
 }
 
 /* ── Слой 2. Палитра темы «Neutral Dark» ───────────────────────────────── */

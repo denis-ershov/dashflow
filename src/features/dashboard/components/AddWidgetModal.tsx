@@ -30,12 +30,12 @@ const WIDGET_ICONS: Record<string, React.ReactNode> = {
   search: <Search className="w-5 h-5 text-secondary" />,
   weather: <CloudSun className="w-5 h-5 text-warning" />,
   todo: <CheckSquare className="w-5 h-5 text-success" />,
-  notes: <FileText className="w-5 h-5 text-info" />,
+  notes: <FileText className="w-5 h-5 text-primary" />,
   quickLinks: <Link2 className="w-5 h-5 text-primary" />,
   bookmarks: <Bookmark className="w-5 h-5 text-warning" />,
   iframe: <Globe className="w-5 h-5 text-secondary" />,
   pomodoro: <Timer className="w-5 h-5 text-danger" />,
-  quotes: <Quote className="w-5 h-5 text-info" />,
+  quotes: <Quote className="w-5 h-5 text-primary" />,
   systemMonitor: <Cpu className="w-5 h-5 text-success" />,
   rssReader: <Rss className="w-5 h-5 text-warning" />,
 };
@@ -99,7 +99,7 @@ export const AddWidgetModal: React.FC = () => {
           />
 
           {/* Фильтры категорий */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 select-none">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 select-none">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.key}
@@ -135,10 +135,10 @@ export const AddWidgetModal: React.FC = () => {
               return (
                 <div
                   key={w.id}
-                  className="flex flex-col justify-between p-3.5 rounded-lg bg-surface/60 border border-line hover:border-primary transition-all duration-normal group"
+                  className="flex flex-col justify-between p-3 rounded-xl glass-panel border border-line hover:border-primary transition-all duration-normal group"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-2.5 rounded-lg bg-surface border border-line/60 shrink-0">
+                    <div className="p-2 rounded-xl bg-surface border border-line shrink-0">
                       {icon}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -146,7 +146,7 @@ export const AddWidgetModal: React.FC = () => {
                         <h4 className="text-xs font-semibold text-fg truncate">
                           {title}
                         </h4>
-                        <Badge variant="default">
+                        <Badge variant="glass">
                           {w.size.defaultW}×{w.size.defaultH}
                         </Badge>
                       </div>
@@ -156,7 +156,7 @@ export const AddWidgetModal: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="mt-3 pt-2.5 border-t border-line/40 flex items-center justify-between">
+                  <div className="mt-3 pt-2 border-t border-line flex items-center justify-between">
                     <span className="text-[10px] text-fg-muted font-mono capitalize">
                       {w.surface}
                     </span>
@@ -166,7 +166,7 @@ export const AddWidgetModal: React.FC = () => {
                       variant="primary"
                       onClick={() => handleAdd(w.id, w.size.defaultW, w.size.defaultH)}
                     >
-                      <Plus className="w-3.5 h-3.5 mr-1" />
+                      <Plus className="w-4 h-4 mr-1" />
                       Добавить
                     </Button>
                   </div>

@@ -48,7 +48,7 @@ class WidgetErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySta
   public override render(): ReactNode {
     if (this.state.hasError) {
       return (
-        <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-surface/50 border border-line rounded-lg">
+        <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-surface/50 border border-line rounded-2xl">
           <ErrorState
             title="Ошибка виджета"
             message="Не удалось загрузить виджет"
@@ -74,8 +74,8 @@ export interface WidgetShellProps {
 }
 
 /**
- * Универсальная оболочка виджета DashFlow
- * Поддерживает поверхности panel, chromeless, tiles и изолированный ErrorBoundary
+ * Универсальная оболочка виджета DashFlow 3.0
+ * Поддерживает поверхности panel (glass-card), chromeless, tiles и изолированный ErrorBoundary
  */
 export const WidgetShell: React.FC<WidgetShellProps> = ({
   instanceId,
@@ -95,14 +95,14 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
       data-instance-id={instanceId}
       data-surface={surface}
       className={cn(
-        'relative group w-full h-full flex flex-col transition-shadow duration-fast overflow-hidden',
-        // Стили поверхности
+        'relative group w-full h-full flex flex-col transition-all duration-normal overflow-hidden',
+        // Стили поверхности Glassmorphism
         isChromeless && 'bg-transparent border-transparent',
-        !isChromeless && !isTiles && 'bg-surface border border-line rounded-lg shadow-sm',
-        isTiles && 'bg-surface/60 border border-line/80 rounded-lg p-2 shadow-sm',
+        !isChromeless && !isTiles && 'glass-card border border-line rounded-2xl shadow-2 hover:shadow-3',
+        isTiles && 'glass-subtle border border-line/80 rounded-2xl p-2 shadow-1',
         // Рамка в режиме редактирования
-        isEditMode && 'ring-1 ring-primary/40',
-        isChromeless && isEditMode && 'bg-surface/20 border-dashed border-line rounded-lg',
+        isEditMode && 'ring-2 ring-primary/60 border-primary/80',
+        isChromeless && isEditMode && 'glass-panel border-dashed border-line rounded-2xl',
         className,
       )}
     >
@@ -110,15 +110,15 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
       {(!isChromeless || isEditMode) && (
         <div
           className={cn(
-            'flex items-center justify-between px-3 py-2 select-none shrink-0',
-            !isChromeless && 'border-b border-line/40',
+            'flex items-center justify-between px-4 py-2 select-none shrink-0',
+            !isChromeless && 'border-b border-line/50 bg-surface/30',
           )}
         >
           <div className="flex items-center gap-2 min-w-0">
             {isEditMode && (
               <button
                 type="button"
-                className="widget-drag-handle flex items-center justify-center w-8 h-8 rounded text-fg-muted hover:text-fg hover:bg-surface-hover cursor-grab active:cursor-grabbing transition-colors"
+                className="widget-drag-handle flex items-center justify-center w-8 h-8 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover cursor-grab active:cursor-grabbing transition-colors"
                 aria-label="Перетащить виджет"
               >
                 <GripVertical className="w-4 h-4" />
@@ -142,7 +142,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
               <button
                 type="button"
                 onClick={onOpenSettings}
-                className="flex items-center justify-center w-8 h-8 rounded text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors cursor-pointer"
                 aria-label="Настройки виджета"
               >
                 <Settings className="w-4 h-4" />
@@ -153,7 +153,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
               <button
                 type="button"
                 onClick={onRemove}
-                className="flex items-center justify-center w-8 h-8 rounded text-danger hover:bg-danger/10 transition-colors"
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-danger hover:bg-danger/15 transition-colors cursor-pointer"
                 aria-label="Удалить виджет"
               >
                 <Trash2 className="w-4 h-4" />
@@ -164,7 +164,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
       )}
 
       {/* Тело виджета, защищенное ErrorBoundary */}
-      <div className="flex-1 min-h-0 w-full overflow-auto">
+      <div className="flex-1 min-h-0 w-full overflow-auto p-1">
         <WidgetErrorBoundary fallbackTitle={title} onRemove={onRemove}>
           {children}
         </WidgetErrorBoundary>

@@ -5,6 +5,7 @@ export interface SwitchProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label?: string;
+  'aria-label'?: string;
   disabled?: boolean;
   className?: string;
   id?: string;
@@ -14,6 +15,7 @@ export const Switch: React.FC<SwitchProps> = ({
   checked,
   onChange,
   label,
+  'aria-label': ariaLabel,
   disabled = false,
   className,
   id: customId,
@@ -41,7 +43,7 @@ export const Switch: React.FC<SwitchProps> = ({
         id={switchId}
         role="switch"
         aria-checked={checked}
-        aria-label={label}
+        aria-label={label || ariaLabel}
         disabled={disabled}
         onClick={handleClick}
         className={cn(

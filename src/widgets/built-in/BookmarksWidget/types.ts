@@ -7,4 +7,13 @@ export interface BookmarkSettings {
   singleIconUrl?: string;
   showTitle?: boolean;
   showIcon?: boolean;
+  activeTab?: 'bookmarks' | 'recent';
+}
+
+export interface RecentlyClosedItem {
+  id: string;
+  title: string;
+  url: string;
+  sessionId?: string;
+  lastModified?: number;
 }

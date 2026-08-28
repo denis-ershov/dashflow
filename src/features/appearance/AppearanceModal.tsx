@@ -31,7 +31,7 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
     >
       <div className="space-y-6">
         {/* Вкладки */}
-        <div className="flex items-center gap-1 p-1 bg-canvas rounded-md border border-line">
+        <div className="flex items-center gap-1 p-1 bg-surface/50 rounded-xl border border-line">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -41,7 +41,7 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
                 onClick={() => setActiveTab(tab.id)}
                 aria-pressed={isActive}
                 className={cn(
-                  'flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-sm transition-all duration-normal ease-expo cursor-pointer min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                  'flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all duration-normal ease-expo cursor-pointer min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                   isActive
                     ? 'bg-surface text-primary shadow-1'
                     : 'text-fg-muted hover:text-fg hover:bg-surface/50',

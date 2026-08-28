@@ -11,6 +11,7 @@ describe('App Root Layout', () => {
     registerBuiltInWidgets();
     useAppStore.setState({ isInitialized: true });
     useDashboardStore.setState({
+      layoutMode: 'modular',
       instances: [
         {
           instanceId: 'clock-1',
@@ -40,12 +41,12 @@ describe('App Root Layout', () => {
     vi.restoreAllMocks();
   });
 
-  it('должен рендерить навигационный рельс и сетку дашборда при успешной инициализации', async () => {
+  it('должен рендерить Hero-зону, плавающий Dock и сетку дашборда при успешной инициализации', async () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole('complementary', { name: /основная навигация/i })).toBeInTheDocument();
-      expect(screen.getByRole('navigation', { name: /мобильная навигация/i })).toBeInTheDocument();
+      expect(screen.getByRole('navigation', { name: /панель быстрого управления/i })).toBeInTheDocument();
+      expect(screen.getByRole('timer')).toBeInTheDocument();
       expect(screen.getByTestId('grid-engine-container')).toBeInTheDocument();
     });
   });

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { Button, Badge } from '@/ui/primitives';
+import { playPomodoroBell } from '@/core/audio';
+import { cn } from '@/ui/lib/cn';
 import type { PomodoroSettings } from './types';
 
 export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settings }) => {
@@ -12,6 +14,14 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
   const [isRunning, setIsRunning] = useState(false);
   const [mode, setMode] = useState<'work' | 'break'>('work');
   const [soundActive, setSoundActive] = useState(false);
+
+  const totalDuration = mode === 'work' ? workDuration : breakDuration;
+  const progress = Math.max(0, Math.min(1, timeLeft / totalDuration));
+
+  // SVG Circle параметры (R = 40, C = 2 * PI * 40 ≈ 251.32)
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference * (1 - progress);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
 
@@ -26,6 +36,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
         setTimeLeft((prev) => prev - 1);
       }, 1000);
     } else if (timeLeft === 0) {
+      playPomodoroBell();
       if (mode === 'work') {
         setMode('break');
         setTimeLeft(breakDuration);
@@ -40,7 +51,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
     };
   }, [isRunning, timeLeft, mode, workDuration, breakDuration]);
 
-  // Фоновый звук фокуса через Web Audio API
+  // Фоновый шум фокуса через Web Audio API
   const toggleSound = () => {
     if (soundActive) {
       if (audioCtxRef.current) {
@@ -50,7 +61,9 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
       setSoundActive(false);
     } else {
       try {
-        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const AudioCtx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
         if (!AudioCtx) return;
         const ctx = new AudioCtx();
         audioCtxRef.current = ctx;
@@ -99,18 +112,58 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
   };
 
   return (
-    <div className="flex flex-col items-center justify-around h-full p-2 select-none">
-      <Badge variant={mode === 'work' ? 'warning' : 'success'}>
-        {mode === 'work' ? '🔥 Фокус' : '☕ Отдых'}
-      </Badge>
-
-      <div
-        aria-live="polite"
-        className="text-4xl font-bold font-mono text-fg tracking-tight"
-      >
-        {formatTime(timeLeft)}
+    <div className="flex flex-col items-center justify-between h-full p-2 select-none">
+      {/* Бейдж фазы */}
+      <div className="flex items-center gap-2">
+        <Badge variant={mode === 'work' ? 'warning' : 'success'}>
+          {mode === 'work' ? '🔥 Фокус' : '☕ Отдых'}
+        </Badge>
       </div>
 
+      {/* Круговой SVG Таймер */}
+      <div className="relative flex items-center justify-center my-1">
+        <svg className="w-28 h-28 -rotate-90 transform" viewBox="0 0 100 100">
+          {/* Фоновый круг */}
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            className="stroke-surface-hover"
+            strokeWidth="6"
+            fill="transparent"
+          />
+          {/* Прогресс круг */}
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            className={cn(
+              'transition-all duration-1000 ease-linear',
+              mode === 'work' ? 'stroke-warning' : 'stroke-success',
+            )}
+            strokeWidth="6"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            fill="transparent"
+          />
+        </svg>
+
+        {/* Цифровое время в центре */}
+        <div
+          aria-live="polite"
+          className="absolute flex flex-col items-center justify-center text-center"
+        >
+          <span className="text-xl sm:text-2xl font-bold font-mono text-fg tracking-tight">
+            {formatTime(timeLeft)}
+          </span>
+          <span className="text-[9px] text-fg-muted font-medium uppercase tracking-wider">
+            {mode === 'work' ? 'Работа' : 'Отдых'}
+          </span>
+        </div>
+      </div>
+
+      {/* Панель управления */}
       <div className="flex items-center gap-2">
         <Button
           size="sm"

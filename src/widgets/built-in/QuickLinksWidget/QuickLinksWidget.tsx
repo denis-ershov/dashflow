@@ -66,22 +66,22 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ se
   };
 
   return (
-    <div className="flex flex-col h-full gap-2.5 p-1 select-none">
+    <div className="flex flex-col h-full gap-2 p-1 select-none">
       {isAdding ? (
-        <form onSubmit={handleAdd} className="flex flex-col gap-2 p-3 rounded-lg bg-surface border border-line">
+        <form onSubmit={handleAdd} className="flex flex-col gap-2 p-3 rounded-xl bg-surface border border-line">
           <input
             type="text"
             placeholder="Название ссылки"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded px-2.5 py-1.5 focus-visible:outline-none focus-visible:border-primary"
+            className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded-lg px-3 py-1 focus-visible:outline-none focus-visible:border-primary"
           />
           <input
             type="text"
             placeholder="URL (напр. github.com)"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded px-2.5 py-1.5 focus-visible:outline-none focus-visible:border-primary"
+            className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded-lg px-3 py-1 focus-visible:outline-none focus-visible:border-primary"
           />
           <div className="flex justify-end gap-2 pt-1">
             <Button
@@ -98,56 +98,56 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ se
           </div>
         </form>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 overflow-y-auto p-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto flex-1 p-1">
           {links.map((link) => (
             <div
               key={link.id}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  window.open(link.url, '_blank', 'noopener,noreferrer');
-                }
-              }}
-              onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
-              className="group relative flex flex-col items-center justify-center p-2 rounded-lg bg-surface/70 border border-line/60 hover:bg-surface-hover hover:border-primary transition-all text-center cursor-pointer min-h-[58px]"
+              onClick={() => (window.location.href = link.url)}
+              className="group relative flex flex-col items-center justify-center p-2 rounded-xl bg-surface hover:bg-surface-hover border border-line hover:border-line-hover transition-all cursor-pointer text-center"
             >
+              <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center overflow-hidden mb-1 border border-line group-hover:scale-105 transition-transform">
+                {getFaviconUrl(link.url) ? (
+                  <img
+                    src={getFaviconUrl(link.url)}
+                    alt=""
+                    className="w-5 h-5 object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <Globe className="w-4 h-4 text-fg-muted" />
+                )}
+              </div>
+
+              {showTitles && (
+                <span className="text-[11px] font-medium text-fg truncate w-full group-hover:text-primary transition-colors">
+                  {link.title}
+                </span>
+              )}
+
               <button
                 type="button"
-                aria-label={`Удалить ссылку ${link.title}`}
+                aria-label="Удалить ссылку"
                 onClick={(e) => {
                   e.stopPropagation();
                   removeLink(link.id);
                 }}
-                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-0.5 rounded text-fg-muted hover:text-danger hover:bg-danger/10 transition-opacity"
+                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 text-fg-muted hover:text-danger rounded-lg hover:bg-danger/10 transition-all cursor-pointer"
               >
                 <X className="w-3 h-3" />
               </button>
-
-              <img
-                src={getFaviconUrl(link.url)}
-                alt=""
-                aria-hidden="true"
-                className="w-6 h-6 mb-1 rounded object-contain"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
-              {showTitles && (
-                <span className="text-[11px] font-medium text-fg truncate w-full px-1">
-                  {link.title}
-                </span>
-              )}
             </div>
           ))}
 
+          {/* Кнопка добавления */}
           <button
             type="button"
             aria-label="Добавить ссылку"
             onClick={() => setIsAdding(true)}
-            className="flex flex-col items-center justify-center p-2 rounded-lg border border-dashed border-line hover:border-primary text-fg-muted hover:text-primary transition-colors text-center cursor-pointer min-h-[58px]"
+            className="flex flex-col items-center justify-center p-2 rounded-xl border border-dashed border-line hover:border-primary text-fg-muted hover:text-primary transition-all cursor-pointer min-h-[64px]"
           >
-            <Plus className="w-4 h-4 mb-0.5" />
+            <Plus className="w-5 h-5 mb-1" />
             <span className="text-[10px] font-medium">Добавить</span>
           </button>
         </div>

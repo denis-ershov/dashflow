@@ -41,31 +41,74 @@ export interface LayoutItem {
 
 export type ResponsiveLayouts = Record<Breakpoint, LayoutItem[]>;
 
+export interface HeroSettings {
+  clockStyle: 'digital' | 'minimal' | 'serif' | 'flip' | 'mono';
+  timeFormat: '12h' | '24h';
+  showSeconds: boolean;
+  showDate: boolean;
+  showGreeting: boolean;
+  userName: string;
+  showYearProgress: boolean;
+  showSearchBar: boolean;
+  defaultSearchEngine: 'google' | 'yandex' | 'duckduckgo' | 'bing' | 'github' | 'youtube' | 'perplexity';
+}
+
+export interface SpeedDialLink {
+  id: string;
+  title: string;
+  url: string;
+  icon?: string;
+}
+
 export interface MigratedDashboardState {
   version: 2;
   baseColumns: BaseColumns;
   gap: number;
   isEditMode: boolean;
   isLocked: boolean;
+  layoutMode: 'zen' | 'modular';
+  heroSettings: HeroSettings;
+  speedDialLinks: SpeedDialLink[];
   activeModal: ActiveModal;
   instances: WidgetInstance[];
   layouts: ResponsiveLayouts;
 }
 
+export const DEFAULT_HERO_SETTINGS: HeroSettings = {
+  clockStyle: 'digital',
+  timeFormat: '24h',
+  showSeconds: false,
+  showDate: true,
+  showGreeting: true,
+  userName: '',
+  showYearProgress: true,
+  showSearchBar: true,
+  defaultSearchEngine: 'google',
+};
+
+export const DEFAULT_SPEED_DIAL_LINKS: SpeedDialLink[] = [
+  { id: 'sd-1', title: 'Google', url: 'https://google.com' },
+  { id: 'sd-2', title: 'GitHub', url: 'https://github.com' },
+  { id: 'sd-3', title: 'YouTube', url: 'https://youtube.com' },
+  { id: 'sd-4', title: 'Perplexity', url: 'https://perplexity.ai' },
+  { id: 'sd-5', title: 'ChatGPT', url: 'https://chatgpt.com' },
+  { id: 'sd-6', title: 'Reddit', url: 'https://reddit.com' },
+];
+
 const DEFAULT_INSTANCES: WidgetInstance[] = [
-  { instanceId: 'clock-1', widgetId: 'clock', settings: {} },
   { instanceId: 'weather-1', widgetId: 'weather', settings: {} },
-  { instanceId: 'search-1', widgetId: 'search', settings: {} },
-  { instanceId: 'rss-1', widgetId: 'rssReader', settings: {} },
+  { instanceId: 'todo-1', widgetId: 'todo', settings: {} },
+  { instanceId: 'notes-1', widgetId: 'notes', settings: {} },
+  { instanceId: 'pomodoro-1', widgetId: 'pomodoro', settings: {} },
   { instanceId: 'bookmarks-1', widgetId: 'bookmarks', settings: {} },
 ];
 
 const DEFAULT_BASE_LAYOUT: LayoutItem[] = [
-  { i: 'clock-1', x: 0, y: 0, w: 4, h: 2 },
-  { i: 'weather-1', x: 4, y: 0, w: 4, h: 2 },
-  { i: 'search-1', x: 8, y: 0, w: 4, h: 2 },
-  { i: 'rss-1', x: 0, y: 2, w: 6, h: 4 },
-  { i: 'bookmarks-1', x: 6, y: 2, w: 6, h: 4 },
+  { i: 'weather-1', x: 0, y: 0, w: 4, h: 2 },
+  { i: 'todo-1', x: 4, y: 0, w: 4, h: 4 },
+  { i: 'notes-1', x: 8, y: 0, w: 4, h: 4 },
+  { i: 'pomodoro-1', x: 0, y: 2, w: 4, h: 2 },
+  { i: 'bookmarks-1', x: 0, y: 4, w: 12, h: 3 },
 ];
 
 /**
@@ -212,6 +255,9 @@ export function createDefaultDashboardState(): MigratedDashboardState {
     gap: 16,
     isEditMode: false,
     isLocked: false,
+    layoutMode: 'modular',
+    heroSettings: { ...DEFAULT_HERO_SETTINGS },
+    speedDialLinks: [...DEFAULT_SPEED_DIAL_LINKS],
     activeModal: null,
     instances: [...DEFAULT_INSTANCES],
     layouts: deriveResponsiveLayouts(DEFAULT_BASE_LAYOUT, 12),
@@ -239,12 +285,24 @@ export function migrateDashboardState(rawState: unknown): MigratedDashboardState
         baseCols,
       );
 
+      const layoutMode = rawObj.layoutMode === 'zen' ? 'zen' : 'modular';
+      const heroSettings =
+        rawObj.heroSettings && typeof rawObj.heroSettings === 'object'
+          ? { ...DEFAULT_HERO_SETTINGS, ...(rawObj.heroSettings as Partial<HeroSettings>) }
+          : { ...DEFAULT_HERO_SETTINGS };
+      const speedDialLinks = Array.isArray(rawObj.speedDialLinks)
+        ? (rawObj.speedDialLinks as SpeedDialLink[])
+        : [...DEFAULT_SPEED_DIAL_LINKS];
+
       return {
         version: 2,
         baseColumns: baseCols,
         gap: typeof rawObj.gap === 'number' ? rawObj.gap : 16,
         isEditMode: Boolean(rawObj.isEditMode),
         isLocked: Boolean(rawObj.isLocked),
+        layoutMode,
+        heroSettings,
+        speedDialLinks,
         activeModal: typeof rawObj.activeModal === 'string' ? (rawObj.activeModal as ActiveModal) : null,
         instances: rawObj.instances as WidgetInstance[],
         layouts: sanitizedLayouts,
@@ -292,6 +350,9 @@ export function migrateDashboardState(rawState: unknown): MigratedDashboardState
       gap,
       isEditMode: false,
       isLocked: Boolean(rawObj.isLocked),
+      layoutMode: 'modular',
+      heroSettings: { ...DEFAULT_HERO_SETTINGS },
+      speedDialLinks: [...DEFAULT_SPEED_DIAL_LINKS],
       activeModal: null,
       instances: instances.length > 0 ? instances : DEFAULT_INSTANCES,
       layouts: deriveResponsiveLayouts(baseLayout.length > 0 ? baseLayout : DEFAULT_BASE_LAYOUT, baseCols),

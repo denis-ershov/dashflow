@@ -1,5 +1,4 @@
 import React from 'react';
-import { ExternalLink, Bookmark } from 'lucide-react';
 
 export interface SingleBookmarkTileProps {
   instanceId: string;
@@ -31,7 +30,7 @@ export const SingleBookmarkTile: React.FC<SingleBookmarkTileProps> = ({ settings
   return (
     <div
       onClick={() => (window.location.href = url)}
-      className="flex flex-col items-center justify-center h-full w-full p-2 text-center rounded-xl bg-[var(--color-surface)]/70 hover:bg-[var(--color-surface-hover)] border border-[var(--color-border)] hover:border-[var(--color-primary)] transition-all cursor-pointer group select-none overflow-hidden"
+      className="flex flex-col items-center justify-center h-full w-full p-2 text-center rounded-xl bg-surface hover:bg-surface-hover border border-line hover:border-primary transition-all cursor-pointer group select-none overflow-hidden"
       title={`${title} (${url})`}
     >
       {showIcon && (
@@ -46,7 +45,7 @@ export const SingleBookmarkTile: React.FC<SingleBookmarkTileProps> = ({ settings
       )}
 
       {showTitle && (
-        <span className="text-[11px] font-semibold text-[var(--color-text)] truncate w-full group-hover:text-[var(--color-primary)] transition-colors">
+        <span className="text-[11px] font-semibold text-fg truncate w-full group-hover:text-primary transition-colors">
           {title}
         </span>
       )}

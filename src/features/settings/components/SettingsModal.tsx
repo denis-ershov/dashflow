@@ -5,11 +5,11 @@ import { useAppStore } from '@/stores/useAppStore';
 import { getTranslation } from '@/services/localization/i18n';
 import { Switch, Slider, Button } from '@/ui/primitives';
 import { ImportExportModal } from './ImportExportModal';
-import { Settings, Globe, Layout, Palette, Sparkles } from 'lucide-react';
+import { Globe, Layout } from 'lucide-react';
 
 export const SettingsModal: React.FC = () => {
   const { activeModal, setActiveModal, columns, setColumns, gap, setGap } = useDashboardStore();
-  const { language, setLanguage, theme, setTheme, animationsEnabled, setAnimationsEnabled } = useAppStore();
+  const { language, setLanguage, animationsEnabled, setAnimationsEnabled } = useAppStore();
   const [isImportOpen, setIsImportOpen] = useState(false);
 
   const isOpen = activeModal === 'settings';
@@ -23,15 +23,15 @@ export const SettingsModal: React.FC = () => {
     >
       <div className="space-y-6">
         {/* Секция: Основные настройки */}
-        <div className="p-4 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] space-y-4">
-          <div className="flex items-center space-x-2 text-sm font-semibold text-[var(--color-secondary)]">
+        <div className="p-4 rounded-xl bg-surface border border-line space-y-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-secondary">
             <Globe className="w-4 h-4" />
             <span>{getTranslation(language, 'settings.general')}</span>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium">{getTranslation(language, 'settings.language')}</span>
-            <div className="flex space-x-2">
+            <span className="text-xs font-medium text-fg">{getTranslation(language, 'settings.language')}</span>
+            <div className="flex gap-2">
               <Button
                 size="sm"
                 variant={language === 'ru' ? 'primary' : 'secondary'}
@@ -50,21 +50,21 @@ export const SettingsModal: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <span className="text-xs font-medium">{getTranslation(language, 'settings.animations')}</span>
+            <span className="text-xs font-medium text-fg">{getTranslation(language, 'settings.animations')}</span>
             <Switch checked={animationsEnabled} onChange={setAnimationsEnabled} />
           </div>
         </div>
 
         {/* Секция: Сетка и Расположение */}
-        <div className="p-4 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] space-y-4">
-          <div className="flex items-center space-x-2 text-sm font-semibold text-[var(--color-secondary)]">
+        <div className="p-4 rounded-xl bg-surface border border-line space-y-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-secondary">
             <Layout className="w-4 h-4" />
             <span>{getTranslation(language, 'settings.layout')}</span>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium">Количество колонок</span>
-            <div className="flex space-x-2">
+            <span className="text-xs font-medium text-fg">Количество колонок</span>
+            <div className="flex gap-2">
               <Button
                 size="sm"
                 variant={columns === 12 ? 'primary' : 'secondary'}
@@ -103,10 +103,10 @@ export const SettingsModal: React.FC = () => {
         </div>
 
         {/* Секция: Импорт и Экспорт */}
-        <div className="p-4 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-between">
-          <div className="space-y-0.5">
-            <p className="text-xs font-semibold text-[var(--color-text)]">Импорт / Экспорт данных</p>
-            <p className="text-[10px] text-[var(--color-text-muted)]">Сохранение и восстановление настроек в JSON</p>
+        <div className="p-4 rounded-xl bg-surface border border-line flex items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold text-fg">Импорт / Экспорт данных</p>
+            <p className="text-[10px] text-fg-muted">Сохранение и восстановление настроек в JSON</p>
           </div>
           <Button size="sm" variant="secondary" onClick={() => setIsImportOpen(true)}>
             Управление JSON

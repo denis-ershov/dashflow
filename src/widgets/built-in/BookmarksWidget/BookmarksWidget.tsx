@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Folder, Search, Plus, Trash2 } from 'lucide-react';
+import { Folder, Search, Plus, Trash2, History, Bookmark as BookmarkIcon, RotateCcw } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { SingleBookmarkTile } from './SingleBookmarkTile';
 import { useChromeBookmarksStore, BookmarkNode } from '@/services/storage/ChromeBookmarksSync';
-import { Button } from '@/ui/primitives';
+import { Button, Badge } from '@/ui/primitives';
 import { EmptyState } from '@/ui/feedback';
 import { cn } from '@/ui/lib/cn';
-import type { BookmarkSettings } from './types';
+import type { BookmarkSettings, RecentlyClosedItem } from './types';
 
 export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({ instanceId, settings }) => {
   const mode = settings?.mode || 'folder';
   const viewMode = settings?.viewMode || 'tiles';
   const selectedFolderId = settings?.selectedFolderId || '1';
+
+  const [activeTab, setActiveTab] = useState<'bookmarks' | 'recent'>(settings?.activeTab || 'bookmarks');
+  const [recentlyClosed, setRecentlyClosed] = useState<RecentlyClosedItem[]>([]);
 
   const { tree, loadTree, createBookmark, deleteBookmark, createFolder } =
     useChromeBookmarksStore();
@@ -30,6 +33,38 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({ insta
   useEffect(() => {
     setCurrentFolderId(selectedFolderId);
   }, [selectedFolderId]);
+
+  // Загрузка недавно закрытых вкладок
+  useEffect(() => {
+    if (typeof chrome !== 'undefined' && chrome.sessions?.getRecentlyClosed) {
+      chrome.sessions.getRecentlyClosed({ maxResults: 15 }, (sessions) => {
+        if (!sessions) return;
+        const items: RecentlyClosedItem[] = [];
+        sessions.forEach((s, idx) => {
+          if (s.tab) {
+            items.push({
+              id: s.tab.sessionId || String(idx),
+              title: s.tab.title || s.tab.url || 'Вкладка',
+              url: s.tab.url || '',
+              sessionId: s.tab.sessionId,
+              lastModified: s.lastModified,
+            });
+          } else if (s.window && s.window.tabs) {
+            s.window.tabs.forEach((tab, tIdx) => {
+              items.push({
+                id: tab.sessionId || `${idx}-${tIdx}`,
+                title: tab.title || tab.url || 'Вкладка',
+                url: tab.url || '',
+                sessionId: tab.sessionId,
+                lastModified: s.lastModified,
+              });
+            });
+          }
+        });
+        setRecentlyClosed(items);
+      });
+    }
+  }, [activeTab]);
 
   if (mode === 'single') {
     return (
@@ -61,10 +96,16 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({ insta
   const currentFolder = findFolderInTree(tree, currentFolderId) || (tree[0] ? tree[0] : null);
   const rawItems = currentFolder?.children || [];
 
-  // Фильтрация поиска
+  // Фильтрация поиска закладок
   const items = rawItems.filter((item) =>
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (item.url && item.url.toLowerCase().includes(searchQuery.toLowerCase())),
+  );
+
+  // Фильтрация поиска недавних вкладок
+  const filteredRecent = recentlyClosed.filter((item) =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.url.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const getFaviconUrl = (url?: string) => {
@@ -96,51 +137,94 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({ insta
     setIsAddingItem(false);
   };
 
+  const restoreTab = (item: RecentlyClosedItem) => {
+    if (item.sessionId && typeof chrome !== 'undefined' && chrome.sessions?.restore) {
+      chrome.sessions.restore(item.sessionId);
+    } else if (item.url) {
+      window.open(item.url, '_blank');
+    }
+  };
+
   return (
     <div className="flex flex-col h-full w-full gap-2 p-2 select-none">
-      {/* Навигация и поиск */}
-      <div className="flex items-center justify-between gap-2 pb-2 border-b border-line/40">
-        <div className="flex items-center gap-2 min-w-0">
-          {currentFolder && currentFolder.id !== selectedFolderId && (
-            <button
-              type="button"
-              onClick={() => setCurrentFolderId(currentFolder.parentId || selectedFolderId)}
-              className="text-xs font-semibold text-primary hover:underline truncate"
-            >
-              ← Назад
-            </button>
-          )}
-          <span className="text-xs font-semibold text-fg truncate">
-            {currentFolder ? currentFolder.title : 'Закладки'}
-          </span>
+      {/* Главные вкладки: Закладки / Недавно закрытые */}
+      <div className="flex items-center justify-between gap-2 pb-2 border-b border-line">
+        <div className="flex items-center gap-1 bg-surface/50 p-1 rounded-xl border border-line">
+          <button
+            type="button"
+            onClick={() => setActiveTab('bookmarks')}
+            className={cn(
+              'flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+              activeTab === 'bookmarks'
+                ? 'bg-primary text-primary-fg shadow-1'
+                : 'text-fg-muted hover:text-fg',
+            )}
+          >
+            <BookmarkIcon className="w-4 h-4" />
+            <span>Закладки</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('recent')}
+            className={cn(
+              'flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+              activeTab === 'recent'
+                ? 'bg-primary text-primary-fg shadow-1'
+                : 'text-fg-muted hover:text-fg',
+            )}
+          >
+            <History className="w-4 h-4" />
+            <span>Недавние</span>
+            {recentlyClosed.length > 0 && (
+              <Badge variant="glass" className="ml-1 text-[10px]">
+                {recentlyClosed.length}
+              </Badge>
+            )}
+          </button>
         </div>
 
-        {/* Поиск и Добавление */}
-        <div className="flex items-center gap-1.5">
+        {/* Поиск и кнопка создания (только в закладках) */}
+        <div className="flex items-center gap-2">
           <div className="relative flex items-center">
-            <Search className="w-3.5 h-3.5 text-fg-muted absolute left-2 pointer-events-none" />
+            <Search className="w-4 h-4 text-fg-muted absolute left-2 pointer-events-none" />
             <input
               type="text"
               placeholder="Поиск..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded pl-7 pr-2 py-1 w-24 sm:w-32 focus:w-40 transition-all focus-visible:outline-none focus-visible:border-primary"
+              className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded-lg pl-7 pr-2 py-1 w-20 sm:w-28 focus:w-36 transition-all focus-visible:outline-none focus-visible:border-primary"
             />
           </div>
 
-          <Button
-            size="sm"
-            variant="primary"
-            aria-label="Добавить закладку"
-            onClick={() => setIsAddingItem(!isAddingItem)}
-            icon={<Plus className="w-3.5 h-3.5" />}
-          />
+          {activeTab === 'bookmarks' && (
+            <Button
+              size="sm"
+              variant="primary"
+              aria-label="Добавить закладку"
+              onClick={() => setIsAddingItem(!isAddingItem)}
+              icon={<Plus className="w-4 h-4" />}
+            />
+          )}
         </div>
       </div>
 
-      {/* Форма добавления */}
-      {isAddingItem && (
-        <form onSubmit={handleCreate} className="p-3 rounded-lg bg-surface border border-line space-y-2">
+      {/* Навигация по папкам (в режиме закладок) */}
+      {activeTab === 'bookmarks' && currentFolder && currentFolder.id !== selectedFolderId && (
+        <div className="flex items-center gap-2 px-1">
+          <button
+            type="button"
+            onClick={() => setCurrentFolderId(currentFolder.parentId || selectedFolderId)}
+            className="text-xs font-semibold text-primary hover:underline truncate cursor-pointer"
+          >
+            ← Назад: {currentFolder.title}
+          </button>
+        </div>
+      )}
+
+      {/* Форма добавления закладки */}
+      {activeTab === 'bookmarks' && isAddingItem && (
+        <form onSubmit={handleCreate} className="p-3 rounded-xl bg-surface border border-line space-y-2">
           <div className="flex items-center gap-3 text-xs text-fg">
             <label className="flex items-center gap-1 cursor-pointer">
               <input
@@ -169,7 +253,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({ insta
             placeholder="Название"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            className="w-full bg-surface text-xs text-fg border border-line rounded px-2.5 py-1.5 focus-visible:outline-none focus-visible:border-primary"
+            className="w-full bg-surface text-xs text-fg border border-line rounded-lg px-3 py-1 focus-visible:outline-none focus-visible:border-primary"
           />
 
           {!isFolderType && (
@@ -178,7 +262,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({ insta
               placeholder="URL (https://...)"
               value={newUrl}
               onChange={(e) => setNewUrl(e.target.value)}
-              className="w-full bg-surface text-xs text-fg border border-line rounded px-2.5 py-1.5 focus-visible:outline-none focus-visible:border-primary"
+              className="w-full bg-surface text-xs text-fg border border-line rounded-lg px-3 py-1 focus-visible:outline-none focus-visible:border-primary"
             />
           )}
 
@@ -193,112 +277,160 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({ insta
         </form>
       )}
 
-      {/* Вывод списка закладок в заданном viewMode (Mobile First: без HTML table на узких экранах) */}
-      <div className="flex-1 overflow-y-auto pr-1">
-        {items.length === 0 ? (
-          <EmptyState
-            title="Нет закладок"
-            description="В этой папке нет закладок. Добавьте первую выше!"
-          />
-        ) : viewMode === 'tiles' ? (
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    if (item.children) setCurrentFolderId(item.id);
-                    else if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer');
-                  }
-                }}
-                onClick={() => {
-                  if (item.children) setCurrentFolderId(item.id);
-                  else if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer');
-                }}
-                className="flex flex-col items-center justify-center p-2 rounded-lg bg-surface/70 border border-line/60 hover:border-primary hover:bg-surface-hover transition-all cursor-pointer text-center group relative min-h-[58px]"
-              >
-                <button
-                  type="button"
-                  aria-label={`Удалить закладку ${item.title}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteBookmark(item.id);
+      {/* Контент активной вкладки */}
+      {activeTab === 'bookmarks' ? (
+        /* Список закладок */
+        <div className="flex-1 overflow-y-auto pr-1">
+          {items.length === 0 ? (
+            <EmptyState
+              title="Нет закладок"
+              description={searchQuery ? 'Ничего не найдено' : 'В этой папке пока нет элементов'}
+            />
+          ) : viewMode === 'tiles' ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => {
+                    if (item.children) {
+                      setCurrentFolderId(item.id);
+                    } else if (item.url) {
+                      window.location.href = item.url;
+                    }
                   }}
-                  className="absolute top-1 right-1 p-0.5 rounded text-fg-muted hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="group relative flex flex-col items-center justify-center p-2 rounded-xl bg-surface hover:bg-surface-hover border border-line hover:border-line-hover transition-all cursor-pointer select-none text-center"
                 >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-
-                {item.children ? (
-                  <Folder className="w-6 h-6 text-warning mb-1" />
-                ) : (
-                  <img
-                    src={getFaviconUrl(item.url)}
-                    alt=""
-                    aria-hidden="true"
-                    className="w-6 h-6 rounded mb-1 object-contain group-hover:scale-105 transition-transform"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
-                    }}
-                  />
-                )}
-                <span className="text-[11px] font-medium text-fg truncate w-full px-1">
-                  {item.title}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    if (item.children) setCurrentFolderId(item.id);
-                    else if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer');
-                  }
-                }}
-                onClick={() => {
-                  if (item.children) setCurrentFolderId(item.id);
-                  else if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer');
-                }}
-                className="flex items-center justify-between p-2 rounded-lg bg-surface/70 border border-line/60 hover:border-primary hover:bg-surface-hover transition-all cursor-pointer group min-h-[40px]"
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
                   {item.children ? (
-                    <Folder className="w-4 h-4 text-warning shrink-0" />
+                    <Folder className="w-6 h-6 text-warning mb-1" />
                   ) : (
                     <img
                       src={getFaviconUrl(item.url)}
                       alt=""
-                      aria-hidden="true"
-                      className="w-4 h-4 rounded shrink-0"
+                      className="w-5 h-5 mb-1 object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
                     />
                   )}
-                  <span className="text-xs font-medium text-fg truncate">{item.title}</span>
-                </div>
+                  <span className="text-[11px] font-medium text-fg truncate w-full group-hover:text-primary">
+                    {item.title}
+                  </span>
 
-                <button
-                  type="button"
-                  aria-label={`Удалить закладку ${item.title}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteBookmark(item.id);
+                  <button
+                    type="button"
+                    aria-label="Удалить элемент"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteBookmark(item.id);
+                    }}
+                    className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 text-fg-muted hover:text-danger rounded hover:bg-danger/10 transition-all cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => {
+                    if (item.children) {
+                      setCurrentFolderId(item.id);
+                    } else if (item.url) {
+                      window.location.href = item.url;
+                    }
                   }}
-                  className="p-1 text-fg-muted hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="group flex items-center justify-between p-2 rounded-xl bg-surface hover:bg-surface-hover border border-line hover:border-line-hover transition-all cursor-pointer select-none"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                  <div className="flex items-center gap-2 min-w-0">
+                    {item.children ? (
+                      <Folder className="w-4 h-4 text-warning shrink-0" />
+                    ) : (
+                      <img
+                        src={getFaviconUrl(item.url)}
+                        alt=""
+                        className="w-4 h-4 shrink-0 object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    )}
+                    <span className="text-xs font-medium text-fg truncate group-hover:text-primary">
+                      {item.title}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    aria-label="Удалить закладку"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteBookmark(item.id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-fg-muted hover:text-danger rounded-lg hover:bg-danger/10 transition-all cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Недавно закрытые вкладки */
+        <div className="flex-1 overflow-y-auto pr-1">
+          {filteredRecent.length === 0 ? (
+            <EmptyState
+              title="Нет недавних вкладок"
+              description="Здесь появятся недавно закрытые страницы Chrome"
+            />
+          ) : (
+            <div className="flex flex-col gap-1">
+              {filteredRecent.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => restoreTab(item)}
+                  className="group flex items-center justify-between p-2 rounded-xl bg-surface hover:bg-surface-hover border border-line hover:border-primary transition-all cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <img
+                      src={getFaviconUrl(item.url)}
+                      alt=""
+                      className="w-4 h-4 shrink-0 object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                    <div className="min-w-0">
+                      <span className="text-xs font-medium text-fg truncate block group-hover:text-primary">
+                        {item.title}
+                      </span>
+                      <span className="text-[10px] text-fg-muted truncate block">
+                        {item.url}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    aria-label="Восстановить вкладку"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      restoreTab(item);
+                    }}
+                    className="p-1 text-fg-muted hover:text-primary rounded-lg hover:bg-primary/10 transition-all cursor-pointer shrink-0"
+                    title="Восстановить вкладку"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
