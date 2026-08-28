@@ -1,5 +1,19 @@
-export type SearchEngineId = 'google' | 'yandex' | 'duckduckgo' | 'bing' | 'youtube' | 'github';
+export type SearchEngine =
+  | 'google'
+  | 'yandex'
+  | 'duckduckgo'
+  | 'bing'
+  | 'github'
+  | 'youtube'
+  | 'perplexity';
+
+export type SearchEngineId = SearchEngine;
 
 export interface SearchSettings {
-  engine: SearchEngineId;
+  engine?: SearchEngine;
+  searchStyle?: 'bar' | 'tiles';
+  showEngineSelector?: boolean;
+  showSearchButton?: boolean;
+  openInNewTab?: boolean;
+  placeholder?: string;
 }

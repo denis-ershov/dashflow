@@ -14,4 +14,6 @@ export interface RssSettings {
   feedUrl?: string;
   feedUrls?: string[];
   viewMode?: RssViewMode;
+  itemCount?: number;
+  showDate?: boolean;
 }

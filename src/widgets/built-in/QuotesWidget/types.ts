@@ -7,4 +7,7 @@ export interface QuoteItem {
 
 export interface QuotesSettings {
   category?: 'code' | 'wisdom' | 'life' | 'motivation' | 'all';
+  showAuthor?: boolean;
+  showCopyButton?: boolean;
+  textAlign?: 'center' | 'left';
 }

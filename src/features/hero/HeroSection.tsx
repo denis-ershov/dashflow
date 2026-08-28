@@ -21,16 +21,25 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const timeFormat = settings?.timeFormat ?? '24h';
   const showSeconds = settings?.showSeconds ?? false;
   const showDate = settings?.showDate ?? true;
+  const showClock = settings?.showClock !== false;
   const showGreeting = settings?.showGreeting ?? true;
   const userName = settings?.userName ?? '';
   const showYearProgress = settings?.showYearProgress ?? true;
   const showSearchBar = settings?.showSearchBar ?? true;
+  const alignment = settings?.alignment ?? 'center';
   const defaultEngine = (settings?.defaultSearchEngine as SearchEngineKey) ?? 'google';
+
+  const alignClass = {
+    center: 'items-center text-center',
+    left: 'items-start text-left',
+    right: 'items-end text-right',
+  }[alignment];
 
   return (
     <header
       className={cn(
-        'w-full max-w-4xl mx-auto flex flex-col items-center justify-center gap-6 py-6 px-4 transition-all duration-normal text-center',
+        'w-full max-w-4xl mx-auto flex flex-col justify-center gap-6 py-6 px-4 transition-all duration-normal',
+        alignClass,
         className,
       )}
     >
@@ -38,13 +47,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       {showGreeting && <SmartGreeting userName={userName} />}
 
       {/* Часы */}
-      <HeroClock
-        style={clockStyle}
-        timeFormat={timeFormat}
-        showSeconds={showSeconds}
-        showDate={showDate}
-        className="my-2"
-      />
+      {showClock && (
+        <HeroClock
+          style={clockStyle}
+          timeFormat={timeFormat}
+          showSeconds={showSeconds}
+          showDate={showDate}
+          className="my-2"
+        />
+      )}
 
       {/* Поисковая строка */}
       {showSearchBar && (

@@ -15,6 +15,7 @@ const DEFAULT_LINKS: QuickLinkItem[] = [
 
 export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ settings }) => {
   const showTitles = settings?.showTitles ?? true;
+  const openInNewTab = settings?.openInNewTab !== false;
   const [links, setLinks] = useState<QuickLinkItem[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState('');
@@ -98,11 +99,17 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ se
           </div>
         </form>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto flex-1 p-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto flex-1 min-h-0 p-1">
           {links.map((link) => (
             <div
               key={link.id}
-              onClick={() => (window.location.href = link.url)}
+              onClick={() => {
+                if (openInNewTab) {
+                  window.open(link.url, '_blank');
+                } else {
+                  window.location.href = link.url;
+                }
+              }}
               className="group relative flex flex-col items-center justify-center p-2 rounded-xl bg-surface hover:bg-surface-hover border border-line hover:border-line-hover transition-all cursor-pointer text-center"
             >
               <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center overflow-hidden mb-1 border border-line group-hover:scale-105 transition-transform">

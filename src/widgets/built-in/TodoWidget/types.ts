@@ -22,4 +22,5 @@ export interface TodoSettings {
   filter?: TodoFilter;
   defaultPriority?: TodoPriority;
   defaultTab?: TodoTab;
+  showProgress?: boolean;
 }

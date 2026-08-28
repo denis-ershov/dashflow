@@ -5,7 +5,7 @@ export const systemMonitorManifest: WidgetDefinition<SystemMonitorSettings> = {
   id: 'systemMonitor',
   nameKey: 'widgets.systemMonitor',
   descriptionKey: 'widgetDesc.systemMonitor',
-  version: '2.0.0',
+  version: '2.5.0',
   iconName: 'Cpu',
   category: 'developer',
   surface: 'panel',
@@ -18,13 +18,25 @@ export const systemMonitorManifest: WidgetDefinition<SystemMonitorSettings> = {
   settingsSchema: [
     {
       key: 'showNetwork',
-      labelKey: 'common.enabled',
+      labelKey: 'Сеть и онлайн-статус',
       type: 'boolean',
       defaultValue: true,
     },
     {
       key: 'showBattery',
-      labelKey: 'common.enabled',
+      labelKey: 'Уровень заряда батареи',
+      type: 'boolean',
+      defaultValue: true,
+    },
+    {
+      key: 'showTabs',
+      labelKey: 'Счетчик открытых вкладок',
+      type: 'boolean',
+      defaultValue: true,
+    },
+    {
+      key: 'showMemory',
+      labelKey: 'Использование памяти JS Heap',
       type: 'boolean',
       defaultValue: true,
     },

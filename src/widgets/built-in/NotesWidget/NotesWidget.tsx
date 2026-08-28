@@ -8,12 +8,21 @@ import type { NotesSettings } from './types';
 
 const DEFAULT_NOTE = '# Заметки DashFlow\n- [x] Опробовать новую дизайн-систему\n- [ ] Настроить звуки природы\n\nСоздавайте быстрые списки и форматируйте текст с помощью **Markdown**!';
 
-export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings }) => {
+export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings, onUpdateSettings }) => {
   const [content, setContent] = useState('');
-  const [mode, setMode] = useState<'edit' | 'preview'>('edit');
+  const [mode, setMode] = useState<'edit' | 'preview'>(settings?.defaultMode || 'edit');
   const [isSaved, setIsSaved] = useState(true);
   const fontSize = settings?.fontSize || 13;
+  const showWordCount = settings?.showWordCount !== false;
+  const showSaveStatus = settings?.showSaveStatus !== false;
+
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (settings?.defaultMode) {
+      setMode(settings.defaultMode);
+    }
+  }, [settings?.defaultMode]);
 
   useEffect(() => {
     StorageAdapter.get<string>(STORAGE_KEYS.NOTES_CONTENT, DEFAULT_NOTE).then(setContent);
@@ -61,7 +70,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings }) 
       if (line.startsWith('- [x] ') || line.startsWith('- [X] ')) {
         return (
           <div key={idx} className="flex items-center gap-2 text-xs text-fg-muted line-through my-1">
-            <span className="w-4 h-4 rounded bg-primary/20 text-primary flex items-center justify-center text-[10px]">✓</span>
+            <span className="text-success font-bold">✓</span>
             <span>{line.slice(6)}</span>
           </div>
         );
@@ -69,15 +78,15 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings }) 
       if (line.startsWith('- [ ] ')) {
         return (
           <div key={idx} className="flex items-center gap-2 text-xs text-fg my-1">
-            <span className="w-4 h-4 rounded border border-line flex items-center justify-center" />
+            <span className="text-fg-muted">◻</span>
             <span>{line.slice(6)}</span>
           </div>
         );
       }
-      if (line.startsWith('- ') || line.startsWith('* ')) {
+      if (line.startsWith('- ')) {
         return (
-          <div key={idx} className="flex items-center gap-2 text-xs text-fg my-1 pl-2">
-            <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+          <div key={idx} className="flex items-center gap-2 text-xs text-fg my-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
             <span>{line.slice(2)}</span>
           </div>
         );
@@ -85,18 +94,25 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings }) 
       if (!line.trim()) {
         return <div key={idx} className="h-2" />;
       }
-      return <p key={idx} className="text-xs text-fg my-1 leading-relaxed">{line}</p>;
+      return (
+        <p key={idx} className="text-xs text-fg leading-relaxed my-1">
+          {line}
+        </p>
+      );
     });
   };
 
   return (
-    <div className="flex flex-col h-full p-3 select-text">
-      {/* Панель инструментов: переключение Edit/Preview и статус */}
-      <div className="flex items-center justify-between pb-2 border-b border-line mb-2 select-none">
-        <div className="flex items-center gap-1">
+    <div className="flex flex-col h-full w-full p-2 select-none">
+      {/* Верхний тулбар: Переключатель режима и статус */}
+      <div className="flex items-center justify-between pb-2 border-b border-line mb-2">
+        <div className="flex items-center gap-1 bg-surface p-1 rounded-xl border border-line">
           <button
             type="button"
-            onClick={() => setMode('edit')}
+            onClick={() => {
+              setMode('edit');
+              onUpdateSettings?.({ defaultMode: 'edit' });
+            }}
             aria-label="Режим редактирования"
             className={cn(
               'flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer',
@@ -111,7 +127,10 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings }) 
 
           <button
             type="button"
-            onClick={() => setMode('preview')}
+            onClick={() => {
+              setMode('preview');
+              onUpdateSettings?.({ defaultMode: 'preview' });
+            }}
             aria-label="Режим предпросмотра"
             className={cn(
               'flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer',
@@ -125,15 +144,17 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings }) 
           </button>
         </div>
 
-        <div className="flex items-center gap-1 text-[10px] text-fg-dim font-medium">
-          {isSaved ? (
-            <span className="flex items-center gap-1 text-success">
-              <Check className="w-3 h-3" /> Сохранено
-            </span>
-          ) : (
-            <span>Сохранение...</span>
-          )}
-        </div>
+        {showSaveStatus && (
+          <div className="flex items-center gap-1 text-[10px] text-fg-dim font-medium">
+            {isSaved ? (
+              <span className="flex items-center gap-1 text-success">
+                <Check className="w-4 h-4" /> Сохранено
+              </span>
+            ) : (
+              <span>Сохранение...</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Контент: Редактор или Просмотр */}
@@ -144,19 +165,21 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings }) 
           onChange={handleChange}
           style={{ fontSize: `${fontSize}px` }}
           placeholder={settings?.placeholder || 'Напишите здесь что-нибудь...'}
-          className="w-full flex-1 bg-transparent text-fg placeholder:text-fg-muted resize-none focus-visible:outline-none leading-relaxed font-sans"
+          className="w-full flex-1 min-h-0 bg-transparent text-fg placeholder:text-fg-muted resize-none focus-visible:outline-none leading-relaxed font-sans"
         />
       ) : (
-        <div className="w-full flex-1 overflow-y-auto font-sans pr-1">
+        <div className="w-full flex-1 min-h-0 overflow-y-auto font-sans pr-1">
           {renderMarkdownPreview(content)}
         </div>
       )}
 
       {/* Футер: счетчики слов и символов */}
-      <div className="flex items-center justify-between pt-2 border-t border-line text-[10px] text-fg-muted select-none mt-auto">
-        <span>{wordCount} слов</span>
-        <span>{charCount} символов</span>
-      </div>
+      {showWordCount && (
+        <div className="flex items-center justify-between pt-2 border-t border-line text-[10px] text-fg-muted select-none mt-auto">
+          <span>{wordCount} слов</span>
+          <span>{charCount} символов</span>
+        </div>
+      )}
     </div>
   );
 };

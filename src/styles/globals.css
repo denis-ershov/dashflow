@@ -28,31 +28,6 @@
     background-color: var(--dashflow-canvas);
     color: var(--dashflow-fg);
     font-family: var(--dashflow-font-sans);
-
-    /* Фирменное свечение канвы. Цвета берутся из темы, а не зашиты в градиент. */
-    background-image:
-      radial-gradient(ellipse 80% 80% at 50% -20%, var(--dashflow-ambient-1), transparent),
-      radial-gradient(ellipse 60% 60% at 80% 100%, var(--dashflow-ambient-2), transparent);
-    background-attachment: fixed;
-  }
-
-  /**
-   * Обои живут в отдельном слое под содержимым, а не в background у body:
-   * иначе градиент канвы и картинка пользователя конкурировали бы за одно
-   * свойство, а затемнение нельзя было бы регулировать независимо.
-   */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background-image:
-      linear-gradient(rgb(0 0 0 / var(--app-scrim)), rgb(0 0 0 / var(--app-scrim))),
-      var(--app-bg-image);
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
   }
 
   /* Правило 16: фокус обязан быть видимым во всём приложении по умолчанию. */

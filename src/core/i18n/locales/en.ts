@@ -46,6 +46,8 @@ export const en = {
     quotes: 'Daily Quote',
     systemMonitor: 'System Monitor',
     rssReader: 'RSS Reader',
+    greeting: 'Smart Greeting',
+    yearProgress: 'Time & Year Progress',
   },
   widgetDesc: {
     clock: 'Digital clock, date, and time zone',
@@ -60,6 +62,8 @@ export const en = {
     quotes: 'Daily inspirational and motivational quotes',
     systemMonitor: 'Resource monitor, memory, and status',
     rssReader: 'Read news feeds from your favourite RSS sources',
+    greeting: 'Personalized greeting dynamically adapted to time of day',
+    yearProgress: 'Visual tracker for day, month, and year progression',
   },
   common: {
     save: 'Save',

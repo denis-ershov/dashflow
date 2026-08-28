@@ -67,16 +67,35 @@ const calculateStreak = (history: Record<string, boolean>) => {
   return streak;
 };
 
-export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings }) => {
+export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings, onUpdateSettings }) => {
   const [activeTab, setActiveTab] = useState<TodoTab>(settings?.defaultTab || 'todos');
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [habits, setHabits] = useState<HabitItem[]>([]);
   const [input, setInput] = useState('');
   const [priority, setPriority] = useState<TodoPriority>(settings?.defaultPriority || 'medium');
   const [activeFilter, setActiveFilter] = useState<TodoFilter>(settings?.filter || 'all');
+  const showProgress = settings?.showProgress !== false;
   const prioritySelectId = useId();
 
   const weekDays = getDaysOfWeek();
+
+  useEffect(() => {
+    if (settings?.defaultTab) {
+      setActiveTab(settings.defaultTab);
+    }
+  }, [settings?.defaultTab]);
+
+  useEffect(() => {
+    if (settings?.defaultPriority) {
+      setPriority(settings.defaultPriority);
+    }
+  }, [settings?.defaultPriority]);
+
+  useEffect(() => {
+    if (settings?.filter) {
+      setActiveFilter(settings.filter);
+    }
+  }, [settings?.filter]);
 
   useEffect(() => {
     StorageAdapter.get<TodoItem[]>(STORAGE_KEYS.TODO_ITEMS, DEFAULT_TODOS).then(setTodos);
@@ -173,7 +192,10 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings }) =>
         <div className="flex items-center gap-1 bg-surface/50 p-1 rounded-xl border border-line">
           <button
             type="button"
-            onClick={() => setActiveTab('todos')}
+            onClick={() => {
+              setActiveTab('todos');
+              onUpdateSettings?.({ defaultTab: 'todos' });
+            }}
             className={cn(
               'flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer',
               activeTab === 'todos'
@@ -190,7 +212,10 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings }) =>
 
           <button
             type="button"
-            onClick={() => setActiveTab('habits')}
+            onClick={() => {
+              setActiveTab('habits');
+              onUpdateSettings?.({ defaultTab: 'habits' });
+            }}
             className={cn(
               'flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer',
               activeTab === 'habits'
@@ -225,6 +250,16 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings }) =>
           </div>
         )}
       </div>
+
+      {/* Индикатор прогресса выполнения задач */}
+      {showProgress && activeTab === 'todos' && todos.length > 0 && (
+        <div className="w-full bg-surface-hover h-1.5 rounded-full overflow-hidden">
+          <div
+            className="bg-primary h-full transition-all duration-300 rounded-full"
+            style={{ width: `${Math.round((completedCount / todos.length) * 100)}%` }}
+          />
+        </div>
+      )}
 
       {/* Форма добавления */}
       <form onSubmit={addTodo} className="flex items-center gap-2">
@@ -267,7 +302,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings }) =>
       {/* Контент: Список задач */}
       {activeTab === 'todos' ? (
         <>
-          <div className="flex-1 overflow-y-auto pr-1 space-y-2">
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-2">
             {filteredTodos.length === 0 ? (
               <EmptyState
                 title="Все сделано!"
@@ -319,7 +354,10 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings }) =>
               <button
                 key={filterKey}
                 type="button"
-                onClick={() => setActiveFilter(filterKey)}
+                onClick={() => {
+                  setActiveFilter(filterKey);
+                  onUpdateSettings?.({ filter: filterKey });
+                }}
                 className={cn(
                   'px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer',
                   activeFilter === filterKey
@@ -336,7 +374,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings }) =>
         </>
       ) : (
         /* Контент: Трекер привычек */
-        <div className="flex-1 overflow-y-auto pr-1 space-y-2">
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-2">
           {habits.length === 0 ? (
             <EmptyState
               title="Нет привычек"

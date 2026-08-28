@@ -5,7 +5,7 @@ export const quickLinksManifest: WidgetDefinition<QuickLinksSettings> = {
   id: 'quickLinks',
   nameKey: 'widgets.quickLinks',
   descriptionKey: 'widgetDesc.quickLinks',
-  version: '2.0.0',
+  version: '2.5.0',
   iconName: 'Link',
   category: 'productivity',
   surface: 'tiles',
@@ -19,7 +19,13 @@ export const quickLinksManifest: WidgetDefinition<QuickLinksSettings> = {
   settingsSchema: [
     {
       key: 'showTitles',
-      labelKey: 'common.enabled',
+      labelKey: 'Показывать названия сайтов',
+      type: 'boolean',
+      defaultValue: true,
+    },
+    {
+      key: 'openInNewTab',
+      labelKey: 'Открывать в новой вкладке',
       type: 'boolean',
       defaultValue: true,
     },

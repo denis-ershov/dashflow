@@ -7,7 +7,7 @@ import { CommandPalette } from '@/features/dashboard/components/CommandPalette';
 import { SettingsModal } from '@/features/settings/components/SettingsModal';
 import { AddWidgetModal } from '@/features/dashboard/components/AddWidgetModal';
 import { MarketplaceModal } from '@/features/marketplace/components/MarketplaceModal';
-import { AppearanceModal } from '@/features/appearance';
+import { AppearanceModal, WallpaperBackground } from '@/features/appearance';
 import { HeroSection } from '@/features/hero';
 import { SpeedDialGrid, AddLinkModal } from '@/features/speedDial';
 import { FloatingDock } from '@/features/dock';
@@ -60,32 +60,49 @@ function DashboardContent() {
     );
   }
 
-  return (
-    <div className="min-h-screen flex flex-col bg-canvas text-fg transition-colors duration-normal relative pb-28">
-      {/* Центральная Hero-зона */}
-      <section className="w-full pt-8 pb-4">
-        <HeroSection
-          settings={heroSettings}
-          onEngineChange={(eng) => updateHeroSettings({ defaultSearchEngine: eng })}
-        />
-        <SpeedDialGrid
-          links={speedDialLinks}
-          onAddClick={() => setIsAddLinkOpen(true)}
-          onRemoveLink={removeSpeedDialLink}
-        />
-      </section>
+  const showHero = layoutMode === 'modular' || layoutMode === 'zen';
+  const showSpeedDial = (layoutMode === 'modular' || layoutMode === 'zen') && heroSettings?.showSpeedDial !== false;
+  const showGrid = layoutMode === 'modular' || layoutMode === 'canvas';
 
-      {/* Модульная сетка виджетов (только в режиме Modular Dashboard) */}
-      {layoutMode === 'modular' && (
-        <main className="flex-1 w-full px-3 sm:px-6 py-4">
-          <GridEngine />
-        </main>
-      )}
+  return (
+    <div className="min-h-screen flex flex-col text-fg transition-colors duration-normal relative pb-36 sm:pb-32">
+      {/* Слой фонового изображения и затемнения (Wallpaper Engine) */}
+      <WallpaperBackground />
+
+      <div className="relative z-10 flex-1 flex flex-col w-full">
+        {/* Центральная Hero-зона */}
+        {showHero && (
+          <section className="w-full pt-8 pb-4">
+            <HeroSection
+              settings={heroSettings}
+              onEngineChange={(eng) => updateHeroSettings({ defaultSearchEngine: eng })}
+            />
+            {showSpeedDial && (
+              <SpeedDialGrid
+                links={speedDialLinks}
+                onAddClick={() => setIsAddLinkOpen(true)}
+                onRemoveLink={removeSpeedDialLink}
+              />
+            )}
+          </section>
+        )}
+
+        {/* Модульная сетка виджетов (режимы Modular и Pure Canvas) */}
+        {showGrid && (
+          <main className="flex-1 w-full px-3 sm:px-6 py-4">
+            <GridEngine />
+          </main>
+        )}
+      </div>
 
       {/* Плавающий нижний бар управления (Floating Dock) */}
       <FloatingDock
         layoutMode={layoutMode}
-        onToggleLayoutMode={() => setLayoutMode(layoutMode === 'zen' ? 'modular' : 'zen')}
+        onToggleLayoutMode={() => {
+          if (layoutMode === 'modular') setLayoutMode('canvas');
+          else if (layoutMode === 'canvas') setLayoutMode('zen');
+          else setLayoutMode('modular');
+        }}
         onOpenAddWidget={() => setActiveModal('addWidget')}
         onOpenAppearance={() => setActiveModal('themes')}
         onOpenAudio={() => setIsAudioDrawerOpen(true)}
@@ -101,7 +118,10 @@ function DashboardContent() {
       <SettingsModal />
       <AddWidgetModal />
       <MarketplaceModal />
-      <AppearanceModal isOpen={activeModal === 'themes' || activeModal === 'appearance'} onClose={() => setActiveModal(null)} />
+      <AppearanceModal
+        isOpen={activeModal === 'themes' || activeModal === 'appearance'}
+        onClose={() => setActiveModal(null)}
+      />
       <AddLinkModal
         isOpen={isAddLinkOpen}
         onClose={() => setIsAddLinkOpen(false)}

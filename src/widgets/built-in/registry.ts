@@ -12,11 +12,15 @@ import { pomodoroManifest } from './PomodoroWidget/manifest';
 import { quotesManifest } from './QuotesWidget/manifest';
 import { systemMonitorManifest } from './SystemMonitorWidget/manifest';
 import { rssManifest } from './RssWidget/manifest';
+import { greetingManifest } from './GreetingWidget/manifest';
+import { yearProgressManifest } from './YearProgressWidget/manifest';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const BUILT_IN_MANIFESTS: Array<WidgetDefinition<any>> = [
   clockManifest,
   searchManifest,
+  greetingManifest,
+  yearProgressManifest,
   weatherManifest,
   todoManifest,
   notesManifest,
@@ -30,7 +34,7 @@ export const BUILT_IN_MANIFESTS: Array<WidgetDefinition<any>> = [
 ];
 
 /**
- * Регистрация всех 12 встроенных манифестов виджетов в общем реестре DashFlow
+ * Регистрация всех встроенных манифестов виджетов в общем реестре DashFlow
  */
 export function registerBuiltInWidgets(): void {
   for (const manifest of BUILT_IN_MANIFESTS) {

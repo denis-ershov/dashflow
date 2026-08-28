@@ -33,7 +33,7 @@ export interface DashboardState {
   version: 2;
   isEditMode: boolean;
   isLocked: boolean;
-  layoutMode: 'zen' | 'modular';
+  layoutMode: 'zen' | 'modular' | 'canvas';
   heroSettings: import('@/core/storage').HeroSettings;
   speedDialLinks: import('@/core/storage').SpeedDialLink[];
   isCommandPaletteOpen: boolean;
@@ -51,7 +51,7 @@ export interface DashboardState {
   toggleEditMode: () => void;
   setEditMode: (val: boolean) => void;
   setLocked: (val: boolean) => void;
-  setLayoutMode: (mode: 'zen' | 'modular') => void;
+  setLayoutMode: (mode: 'zen' | 'modular' | 'canvas') => void;
   updateHeroSettings: (settings: Partial<import('@/core/storage').HeroSettings>) => void;
   addSpeedDialLink: (link: Omit<import('@/core/storage').SpeedDialLink, 'id'>) => void;
   removeSpeedDialLink: (id: string) => void;

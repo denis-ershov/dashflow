@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Quote, RefreshCw, Copy, Check } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
+import { cn } from '@/ui/lib/cn';
 import type { QuoteItem, QuotesSettings } from './types';
 
 const QUOTES_COLLECTION: QuoteItem[] = [
@@ -18,6 +19,9 @@ const QUOTES_COLLECTION: QuoteItem[] = [
 
 export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }) => {
   const category = settings?.category || 'all';
+  const textAlign = settings?.textAlign || 'center';
+  const showAuthor = settings?.showAuthor !== false;
+  const showCopyButton = settings?.showCopyButton !== false;
 
   const quotes = QUOTES_COLLECTION.filter((q) => {
     if (category === 'all') return true;
@@ -49,24 +53,33 @@ export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }
     <div className="flex flex-col justify-between h-full p-3 relative group select-none">
       <Quote className="w-6 h-6 text-primary opacity-20 absolute top-2 left-2 pointer-events-none" />
 
-      <div className="flex-1 flex flex-col justify-center px-4 pt-1">
+      <div
+        className={cn(
+          'flex-1 flex flex-col justify-center px-4 pt-1',
+          textAlign === 'left' ? 'items-start text-left' : 'items-center text-center',
+        )}
+      >
         <p className="text-xs sm:text-sm font-medium italic text-fg leading-relaxed">
           «{current.text}»
         </p>
-        <span className="text-xs font-semibold text-secondary mt-2 self-end">
-          — {current.author}
-        </span>
+        {showAuthor && (
+          <span className="text-xs font-semibold text-secondary mt-2 self-end">
+            — {current.author}
+          </span>
+        )}
       </div>
 
       <div className="flex items-center justify-end gap-1 pt-1">
-        <button
-          type="button"
-          aria-label="Копировать цитату"
-          onClick={copyQuote}
-          className="p-1 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors cursor-pointer"
-        >
-          {copied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
-        </button>
+        {showCopyButton && (
+          <button
+            type="button"
+            aria-label="Копировать цитату"
+            onClick={copyQuote}
+            className="p-1 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors cursor-pointer"
+          >
+            {copied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
+          </button>
+        )}
 
         <button
           type="button"

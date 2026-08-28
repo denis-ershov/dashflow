@@ -5,6 +5,7 @@ import type { TranslationKey } from '@/core/i18n';
  * Категории виджетов DashFlow
  */
 export type WidgetCategory =
+  | 'hero'
   | 'productivity'
   | 'utilities'
   | 'finance'
@@ -52,7 +53,7 @@ export type WidgetSettingFieldType =
   | 'multiselect';
 
 export interface WidgetSettingOption<V extends string | number = string | number> {
-  labelKey: TranslationKey;
+  labelKey: string;
   value: V;
 }
 
@@ -61,7 +62,7 @@ export interface WidgetSettingOption<V extends string | number = string | number
  */
 export interface WidgetSettingFieldSchema<S, K extends keyof S = keyof S> {
   key: K;
-  labelKey: TranslationKey;
+  labelKey: string;
   type: WidgetSettingFieldType;
   defaultValue: S[K];
   options?: WidgetSettingOption[];
@@ -78,6 +79,7 @@ export interface WidgetProps<S = Record<string, unknown>> {
   instanceId: string;
   settings: S;
   isEditMode?: boolean;
+  onUpdateSettings?: (newSettings: Partial<S>) => void;
 }
 
 /**

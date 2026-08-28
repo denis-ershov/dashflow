@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Input, Switch, Slider } from '@/ui/primitives';
-import { t } from '@/core/i18n';
+import { t, isTranslationKey } from '@/core/i18n';
 import type { WidgetSettingFieldSchema } from './types';
 
 export interface WidgetSettingsFormProps<S> {
   schema: WidgetSettingFieldSchema<S>[];
   values: S;
   onChange: (newValues: S) => void;
+}
+
+function resolveLabel(key: string): string {
+  return isTranslationKey(key) ? t(key) : key;
 }
 
 /**
@@ -17,14 +21,24 @@ export function WidgetSettingsForm<S>({
   values,
   onChange,
 }: WidgetSettingsFormProps<S>): React.ReactElement {
+  const effectiveValues = useMemo(() => {
+    const defaults: Record<string, unknown> = {};
+    for (const field of schema) {
+      if (field.defaultValue !== undefined) {
+        defaults[String(field.key)] = field.defaultValue;
+      }
+    }
+    return { ...defaults, ...(values as Record<string, unknown>) } as S;
+  }, [schema, values]);
+
   const updateField = (key: keyof S, val: unknown) => {
     onChange({
-      ...values,
+      ...effectiveValues,
       [key]: val,
     });
   };
 
-  const valuesObj = values as Record<string, unknown>;
+  const valuesObj = effectiveValues as Record<string, unknown>;
 
   return (
     <div className="flex flex-col gap-4">
@@ -32,7 +46,7 @@ export function WidgetSettingsForm<S>({
         const key = field.key;
         const keyStr = String(key);
         const rawValue = valuesObj[keyStr];
-        const label = t(field.labelKey);
+        const label = resolveLabel(field.labelKey);
 
         switch (field.type) {
           case 'text':
@@ -94,7 +108,7 @@ export function WidgetSettingsForm<S>({
                   >
                     {field.options?.map((opt) => (
                       <option key={String(opt.value)} value={String(opt.value)}>
-                        {t(opt.labelKey)}
+                        {resolveLabel(opt.labelKey)}
                       </option>
                     ))}
                   </select>
@@ -157,7 +171,7 @@ export function WidgetSettingsForm<S>({
                             : 'bg-surface text-fg border-line hover:border-line-hover'
                         }`}
                       >
-                        {t(opt.labelKey)}
+                        {resolveLabel(opt.labelKey)}
                       </button>
                     );
                   })}

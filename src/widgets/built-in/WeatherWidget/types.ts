@@ -1,6 +1,10 @@
 export interface WeatherSettings {
   city: string;
   tempUnit?: 'celsius' | 'fahrenheit';
+  showHourly?: boolean;
+  showWind?: boolean;
+  showHumidity?: boolean;
+  showFeelsLike?: boolean;
 }
 
 export interface HourlyForecastItem {

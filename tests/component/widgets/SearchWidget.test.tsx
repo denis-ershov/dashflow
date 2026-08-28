@@ -5,29 +5,28 @@ import { SearchWidget } from '@/widgets/built-in/SearchWidget/SearchWidget';
 import { searchManifest } from '@/widgets/built-in/SearchWidget/manifest';
 
 describe('SearchWidget Component & Manifest', () => {
-  it('манифест должен быть строго типизирован и содержать surface=chromeless', () => {
+  it('манифест должен быть строго типизирован и содержать surface=chromeless и category=hero', () => {
     expect(searchManifest.id).toBe('search');
     expect(searchManifest.surface).toBe('chromeless');
     expect(searchManifest.nameKey).toBe('widgets.search');
+    expect(searchManifest.category).toBe('hero');
   });
 
-  it('должен рендерить поле ввода поиска и переключатели поисковых систем', () => {
-    render(<SearchWidget instanceId="search-1" settings={{ engine: 'google' }} />);
+  it('должен рендерить поле ввода поиска в режиме bar', () => {
+    render(<SearchWidget instanceId="search-1" settings={{ engine: 'google', searchStyle: 'bar' }} />);
 
-    expect(screen.getByRole('textbox', { name: /поиск/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /google/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /yandex/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /duckduckgo/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /строка поиска/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /выбрать поисковую систему/i })).toBeInTheDocument();
   });
 
-  it('должен переключать активную поисковую систему по клику', () => {
-    render(<SearchWidget instanceId="search-1" settings={{ engine: 'google' }} />);
+  it('должен переключать активную поисковую систему по клику в режиме tiles', () => {
+    render(<SearchWidget instanceId="search-1" settings={{ engine: 'google', searchStyle: 'tiles' }} />);
 
-    const yandexBtn = screen.getByRole('button', { name: /yandex/i });
+    const yandexBtn = screen.getByRole('button', { name: /яндекс/i });
     fireEvent.click(yandexBtn);
 
     const input = screen.getByRole('textbox', { name: /поиск/i });
-    expect(input).toHaveAttribute('placeholder', expect.stringContaining('Yandex'));
+    expect(input).toHaveAttribute('placeholder', expect.stringContaining('Яндекс'));
   });
 
   it('должен отправлять форму с введенным запросом', () => {
@@ -47,12 +46,12 @@ describe('SearchWidget Component & Manifest', () => {
       configurable: true,
     });
 
-    render(<SearchWidget instanceId="search-1" settings={{ engine: 'google' }} />);
+    render(<SearchWidget instanceId="search-1" settings={{ engine: 'google', searchStyle: 'bar' }} />);
 
-    const input = screen.getByRole('textbox', { name: /поиск/i });
+    const input = screen.getByRole('textbox', { name: /строка поиска/i });
     fireEvent.change(input, { target: { value: 'React 19' } });
 
-    const submitBtn = screen.getByRole('button', { name: /найти/i });
+    const submitBtn = screen.getByRole('button', { name: /искать/i });
     fireEvent.click(submitBtn);
 
     expect(assignedHref).toContain('https://www.google.com/search?q=React%2019');

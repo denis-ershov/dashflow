@@ -20,45 +20,63 @@ describe('ClockWidget Component & Manifest', () => {
     expect(clockManifest.id).toBe('clock');
     expect(clockManifest.surface).toBe('chromeless');
     expect(clockManifest.nameKey).toBe('widgets.clock');
+    expect(clockManifest.category).toBe('hero');
     expect(clockManifest.size.defaultW).toBe(4);
   });
 
-  it('должен отображать время в 24-часовом формате с секундами по умолчанию', () => {
+  it('должен отображать часы и минуты', () => {
     render(
       <ClockWidget
         instanceId="clock-1"
-        settings={{ is24Hour: true, showSeconds: true, showDate: true }}
+        settings={{ is24Hour: true, showSeconds: true, showDate: true, clockStyle: 'digital' }}
       />,
     );
 
-    expect(screen.getByText('14:30:45')).toBeInTheDocument();
+    expect(screen.getByRole('timer')).toBeInTheDocument();
+    expect(screen.getByText('14')).toBeInTheDocument();
+    expect(screen.getByText('30')).toBeInTheDocument();
+    expect(screen.getByText('45')).toBeInTheDocument();
   });
 
   it('должен скрывать секунды при showSeconds=false', () => {
     render(
       <ClockWidget
         instanceId="clock-1"
-        settings={{ is24Hour: true, showSeconds: false, showDate: true }}
+        settings={{ is24Hour: true, showSeconds: false, showDate: true, clockStyle: 'digital' }}
       />,
     );
 
-    expect(screen.getByText('14:30')).toBeInTheDocument();
+    expect(screen.getByText('14')).toBeInTheDocument();
+    expect(screen.getByText('30')).toBeInTheDocument();
+    expect(screen.queryByText('45')).not.toBeInTheDocument();
+  });
+
+  it('должен поддерживать стиль flip-карточек', () => {
+    render(
+      <ClockWidget
+        instanceId="clock-1"
+        settings={{ clockStyle: 'flip', is24Hour: true, showSeconds: false }}
+      />,
+    );
+
+    expect(screen.getByText('14')).toBeInTheDocument();
+    expect(screen.getByText('30')).toBeInTheDocument();
   });
 
   it('должен обновлять время каждую секунду', () => {
     render(
       <ClockWidget
         instanceId="clock-1"
-        settings={{ is24Hour: true, showSeconds: true, showDate: true }}
+        settings={{ is24Hour: true, showSeconds: true, showDate: true, clockStyle: 'digital' }}
       />,
     );
 
-    expect(screen.getByText('14:30:45')).toBeInTheDocument();
+    expect(screen.getByText('45')).toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(1000);
     });
 
-    expect(screen.getByText('14:30:46')).toBeInTheDocument();
+    expect(screen.getByText('46')).toBeInTheDocument();
   });
 });

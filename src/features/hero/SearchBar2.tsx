@@ -168,7 +168,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
 
           {/* Выпадающее меню поисковиков */}
           {isDropdownOpen && (
-            <div className="absolute top-full left-0 mt-2 z-[var(--z-dropdown,30)] w-48 glass-panel rounded-xl shadow-3 border border-line p-2 flex flex-col gap-1">
+            <div className="absolute top-full left-0 mt-2 z-50 w-48 glass-panel rounded-xl shadow-3 border border-line p-2 flex flex-col gap-1">
               {(Object.keys(SEARCH_ENGINES) as SearchEngineKey[]).map((key) => {
                 const item = SEARCH_ENGINES[key];
                 return (

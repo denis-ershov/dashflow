@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { WidgetRegistry } from '@/core/widget/registry';
 import type { WidgetProps } from '@/core/widget/types';
+import { useDashboardStore } from '@/stores/useDashboardStore';
 import { Skeleton } from '@/ui/feedback/Skeleton';
 import { ErrorState } from '@/ui/feedback/ErrorState';
 
@@ -8,13 +9,16 @@ export interface LazyWidgetRendererProps {
   widgetId: string;
   instanceId: string;
   settings?: Record<string, unknown>;
+  isEditMode?: boolean;
 }
 
 export const LazyWidgetRenderer: React.FC<LazyWidgetRendererProps> = ({
   widgetId,
   instanceId,
   settings,
+  isEditMode = false,
 }) => {
+  const { updateWidgetSettings } = useDashboardStore();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [Component, setComponent] = useState<React.ComponentType<WidgetProps<any>> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -78,5 +82,14 @@ export const LazyWidgetRenderer: React.FC<LazyWidgetRendererProps> = ({
     );
   }
 
-  return <Component instanceId={instanceId} settings={settings} />;
+  return (
+    <Component
+      instanceId={instanceId}
+      settings={settings}
+      isEditMode={isEditMode}
+      onUpdateSettings={(newSettings: Record<string, unknown>) =>
+        updateWidgetSettings(instanceId, newSettings)
+      }
+    />
+  );
 };

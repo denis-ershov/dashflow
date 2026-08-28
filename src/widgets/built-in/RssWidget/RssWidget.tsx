@@ -150,7 +150,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({ settings }) => {
   }
 
   return (
-    <div className="flex flex-col h-full w-full p-2 select-none overflow-y-auto">
+    <div className="flex flex-col h-full w-full p-2 select-none overflow-y-auto min-h-0">
       <div className="space-y-2">
         {items.map((item, idx) => (
           <a

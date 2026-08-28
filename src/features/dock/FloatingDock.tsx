@@ -14,7 +14,7 @@ import {
 import { Tooltip } from '@/ui/primitives';
 
 export interface FloatingDockProps {
-  layoutMode: 'zen' | 'modular';
+  layoutMode: 'zen' | 'modular' | 'canvas';
   onToggleLayoutMode: () => void;
   onOpenAddWidget: () => void;
   onOpenAppearance: () => void;
@@ -44,9 +44,9 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
     <nav
       aria-label="Панель быстрого управления"
       className={cn(
-        'fixed bottom-6 left-1/2 -translate-x-1/2 z-[var(--z-rail,30)]',
-        'glass-pill px-3 py-2 flex items-center gap-2 shadow-3 border border-line',
-        'duration-normal select-none',
+        'fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-[var(--z-rail,30)]',
+        'glass-pill px-2.5 sm:px-3 py-1.5 sm:py-2 flex items-center gap-1 sm:gap-2 shadow-3 border border-line',
+        'max-w-[calc(100vw-1.5rem)] duration-normal select-none overflow-x-auto no-scrollbar backdrop-blur-xl',
         className,
       )}
     >
@@ -127,7 +127,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
       </Tooltip>
 
       {/* Режим редактирования сетки */}
-      {onToggleEditMode && layoutMode === 'modular' && (
+      {onToggleEditMode && (layoutMode === 'modular' || layoutMode === 'canvas') && (
         <Tooltip content={isEditMode ? 'Завершить редактирование' : 'Редактировать сетку'}>
           <button
             type="button"

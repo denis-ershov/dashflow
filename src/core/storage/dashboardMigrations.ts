@@ -46,10 +46,13 @@ export interface HeroSettings {
   timeFormat: '12h' | '24h';
   showSeconds: boolean;
   showDate: boolean;
+  showClock?: boolean;
   showGreeting: boolean;
   userName: string;
   showYearProgress: boolean;
   showSearchBar: boolean;
+  showSpeedDial?: boolean;
+  alignment?: 'left' | 'center' | 'right';
   defaultSearchEngine: 'google' | 'yandex' | 'duckduckgo' | 'bing' | 'github' | 'youtube' | 'perplexity';
 }
 
@@ -66,7 +69,7 @@ export interface MigratedDashboardState {
   gap: number;
   isEditMode: boolean;
   isLocked: boolean;
-  layoutMode: 'zen' | 'modular';
+  layoutMode: 'zen' | 'modular' | 'canvas';
   heroSettings: HeroSettings;
   speedDialLinks: SpeedDialLink[];
   activeModal: ActiveModal;
@@ -79,10 +82,13 @@ export const DEFAULT_HERO_SETTINGS: HeroSettings = {
   timeFormat: '24h',
   showSeconds: false,
   showDate: true,
+  showClock: true,
   showGreeting: true,
   userName: '',
   showYearProgress: true,
   showSearchBar: true,
+  showSpeedDial: true,
+  alignment: 'center',
   defaultSearchEngine: 'google',
 };
 
@@ -285,7 +291,12 @@ export function migrateDashboardState(rawState: unknown): MigratedDashboardState
         baseCols,
       );
 
-      const layoutMode = rawObj.layoutMode === 'zen' ? 'zen' : 'modular';
+      const layoutMode =
+        rawObj.layoutMode === 'zen'
+          ? 'zen'
+          : rawObj.layoutMode === 'canvas'
+            ? 'canvas'
+            : 'modular';
       const heroSettings =
         rawObj.heroSettings && typeof rawObj.heroSettings === 'object'
           ? { ...DEFAULT_HERO_SETTINGS, ...(rawObj.heroSettings as Partial<HeroSettings>) }

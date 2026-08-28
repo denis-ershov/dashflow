@@ -9,11 +9,18 @@ describe('BookmarksWidget Component & Manifest', () => {
     vi.restoreAllMocks();
   });
 
-  it('манифест должен содержать permissions bookmarks и surface=tiles', () => {
+  it('манифест должен содержать permissions bookmarks, surface=tiles и схему визуальных настроек', () => {
     expect(bookmarksManifest.id).toBe('bookmarks');
     expect(bookmarksManifest.surface).toBe('tiles');
     expect(bookmarksManifest.nameKey).toBe('widgets.bookmarks');
     expect(bookmarksManifest.permissions).toContain('bookmarks');
+
+    const schemaKeys = bookmarksManifest.settingsSchema?.map((s) => s.key);
+    expect(schemaKeys).toContain('tileShape');
+    expect(schemaKeys).toContain('tileSize');
+    expect(schemaKeys).toContain('cardStyle');
+    expect(schemaKeys).toContain('borderRadius');
+    expect(schemaKeys).toContain('columns');
   });
 
   it('должен отображать одиночную плитку при mode=single', () => {
@@ -24,6 +31,7 @@ describe('BookmarksWidget Component & Manifest', () => {
           mode: 'single',
           singleTitle: 'Мой проект',
           singleUrl: 'https://dashflow.dev',
+          tileShape: 'square',
         }}
       />,
     );
@@ -35,7 +43,13 @@ describe('BookmarksWidget Component & Manifest', () => {
     render(
       <BookmarksWidget
         instanceId="bm-1"
-        settings={{ mode: 'folder', selectedFolderId: '1', viewMode: 'tiles' }}
+        settings={{
+          mode: 'folder',
+          selectedFolderId: '1',
+          viewMode: 'tiles',
+          tileShape: 'square',
+          cardStyle: 'glass',
+        }}
       />,
     );
 
@@ -43,5 +57,38 @@ describe('BookmarksWidget Component & Manifest', () => {
       expect(screen.getByText('DashFlow GitHub')).toBeInTheDocument();
       expect(screen.getByText('React 19 Documentation')).toBeInTheDocument();
     });
+  });
+
+  it('должен поддерживать плоский список (structureMode=flatten) со сбором всех вложенных закладок', async () => {
+    render(
+      <BookmarksWidget
+        instanceId="bm-flatten"
+        settings={{
+          mode: 'folder',
+          selectedFolderId: '1',
+          structureMode: 'flatten',
+          viewMode: 'tiles',
+        }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('DashFlow GitHub')).toBeInTheDocument();
+      expect(screen.getByText('Vite Guide')).toBeInTheDocument();
+      expect(screen.getByText('MDN Web Docs')).toBeInTheDocument();
+    });
+  });
+
+  it('должен отображать вкладки Закладки / Вкладки / Недавние при mode=folder-tabs', () => {
+    render(
+      <BookmarksWidget
+        instanceId="bm-1"
+        settings={{ mode: 'folder-tabs', activeTab: 'bookmarks' }}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: /^Закладки$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Вкладки/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Недавние$/i })).toBeInTheDocument();
   });
 });

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ResponsiveGridLayout, useContainerWidth, verticalCompactor } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
+import { Columns, Move, Plus, Check, Sliders } from 'lucide-react';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { WidgetRegistry } from '@/core/widget/registry';
 import { WidgetShell } from '@/core/widget/WidgetShell';
@@ -10,6 +11,8 @@ import { LazyWidgetRenderer } from './LazyWidgetRenderer';
 import { WidgetSettingsDrawer } from './WidgetSettingsDrawer';
 import { useGridMetrics } from '../hooks/useGridMetrics';
 import { EmptyState } from '@/ui/feedback/EmptyState';
+import { Button } from '@/ui/primitives/Button';
+import type { BaseColumns } from '@/core/storage';
 
 // Синхронная гарантированная регистрация встроенных манифестов
 registerBuiltInWidgets();
@@ -34,6 +37,9 @@ export const GridEngine: React.FC = () => {
     widgets,
     layouts,
     isEditMode,
+    setEditMode,
+    setBaseColumns,
+    setGap,
     updateLayout,
     removeWidget,
     setActiveModal,
@@ -72,7 +78,7 @@ export const GridEngine: React.FC = () => {
       >
         <EmptyState
           title="Ваш дашборд пока пуст"
-          description="Добавьте виджеты, чтобы настроить удобное рабоковое пространство"
+          description="Добавьте виджеты, чтобы настроить удобное рабочее пространство"
           action={{
             label: 'Добавить первый виджет',
             onClick: () => setActiveModal('addWidget'),
@@ -91,6 +97,82 @@ export const GridEngine: React.FC = () => {
       data-testid="grid-engine-container"
       className="w-full relative"
     >
+      {/* Панель редактора сетки в активном режиме редактирования */}
+      {isEditMode && (
+        <div className="mb-4 p-3 rounded-2xl glass-card border border-warning/40 shadow-3 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-200 select-none">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-warning/15 text-warning text-xs font-semibold border border-warning/30">
+              <Move className="w-3.5 h-3.5" />
+              <span>Редактор сетки</span>
+            </div>
+
+            {/* Выбор колонок базовой сетки */}
+            <div className="flex items-center gap-1.5 bg-surface/80 p-1 rounded-xl border border-line text-xs">
+              <span className="text-fg-muted px-1.5 font-medium flex items-center gap-1">
+                <Columns className="w-3.5 h-3.5" /> Колонки:
+              </span>
+              {([12, 16, 24] as BaseColumns[]).map((cols) => (
+                <button
+                  key={cols}
+                  type="button"
+                  onClick={() => setBaseColumns(cols)}
+                  className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                    columns === cols
+                      ? 'bg-primary text-primary-fg shadow-1'
+                      : 'text-fg-muted hover:text-fg hover:bg-surface-hover'
+                  }`}
+                >
+                  {cols}
+                </button>
+              ))}
+            </div>
+
+            {/* Выбор отступа (Gap) */}
+            <div className="hidden sm:flex items-center gap-1.5 bg-surface/80 p-1 rounded-xl border border-line text-xs">
+              <span className="text-fg-muted px-1.5 font-medium flex items-center gap-1">
+                <Sliders className="w-3.5 h-3.5" /> Отступ:
+              </span>
+              {[8, 16, 24].map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => setGap(g)}
+                  className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                    gap === g
+                      ? 'bg-primary text-primary-fg shadow-1'
+                      : 'text-fg-muted hover:text-fg hover:bg-surface-hover'
+                  }`}
+                >
+                  {g}px
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setActiveModal('addWidget')}
+              className="flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Добавить виджет</span>
+            </Button>
+
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={() => setEditMode(false)}
+              className="flex items-center gap-1.5 bg-warning text-black hover:bg-warning/90 border-0"
+            >
+              <Check className="w-3.5 h-3.5" />
+              <span>Завершить</span>
+            </Button>
+          </div>
+        </div>
+      )}
+
       <ResponsiveGridLayout
         width={gridWidth}
         className="layout w-full"
@@ -130,6 +212,7 @@ export const GridEngine: React.FC = () => {
                   widgetId={item.widgetId}
                   instanceId={item.instanceId}
                   settings={item.settings}
+                  isEditMode={isEditMode}
                 />
               </WidgetShell>
             </div>

@@ -56,6 +56,12 @@ export function t(
   return '—';
 }
 
+export function isTranslationKey(key: string): key is TranslationKey {
+  if (!key || typeof key !== 'string') return false;
+  const parts = key.split('.');
+  return typeof resolveNested(locales.ru, parts) === 'string';
+}
+
 function resolveNested(obj: unknown, parts: string[]): unknown {
   let current: unknown = obj;
   for (const part of parts) {

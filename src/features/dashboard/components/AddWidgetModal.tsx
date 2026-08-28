@@ -14,6 +14,8 @@ import {
   Rss,
   Plus,
   Boxes,
+  Sparkles,
+  Calendar,
 } from 'lucide-react';
 import { Modal } from '@/ui/overlays/Modal';
 import { useDashboardStore } from '@/stores/useDashboardStore';
@@ -28,6 +30,8 @@ import { EmptyState } from '@/ui/feedback/EmptyState';
 const WIDGET_ICONS: Record<string, React.ReactNode> = {
   clock: <Clock className="w-5 h-5 text-primary" />,
   search: <Search className="w-5 h-5 text-secondary" />,
+  greeting: <Sparkles className="w-5 h-5 text-accent" />,
+  yearProgress: <Calendar className="w-5 h-5 text-primary" />,
   weather: <CloudSun className="w-5 h-5 text-warning" />,
   todo: <CheckSquare className="w-5 h-5 text-success" />,
   notes: <FileText className="w-5 h-5 text-primary" />,
@@ -42,6 +46,7 @@ const WIDGET_ICONS: Record<string, React.ReactNode> = {
 
 const CATEGORIES: { key: WidgetCategory | 'all'; label: string }[] = [
   { key: 'all', label: 'Все' },
+  { key: 'hero', label: '🌟 Элементы Hero' },
   { key: 'utilities', label: 'Утилиты' },
   { key: 'productivity', label: 'Продуктивность' },
   { key: 'news', label: 'Новости' },
