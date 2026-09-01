@@ -44,8 +44,8 @@
    - **Исправление:** Выпадающий список подсказок городов теперь открывается исключительно при активном вводе пользователем (`isUserEditing`), предотвращая самопроизвольное появление списка при первом открытии настроек.
 
 6. **Жизненный цикл Service Worker и мгновенное обновление (`background.ts`):**
-   - Добавлены обработчики `self.skipWaiting()` и `clients.claim()` для исключения зависания обновлений Service Worker в состоянии `waiting`.
-   - Интегрирован слушатель `chrome.runtime.onUpdateAvailable` с вызовом `chrome.runtime.reload()`, устраняющий зависание процесса обновления расширений в Chrome.
+   - Устранены специфичные для PWA вызовы `clients.claim()` / `skipWaiting()`, вызывавшие ошибку `InvalidStateError: Only the active worker can claim clients.` в контексте фонового воркера расширения.
+   - Интегрирован нативный слушатель Chrome MV3 `chrome.runtime.onUpdateAvailable` с вызовом `chrome.runtime.reload()` для мгновенного применения обновлений.
 
 7. **Тестирование и валидация:**
    - 15 новых модульных и компонентных тестов (`tests/unit/widgets/weatherService.test.ts`, `tests/component/widgets/WeatherWidget.test.tsx`).

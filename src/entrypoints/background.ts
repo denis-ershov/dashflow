@@ -3,15 +3,6 @@ import { defineBackground } from 'wxt/sandbox';
 export default defineBackground(() => {
   console.log('[DashFlow] Background Service Worker запущен');
 
-  // Мгновенная активация нового Service Worker при обновлении (без зависания в waiting состоянии)
-  self.addEventListener('install', () => {
-    (self as any).skipWaiting?.();
-  });
-
-  self.addEventListener('activate', (event: any) => {
-    event.waitUntil?.((self as any).clients?.claim?.());
-  });
-
   // Автоматическое применение обновлений расширения без ожидания закрытия всех вкладок
   if (typeof chrome !== 'undefined' && chrome.runtime?.onUpdateAvailable) {
     chrome.runtime.onUpdateAvailable.addListener((details) => {
