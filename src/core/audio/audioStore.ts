@@ -10,13 +10,7 @@ import {
   type SoundInstance,
 } from './soundSynthesizers';
 
-export type AmbientSoundKey =
-  | 'rain'
-  | 'campfire'
-  | 'waves'
-  | 'forest'
-  | 'cafe'
-  | 'whitenoise';
+export type AmbientSoundKey = 'rain' | 'campfire' | 'waves' | 'forest' | 'cafe' | 'whitenoise';
 
 export interface AmbientSoundMeta {
   id: AmbientSoundKey;

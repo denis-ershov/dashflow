@@ -86,3 +86,37 @@
 - [ADR-013: Responsive Grid Layout & NavRail](file:///e:/DEV/Project/dashflow/docs/adr/ADR-013-responsive-grid-and-nav-rail.md)
 - [ADR-014: Declarative Plugins & Sandbox Bridge](file:///e:/DEV/Project/dashflow/docs/adr/ADR-014-declarative-plugins-and-sandbox-bridge.md)
 - [ADR-015: Permissions Consent Flow](file:///e:/DEV/Project/dashflow/docs/adr/ADR-015-permissions-consent-flow.md)
+
+---
+
+## 4. Кроссбраузерная архитектура и конвейер сборки
+
+DashFlow поддерживает два основных целевых браузерных окружения:
+1. **Google Chrome & Chromium (Manifest V3):**
+   - Фоновый сервис-воркер (`background.service_worker = "background.js"`).
+   - Директория сборки: `.output/chrome-mv3/`.
+   - Релизный архив: `.output/dashflow-3.7.1-chrome.zip`.
+2. **Mozilla Firefox & Gecko (Manifest V2 / MV3 compatible):**
+   - Настройки расширения `browser_specific_settings.gecko`: `id = "dashflow@addon"`, `strict_min_version = "109.0"`.
+   - Фоновые скрипты (`background.scripts = ["background.js"]`).
+   - Директория сборки: `.output/firefox-mv2/`.
+   - Релизный архив и архив исходников для AMO: `.output/dashflow-3.7.1-firefox.zip`, `.output/dashflow-3.7.1-sources.zip`.
+
+### Регламент директории артефактов:
+Все собранные бандлы и релизные zip-архивы сохраняются **исключительно в директории `.output/`**, не засоряя корень репозитория.
+
+### Команды конвейера сборки:
+```bash
+# Chrome
+npm run build:chrome    # Сборка в .output/chrome-mv3
+npm run zip:chrome      # Упаковка в .output/dashflow-*.chrome.zip
+
+# Firefox
+npm run build:firefox   # Сборка в .output/firefox-mv2
+npm run zip:firefox     # Упаковка в .output/dashflow-*.firefox.zip и sources.zip
+
+# Кроссбраузерная мультисборка
+npm run build:all       # Сборка Chrome и Firefox
+npm run zip:all         # Упаковка Chrome и Firefox
+```
+

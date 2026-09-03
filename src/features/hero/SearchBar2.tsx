@@ -3,13 +3,7 @@ import { cn } from '@/ui/lib/cn';
 import { Search, X, ChevronDown, Sparkles, Globe, Code, Video } from 'lucide-react';
 
 export type SearchEngineKey =
-  | 'google'
-  | 'yandex'
-  | 'duckduckgo'
-  | 'bing'
-  | 'github'
-  | 'youtube'
-  | 'perplexity';
+  'google' | 'yandex' | 'duckduckgo' | 'bing' | 'github' | 'youtube' | 'perplexity';
 
 export interface SearchEngine {
   id: SearchEngineKey;

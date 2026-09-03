@@ -90,8 +90,9 @@ export function validateWidgetSettings<S>(
         if (Array.isArray(val)) {
           if (field.options && field.options.length > 0) {
             const allowed = field.options.map((opt) => opt.value);
-            const filtered = val.filter((item): item is string | number =>
-              (typeof item === 'string' || typeof item === 'number') && allowed.includes(item),
+            const filtered = val.filter(
+              (item): item is string | number =>
+                (typeof item === 'string' || typeof item === 'number') && allowed.includes(item),
             );
             result[key] = filtered;
           } else {

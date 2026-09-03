@@ -99,7 +99,9 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
         isChromeless ? 'overflow-visible' : 'overflow-hidden',
         // Стили поверхности Glassmorphism
         isChromeless && 'bg-transparent border-transparent',
-        !isChromeless && !isTiles && 'glass-card border border-line rounded-2xl shadow-2 hover:shadow-3',
+        !isChromeless &&
+          !isTiles &&
+          'glass-card border border-line rounded-2xl shadow-2 hover:shadow-3',
         isTiles && 'glass-subtle border border-line/80 rounded-2xl p-2 shadow-1',
         // Рамка в режиме редактирования
         isEditMode && 'ring-2 ring-primary/60 border-primary/80',
@@ -126,9 +128,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
               </button>
             )}
             {title && (
-              <h3 className="text-xs font-semibold text-fg truncate tracking-wide">
-                {title}
-              </h3>
+              <h3 className="text-xs font-semibold text-fg truncate tracking-wide">{title}</h3>
             )}
           </div>
 

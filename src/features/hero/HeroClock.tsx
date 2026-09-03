@@ -137,7 +137,10 @@ export const HeroClock: React.FC<HeroClockProps> = ({
     <div
       role="timer"
       aria-label={`Текущее время: ${hours}:${minutes}`}
-      className={cn('flex flex-col items-center justify-center text-center transition-all', className)}
+      className={cn(
+        'flex flex-col items-center justify-center text-center transition-all',
+        className,
+      )}
     >
       {styleVariants[style] || styleVariants.digital}
       {showDate && (

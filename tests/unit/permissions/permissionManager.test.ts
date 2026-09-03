@@ -13,7 +13,9 @@ describe('Permission Manager', () => {
     expect(await PermissionManager.isConsentRequired('notes', ['storage'])).toBe(false);
 
     // Чувствительные разрешения (network, bookmarks) — требуется
-    expect(await PermissionManager.isConsentRequired('rssReader', ['network', 'storage'])).toBe(true);
+    expect(await PermissionManager.isConsentRequired('rssReader', ['network', 'storage'])).toBe(
+      true,
+    );
     expect(await PermissionManager.isConsentRequired('bookmarks', ['bookmarks'])).toBe(true);
   });
 

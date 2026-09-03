@@ -29,7 +29,10 @@ export const SpeedDialGrid: React.FC<SpeedDialGridProps> = ({
     <div
       role="region"
       aria-label="Быстрые ссылки"
-      className={cn('w-full max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-3 py-3 px-4', className)}
+      className={cn(
+        'w-full max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-3 py-3 px-4',
+        className,
+      )}
     >
       {links.map((link) => {
         const favicon = getFaviconUrl(link.url);

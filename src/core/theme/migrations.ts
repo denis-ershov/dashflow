@@ -48,7 +48,8 @@ export function migrateThemeState(raw: unknown): ThemeStateV2 {
 
   // Если уже v2
   if (obj.version === CURRENT_THEME_VERSION) {
-    const rawPreset = typeof obj.activePresetId === 'string' ? obj.activePresetId : DEFAULT_PRESET_ID;
+    const rawPreset =
+      typeof obj.activePresetId === 'string' ? obj.activePresetId : DEFAULT_PRESET_ID;
     const preset = findPreset(rawPreset);
     const activePresetId = preset ? preset.id : DEFAULT_PRESET_ID;
 
@@ -63,7 +64,10 @@ export function migrateThemeState(raw: unknown): ThemeStateV2 {
     return {
       version: CURRENT_THEME_VERSION,
       activePresetId,
-      customTokens: typeof obj.customTokens === 'object' && obj.customTokens !== null ? (obj.customTokens as ThemeTokens) : undefined,
+      customTokens:
+        typeof obj.customTokens === 'object' && obj.customTokens !== null
+          ? (obj.customTokens as ThemeTokens)
+          : undefined,
       customCss,
       allowExternalCss: allowExternal,
       wallpaperUrl,
@@ -73,7 +77,8 @@ export function migrateThemeState(raw: unknown): ThemeStateV2 {
 
   // Миграция v1 -> v2
   // 1. Определение пресета
-  let rawPresetId = (obj.activePresetId ?? obj.theme_active_id ?? obj.active_id) as string | undefined;
+  let rawPresetId = (obj.activePresetId ?? obj.theme_active_id ?? obj.active_id) as
+    string | undefined;
   if (rawPresetId === 'default-dark') {
     rawPresetId = 'deep-blue';
   }

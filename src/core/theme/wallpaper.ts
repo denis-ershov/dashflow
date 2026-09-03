@@ -72,7 +72,10 @@ export interface WallpaperStyle {
  * Формирует значения для CSS-переменных --app-bg-image и --app-scrim.
  * Если URL не задан или невалиден, возвращает { bgImage: 'none', scrim: 0 }.
  */
-export function buildWallpaperStyle(url: string | null | undefined, customScrim?: number): WallpaperStyle {
+export function buildWallpaperStyle(
+  url: string | null | undefined,
+  customScrim?: number,
+): WallpaperStyle {
   const safeUrl = sanitizeWallpaperUrl(url);
   if (!safeUrl) {
     return {

@@ -108,8 +108,16 @@ describe('i18n Core Engine', () => {
   describe('Форматирование Intl дат и чисел', () => {
     it('должна форматировать дату согласно переданной локали', () => {
       const date = new Date('2026-08-27T12:00:00Z');
-      const formattedRu = formatDate(date, { month: 'long', year: 'numeric', timeZone: 'UTC' }, 'ru');
-      const formattedEn = formatDate(date, { month: 'long', year: 'numeric', timeZone: 'UTC' }, 'en');
+      const formattedRu = formatDate(
+        date,
+        { month: 'long', year: 'numeric', timeZone: 'UTC' },
+        'ru',
+      );
+      const formattedEn = formatDate(
+        date,
+        { month: 'long', year: 'numeric', timeZone: 'UTC' },
+        'en',
+      );
 
       expect(formattedRu.toLowerCase()).toContain('август');
       expect(formattedEn.toLowerCase()).toContain('august');

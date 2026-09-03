@@ -4,7 +4,9 @@ import { Slider } from '@/ui/primitives/Slider';
 
 describe('Slider', () => {
   it('рендерит ползунок с лейблом и значением', () => {
-    render(<Slider value={30} min={0} max={100} onChange={() => {}} label="Прозрачность" unit="%" />);
+    render(
+      <Slider value={30} min={0} max={100} onChange={() => {}} label="Прозрачность" unit="%" />,
+    );
 
     expect(screen.getByText('Прозрачность')).toBeInTheDocument();
     expect(screen.getByText('30%')).toBeInTheDocument();

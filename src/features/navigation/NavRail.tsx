@@ -1,14 +1,5 @@
 import React from 'react';
-import {
-  Plus,
-  Search,
-  Palette,
-  ShoppingBag,
-  Edit3,
-  Check,
-  Settings,
-  Sparkles,
-} from 'lucide-react';
+import { Plus, Search, Palette, ShoppingBag, Edit3, Check, Settings, Sparkles } from 'lucide-react';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useTranslation } from '@/core/i18n';
 import { Tooltip } from '@/ui/primitives';
@@ -16,12 +7,7 @@ import { cn } from '@/ui/lib/cn';
 
 export const NavRail: React.FC = () => {
   const { t } = useTranslation();
-  const {
-    isEditMode,
-    setEditMode,
-    setActiveModal,
-    setCommandPaletteOpen,
-  } = useDashboardStore();
+  const { isEditMode, setEditMode, setActiveModal, setCommandPaletteOpen } = useDashboardStore();
 
   const handleToggleEdit = () => {
     setEditMode(!isEditMode);
@@ -179,7 +165,9 @@ export const NavRail: React.FC = () => {
           onClick={handleToggleEdit}
           className={cn(
             'flex items-center justify-center w-11 h-11 rounded-xl transition-colors cursor-pointer',
-            isEditMode ? 'bg-primary text-primary-fg' : 'text-fg-muted hover:text-fg hover:bg-surface-hover',
+            isEditMode
+              ? 'bg-primary text-primary-fg'
+              : 'text-fg-muted hover:text-fg hover:bg-surface-hover',
           )}
         >
           {isEditMode ? <Check className="w-5 h-5" /> : <Edit3 className="w-5 h-5" />}

@@ -5,7 +5,10 @@ import { PRESETS, type PresetId, type ThemePreset } from '@/core/theme/presets';
 import { useThemeStore } from '@/core/theme/themeStore';
 import { Badge } from '@/ui/primitives/Badge';
 
-export const PRESET_META: Record<PresetId, { name: string; description: string; wcagGrade: 'AA' | 'AAA' }> = {
+export const PRESET_META: Record<
+  PresetId,
+  { name: string; description: string; wcagGrade: 'AA' | 'AAA' }
+> = {
   'neutral-dark': {
     name: 'Neutral Dark',
     description: 'Сбалансированная тёмная тема для долгой комфортной работы',
@@ -21,27 +24,27 @@ export const PRESET_META: Record<PresetId, { name: string; description: string; 
     description: 'Светлая чистая тема с мягким контрастом',
     wcagGrade: 'AA',
   },
-  'midnight': {
+  midnight: {
     name: 'Midnight Purple',
     description: 'Ночная фиолетовая палитра с неоновыми акцентами',
     wcagGrade: 'AA',
   },
-  'ocean': {
+  ocean: {
     name: 'Ocean Teal',
     description: 'Морская бирюзовая гамма для продуктивности',
     wcagGrade: 'AA',
   },
-  'minimal': {
+  minimal: {
     name: 'Minimal Monochrome',
     description: 'Строгий минималистичный монохром',
     wcagGrade: 'AAA',
   },
-  'aurora': {
+  aurora: {
     name: 'Aurora Emerald',
     description: 'Изумрудное северное сияние с яркими акцентами',
     wcagGrade: 'AA',
   },
-  'glass': {
+  glass: {
     name: 'Glass',
     description: 'Стеклянный полупрозрачный интерфейс с размытием фона',
     wcagGrade: 'AA',
@@ -61,7 +64,8 @@ export const PresetGrid: React.FC = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-xs text-fg-muted">
-          Выберите готовую тему оформления. Все темы оптимизированы и соответствуют стандарту контрастности WCAG 2.1 AA/AAA.
+          Выберите готовую тему оформления. Все темы оптимизированы и соответствуют стандарту
+          контрастности WCAG 2.1 AA/AAA.
         </p>
       </div>
 

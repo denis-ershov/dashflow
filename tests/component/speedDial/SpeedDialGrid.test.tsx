@@ -13,13 +13,7 @@ describe('SpeedDialGrid Component', () => {
     const handleAdd = vi.fn();
     const handleRemove = vi.fn();
 
-    render(
-      <SpeedDialGrid
-        links={links}
-        onAddClick={handleAdd}
-        onRemoveLink={handleRemove}
-      />,
-    );
+    render(<SpeedDialGrid links={links} onAddClick={handleAdd} onRemoveLink={handleRemove} />);
 
     expect(screen.getByText('Google')).toBeInTheDocument();
     expect(screen.getByText('GitHub')).toBeInTheDocument();

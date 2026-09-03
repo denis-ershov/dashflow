@@ -69,7 +69,11 @@ export class StorageAdapter {
   /**
    * Низкоуровневая запись в целевое хранилище (вынесена для тестируемости и перехвата)
    */
-  public static async writeRaw(key: string, serializedValue: string, rawValue: unknown): Promise<void> {
+  public static async writeRaw(
+    key: string,
+    serializedValue: string,
+    rawValue: unknown,
+  ): Promise<void> {
     if (typeof chrome !== 'undefined' && chrome.storage?.local) {
       await chrome.storage.local.set({ [key]: rawValue });
     } else {

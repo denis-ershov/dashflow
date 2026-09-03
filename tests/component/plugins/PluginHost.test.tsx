@@ -5,9 +5,7 @@ import { PluginHost } from '@/widgets/sandbox/PluginHost';
 
 describe('PluginHost Sandbox Frame', () => {
   it('должен рендерить iframe с sandbox="allow-scripts" без allow-same-origin', () => {
-    const { container } = render(
-      <PluginHost pluginId="weather_widget" instanceId="inst-1" />,
-    );
+    const { container } = render(<PluginHost pluginId="weather_widget" instanceId="inst-1" />);
 
     const iframe = container.querySelector('iframe');
     expect(iframe).toBeInTheDocument();

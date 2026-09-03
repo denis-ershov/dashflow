@@ -21,7 +21,11 @@ describe('Button', () => {
   it('не вызывает клик в disabled состоянии', async () => {
     const user = userEvent.setup();
     const handleClick = vi.fn();
-    render(<Button disabled onClick={handleClick}>Отключена</Button>);
+    render(
+      <Button disabled onClick={handleClick}>
+        Отключена
+      </Button>,
+    );
 
     const btn = screen.getByRole('button', { name: 'Отключена' });
     expect(btn).toBeDisabled();

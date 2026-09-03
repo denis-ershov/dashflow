@@ -82,7 +82,5 @@ export const Modal: React.FC<ModalProps> = ({
     </div>
   );
 
-  return typeof document !== 'undefined'
-    ? createPortal(modalContent, document.body)
-    : modalContent;
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

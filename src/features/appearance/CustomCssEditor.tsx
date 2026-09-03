@@ -42,7 +42,8 @@ export const CustomCssEditor: React.FC = () => {
     <div className="space-y-4">
       <div className="space-y-1">
         <p className="text-xs text-fg-muted">
-          Пользовательский CSS позволяет переопределять стили интерфейса DashFlow. В целях безопасности директивы @import и невалидные селекторы блокируются.
+          Пользовательский CSS позволяет переопределять стили интерфейса DashFlow. В целях
+          безопасности директивы @import и невалидные селекторы блокируются.
         </p>
       </div>
 
@@ -58,12 +59,17 @@ export const CustomCssEditor: React.FC = () => {
         />
 
         <div className="flex items-center justify-between text-xs text-fg-muted px-1">
-          <span>Символов: {code.length} / {MAX_CSS_LENGTH}</span>
+          <span>
+            Символов: {code.length} / {MAX_CSS_LENGTH}
+          </span>
         </div>
       </div>
 
       {error && (
-        <div role="alert" className="p-3 rounded-xl bg-danger/10 border border-danger/20 text-danger text-xs flex items-center gap-2">
+        <div
+          role="alert"
+          className="p-3 rounded-xl bg-danger/10 border border-danger/20 text-danger text-xs flex items-center gap-2"
+        >
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>

@@ -57,14 +57,20 @@ describe('isAllowedWallpaperUrl', () => {
   });
 
   it('отклоняет URL с опасными символами кавычек и точек с запятой для CSS-инъекций', () => {
-    expect(isAllowedWallpaperUrl('https://example.com/bg.png"); body { display: none; } /*')).toBe(false);
-    expect(isAllowedWallpaperUrl("https://example.com/bg.png'); body { color: red; } /*")).toBe(false);
+    expect(isAllowedWallpaperUrl('https://example.com/bg.png"); body { display: none; } /*')).toBe(
+      false,
+    );
+    expect(isAllowedWallpaperUrl("https://example.com/bg.png'); body { color: red; } /*")).toBe(
+      false,
+    );
   });
 });
 
 describe('sanitizeWallpaperUrl', () => {
   it('возвращает нормализованный URL для валидных схем', () => {
-    expect(sanitizeWallpaperUrl('  https://images.unsplash.com/bg.jpg  ')).toBe('https://images.unsplash.com/bg.jpg');
+    expect(sanitizeWallpaperUrl('  https://images.unsplash.com/bg.jpg  ')).toBe(
+      'https://images.unsplash.com/bg.jpg',
+    );
   });
 
   it('возвращает null для невалидных URL и пустых строк', () => {

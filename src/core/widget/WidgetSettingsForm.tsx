@@ -65,7 +65,9 @@ export function WidgetSettingsForm<S>({
                 key={keyStr}
                 type="number"
                 label={label}
-                value={typeof rawValue === 'number' ? String(rawValue) : String(field.defaultValue ?? 0)}
+                value={
+                  typeof rawValue === 'number' ? String(rawValue) : String(field.defaultValue ?? 0)
+                }
                 onChange={(e) => updateField(key, Number(e.target.value))}
               />
             );
@@ -102,7 +104,11 @@ export function WidgetSettingsForm<S>({
                 </label>
                 <div className="relative">
                   <select
-                    value={typeof rawValue === 'string' || typeof rawValue === 'number' ? String(rawValue) : String(field.defaultValue ?? '')}
+                    value={
+                      typeof rawValue === 'string' || typeof rawValue === 'number'
+                        ? String(rawValue)
+                        : String(field.defaultValue ?? '')
+                    }
                     onChange={(e) => updateField(key, e.target.value)}
                     className="w-full min-h-[44px] px-3 bg-surface text-sm text-fg border border-line rounded-md focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 appearance-none cursor-pointer"
                   >
@@ -125,12 +131,18 @@ export function WidgetSettingsForm<S>({
                 <div className="flex items-center gap-3">
                   <input
                     type="color"
-                    value={typeof rawValue === 'string' ? rawValue : String(field.defaultValue ?? '#000000')}
+                    value={
+                      typeof rawValue === 'string'
+                        ? rawValue
+                        : String(field.defaultValue ?? '#000000')
+                    }
                     onChange={(e) => updateField(key, e.target.value)}
                     className="w-11 h-11 rounded-md border border-line cursor-pointer bg-transparent"
                   />
                   <Input
-                    value={typeof rawValue === 'string' ? rawValue : String(field.defaultValue ?? '')}
+                    value={
+                      typeof rawValue === 'string' ? rawValue : String(field.defaultValue ?? '')
+                    }
                     onChange={(e) => updateField(key, e.target.value)}
                   />
                 </div>
@@ -144,7 +156,8 @@ export function WidgetSettingsForm<S>({
                 ? (field.defaultValue as unknown[])
                 : [];
             const currentArray: Array<string | number> = rawArr.filter(
-              (item): item is string | number => typeof item === 'string' || typeof item === 'number',
+              (item): item is string | number =>
+                typeof item === 'string' || typeof item === 'number',
             );
 
             return (

@@ -22,7 +22,12 @@ describe('YearProgressWidget Component & Manifest', () => {
   });
 
   it('должен рендерить кнопку с процентом прогресса', () => {
-    render(<YearProgressWidget instanceId="yp-1" settings={{ defaultMode: 'year', showPercentage: true }} />);
+    render(
+      <YearProgressWidget
+        instanceId="yp-1"
+        settings={{ defaultMode: 'year', showPercentage: true }}
+      />,
+    );
 
     expect(screen.getByRole('button', { name: /прогресс времени/i })).toBeInTheDocument();
   });

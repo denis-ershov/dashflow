@@ -80,18 +80,14 @@ describe('TodoWidget Component & Manifest', () => {
 
     expect(setSpy).toHaveBeenCalledWith(
       'dashflow_widget_todo_items',
-      expect.arrayContaining([
-        expect.objectContaining({ id: '1', completed: true }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ id: '1', completed: true })]),
     );
   });
 
   it('должен переключаться на вкладку привычек и отмечать день', async () => {
     vi.spyOn(StorageAdapter, 'get').mockImplementation((key) => {
       if (key === 'dashflow_widget_habit_items') {
-        return Promise.resolve([
-          { id: 'h1', title: 'Пить воду', history: {} },
-        ]);
+        return Promise.resolve([{ id: 'h1', title: 'Пить воду', history: {} }]);
       }
       return Promise.resolve([]);
     });
@@ -108,9 +104,7 @@ describe('TodoWidget Component & Manifest', () => {
 
     expect(setSpy).toHaveBeenCalledWith(
       'dashflow_widget_habit_items',
-      expect.arrayContaining([
-        expect.objectContaining({ id: 'h1' }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ id: 'h1' })]),
     );
   });
 });

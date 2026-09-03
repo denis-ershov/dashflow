@@ -41,6 +41,15 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ se
       formattedUrl = `https://${formattedUrl}`;
     }
 
+    try {
+      const parsed = new URL(formattedUrl);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        return;
+      }
+    } catch {
+      return;
+    }
+
     const newItem: QuickLinkItem = {
       id: Date.now().toString(),
       title: cleanTitle,

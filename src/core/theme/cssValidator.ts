@@ -79,7 +79,10 @@ function reject(code: CssRejectionCode, message: string, detail?: string): CssRe
  * пользователь должен понимать, что отклонено (спека, риск «CSS-инъекция»;
  * правило 112). Сброс CSS из настроек доступен всегда.
  */
-export function validateCustomCss(input: unknown, options: ValidateCssOptions = {}): CssValidationResult {
+export function validateCustomCss(
+  input: unknown,
+  options: ValidateCssOptions = {},
+): CssValidationResult {
   const allowExternal = options.allowExternal === true;
 
   if (typeof input !== 'string') {
@@ -120,7 +123,10 @@ export function validateCustomCss(input: unknown, options: ValidateCssOptions = 
 
   // Второй слой: нативный парсер отсекает синтаксический мусор. Только в браузере
   // (в Node/jsdom нет constructable CSSStyleSheet с replaceSync), поэтому под feature-detect и не как основа защиты.
-  if (typeof CSSStyleSheet !== 'undefined' && typeof CSSStyleSheet.prototype?.replaceSync === 'function') {
+  if (
+    typeof CSSStyleSheet !== 'undefined' &&
+    typeof CSSStyleSheet.prototype?.replaceSync === 'function'
+  ) {
     try {
       const sheet = new CSSStyleSheet();
       sheet.replaceSync(withoutComments);

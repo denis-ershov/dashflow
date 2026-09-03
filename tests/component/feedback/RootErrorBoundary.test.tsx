@@ -35,7 +35,9 @@ describe('RootErrorBoundary Component', () => {
     expect(screen.getByText('Что-то пошло не так')).toBeInTheDocument();
     expect(screen.getByText('Test crash in child component')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Перезагрузить страницу/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Сбросить макет на стандартный/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Сбросить макет на стандартный/i }),
+    ).toBeInTheDocument();
 
     spy.mockRestore();
   });

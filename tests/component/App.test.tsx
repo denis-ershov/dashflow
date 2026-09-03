@@ -45,14 +45,16 @@ describe('App Root Layout', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole('navigation', { name: /панель быстрого управления/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('navigation', { name: /панель быстрого управления/i }),
+      ).toBeInTheDocument();
       expect(screen.getByRole('timer')).toBeInTheDocument();
       expect(screen.getByTestId('grid-engine-container')).toBeInTheDocument();
     });
   });
 
   it('должен показывать индикатор загрузки, пока приложение не инициализировано', () => {
-    useAppStore.setState({ isInitialized: false });
+    useAppStore.setState({ isInitialized: false, initialize: vi.fn() });
 
     render(<App />);
 

@@ -5,12 +5,7 @@ import { ErrorState } from '@/ui/feedback/ErrorState';
 
 describe('ErrorState', () => {
   it('рендерит сообщение об ошибке с role="alert"', () => {
-    render(
-      <ErrorState
-        title="Ошибка загрузки"
-        message="Не удалось получить данные с сервера"
-      />
-    );
+    render(<ErrorState title="Ошибка загрузки" message="Не удалось получить данные с сервера" />);
 
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByText('Ошибка загрузки')).toBeInTheDocument();
@@ -21,13 +16,7 @@ describe('ErrorState', () => {
     const user = userEvent.setup();
     const handleRetry = vi.fn();
 
-    render(
-      <ErrorState
-        title="Сбой"
-        onRetry={handleRetry}
-        retryLabel="Повторить попытку"
-      />
-    );
+    render(<ErrorState title="Сбой" onRetry={handleRetry} retryLabel="Повторить попытку" />);
 
     const btn = screen.getByRole('button', { name: 'Повторить попытку' });
     expect(btn).toBeInTheDocument();

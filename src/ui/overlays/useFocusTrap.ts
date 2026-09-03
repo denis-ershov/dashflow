@@ -52,7 +52,10 @@ export function useFocusTrap(
         const lastElement = focusable[focusable.length - 1];
 
         if (e.shiftKey) {
-          if (document.activeElement === firstElement || document.activeElement === containerRef.current) {
+          if (
+            document.activeElement === firstElement ||
+            document.activeElement === containerRef.current
+          ) {
             e.preventDefault();
             lastElement.focus();
           }

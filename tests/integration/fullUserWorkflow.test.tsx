@@ -13,7 +13,11 @@ describe('Integration: Full User Workflow & Core Resilience', () => {
     // Чистим память и хранилище
     WidgetRegistry.clear();
     registerBuiltInWidgets();
-    await StorageAdapter.set(STORAGE_KEYS.DASHBOARD, { version: 2, instances: [], layouts: { xl: [], lg: [], md: [], sm: [], xs: [] } });
+    await StorageAdapter.set(STORAGE_KEYS.DASHBOARD, {
+      version: 2,
+      instances: [],
+      layouts: { xl: [], lg: [], md: [], sm: [], xs: [] },
+    });
     await StorageAdapter.set(STORAGE_KEYS.CUSTOM_PLUGINS, []);
     await StorageAdapter.set(STORAGE_KEYS.PERMISSION_GRANTS, {});
 
@@ -37,7 +41,8 @@ describe('Integration: Full User Workflow & Core Resilience', () => {
     // 1. Добавление виджета часов
     useDashboardStore.getState().addWidget('clock');
     expect(useDashboardStore.getState().widgets).toHaveLength(initialCount + 1);
-    const clockInstance = useDashboardStore.getState().widgets[useDashboardStore.getState().widgets.length - 1];
+    const clockInstance =
+      useDashboardStore.getState().widgets[useDashboardStore.getState().widgets.length - 1];
     expect(clockInstance.widgetId).toBe('clock');
     expect(clockInstance.instanceId).toBeDefined();
 
@@ -46,8 +51,12 @@ describe('Integration: Full User Workflow & Core Resilience', () => {
     expect(useDashboardStore.getState().widgets).toHaveLength(initialCount + 2);
 
     // 3. Обновление настроек виджета
-    useDashboardStore.getState().updateWidgetSettings(clockInstance.instanceId, { is24Hour: false, showSeconds: true });
-    const updated = useDashboardStore.getState().widgets.find((w) => w.instanceId === clockInstance.instanceId);
+    useDashboardStore
+      .getState()
+      .updateWidgetSettings(clockInstance.instanceId, { is24Hour: false, showSeconds: true });
+    const updated = useDashboardStore
+      .getState()
+      .widgets.find((w) => w.instanceId === clockInstance.instanceId);
     expect(updated?.settings).toEqual({ is24Hour: false, showSeconds: true });
 
     // 4. Переключение режима редактирования

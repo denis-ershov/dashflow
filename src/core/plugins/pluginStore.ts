@@ -19,7 +19,9 @@ export interface PluginState {
 /**
  * Создает манифест виджета на основе декларативного манифеста плагина
  */
-export const createWidgetManifestFromPlugin = (plugin: DeclarativePluginManifest): WidgetManifest => {
+export const createWidgetManifestFromPlugin = (
+  plugin: DeclarativePluginManifest,
+): WidgetManifest => {
   return {
     id: plugin.id,
     name: plugin.name,
@@ -33,7 +35,8 @@ export const createWidgetManifestFromPlugin = (plugin: DeclarativePluginManifest
     load: async () => {
       // Ленивая загрузка соответствующего шаблонного компонента
       if (plugin.type === 'embed') {
-        const { IframeWidget: IframeComponent } = await import('@/widgets/built-in/IframeWidget/IframeWidget');
+        const { IframeWidget: IframeComponent } =
+          await import('@/widgets/built-in/IframeWidget/IframeWidget');
         return {
           default: (props: WidgetProps<Record<string, unknown>>) => {
             const embedCfg = plugin.config as EmbedPluginConfig;
@@ -59,7 +62,8 @@ export const createWidgetManifestFromPlugin = (plugin: DeclarativePluginManifest
         };
       }
       if (plugin.type === 'links') {
-        const { QuickLinksWidget: QuickLinksComponent } = await import('@/widgets/built-in/QuickLinksWidget/QuickLinksWidget');
+        const { QuickLinksWidget: QuickLinksComponent } =
+          await import('@/widgets/built-in/QuickLinksWidget/QuickLinksWidget');
         return {
           default: (props: WidgetProps<Record<string, unknown>>) => {
             return QuickLinksComponent(props);

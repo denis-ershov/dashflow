@@ -13,7 +13,9 @@ describe('GreetingWidget Component & Manifest', () => {
   });
 
   it('должен отображать приветствие и имя пользователя', () => {
-    render(<GreetingWidget instanceId="greeting-1" settings={{ userName: 'Алексей', showIcon: true }} />);
+    render(
+      <GreetingWidget instanceId="greeting-1" settings={{ userName: 'Алексей', showIcon: true }} />,
+    );
 
     expect(screen.getByRole('heading')).toBeInTheDocument();
     expect(screen.getByText(/Алексей/)).toBeInTheDocument();

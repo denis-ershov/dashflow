@@ -28,21 +28,25 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    let batteryInstance: BatteryManager | null = null;
+    let updateBatteryListener: (() => void) | null = null;
+
     // Батарея
     if (typeof navigator !== 'undefined' && 'getBattery' in navigator) {
       (navigator as unknown as { getBattery: () => Promise<BatteryManager> })
         .getBattery()
         .then((battery) => {
+          batteryInstance = battery;
           setBatteryLevel(Math.round(battery.level * 100));
           setIsCharging(battery.charging);
 
-          const updateBattery = () => {
+          updateBatteryListener = () => {
             setBatteryLevel(Math.round(battery.level * 100));
             setIsCharging(battery.charging);
           };
 
-          battery.addEventListener('levelchange', updateBattery);
-          battery.addEventListener('chargingchange', updateBattery);
+          battery.addEventListener('levelchange', updateBatteryListener);
+          battery.addEventListener('chargingchange', updateBatteryListener);
         })
         .catch(() => {});
     }
@@ -55,8 +59,7 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
     }
 
     // Использование памяти JS Heap
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const perfMem = (performance as any).memory;
+    const perfMem = (performance as unknown as { memory?: { usedJSHeapSize?: number } }).memory;
     if (perfMem?.usedJSHeapSize) {
       setMemoryUsage(Math.round(perfMem.usedJSHeapSize / (1024 * 1024)));
     }
@@ -64,6 +67,10 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      if (batteryInstance && updateBatteryListener) {
+        batteryInstance.removeEventListener('levelchange', updateBatteryListener);
+        batteryInstance.removeEventListener('chargingchange', updateBatteryListener);
+      }
     };
   }, []);
 

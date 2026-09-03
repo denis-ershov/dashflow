@@ -11,12 +11,7 @@ describe('Dropdown', () => {
 
   it('открывает меню по клику на триггер и закрывает при повторном клике', async () => {
     const user = userEvent.setup();
-    render(
-      <Dropdown
-        trigger={<button type="button">Опции</button>}
-        items={items}
-      />
-    );
+    render(<Dropdown trigger={<button type="button">Опции</button>} items={items} />);
 
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
 
@@ -32,16 +27,9 @@ describe('Dropdown', () => {
   it('вызывает onClick пункта меню и закрывает меню', async () => {
     const user = userEvent.setup();
     const handleSettings = vi.fn();
-    const testItems: DropdownItem[] = [
-      { id: 's', label: 'Параметры', onClick: handleSettings },
-    ];
+    const testItems: DropdownItem[] = [{ id: 's', label: 'Параметры', onClick: handleSettings }];
 
-    render(
-      <Dropdown
-        trigger={<button type="button">Меню</button>}
-        items={testItems}
-      />
-    );
+    render(<Dropdown trigger={<button type="button">Меню</button>} items={testItems} />);
 
     await user.click(screen.getByRole('button', { name: 'Меню' }));
     await user.click(screen.getByText('Параметры'));
@@ -52,12 +40,7 @@ describe('Dropdown', () => {
 
   it('закрывается по нажатию Escape', async () => {
     const user = userEvent.setup();
-    render(
-      <Dropdown
-        trigger={<button type="button">Открыть меню</button>}
-        items={items}
-      />
-    );
+    render(<Dropdown trigger={<button type="button">Открыть меню</button>} items={items} />);
 
     await user.click(screen.getByRole('button', { name: 'Открыть меню' }));
     expect(screen.getByRole('menu')).toBeInTheDocument();

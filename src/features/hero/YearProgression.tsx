@@ -20,23 +20,37 @@ export const YearProgression: React.FC<YearProgressionProps> = ({ className }) =
 
       // День
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-      const dayPercent = Math.min(100, Math.max(0, ((now.getTime() - startOfDay) / 86400000) * 100));
+      const dayPercent = Math.min(
+        100,
+        Math.max(0, ((now.getTime() - startOfDay) / 86400000) * 100),
+      );
 
       // Месяц
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
       const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
       const totalMonthMs = daysInMonth * 86400000;
-      const monthPercent = Math.min(100, Math.max(0, ((now.getTime() - startOfMonth) / totalMonthMs) * 100));
+      const monthPercent = Math.min(
+        100,
+        Math.max(0, ((now.getTime() - startOfMonth) / totalMonthMs) * 100),
+      );
 
       // Год
       const startOfYear = new Date(now.getFullYear(), 0, 1).getTime();
-      const isLeap = (now.getFullYear() % 4 === 0 && now.getFullYear() % 100 !== 0) || now.getFullYear() % 400 === 0;
+      const isLeap =
+        (now.getFullYear() % 4 === 0 && now.getFullYear() % 100 !== 0) ||
+        now.getFullYear() % 400 === 0;
       const totalYearMs = (isLeap ? 366 : 365) * 86400000;
-      const yearPercent = Math.min(100, Math.max(0, ((now.getTime() - startOfYear) / totalYearMs) * 100));
+      const yearPercent = Math.min(
+        100,
+        Math.max(0, ((now.getTime() - startOfYear) / totalYearMs) * 100),
+      );
 
       setProgress({
         year: { percent: Math.round(yearPercent * 10) / 10, label: `Год ${now.getFullYear()}` },
-        month: { percent: Math.round(monthPercent * 10) / 10, label: new Intl.DateTimeFormat('ru-RU', { month: 'long' }).format(now) },
+        month: {
+          percent: Math.round(monthPercent * 10) / 10,
+          label: new Intl.DateTimeFormat('ru-RU', { month: 'long' }).format(now),
+        },
         day: { percent: Math.round(dayPercent * 10) / 10, label: 'Сегодня' },
       });
     };

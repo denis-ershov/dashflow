@@ -54,7 +54,9 @@
 
 .glass-panel:hover {
   border-color: var(--dashflow-glass-border-hover);
-  box-shadow: 0 12px 40px rgb(0 0 0 / 0.45), 0 0 30px var(--dashflow-primary-glow);
+  box-shadow:
+    0 12px 40px rgb(0 0 0 / 0.45),
+    0 0 30px var(--dashflow-primary-glow);
 }
 
 .glass-card {
@@ -95,7 +97,9 @@
 .glass-pill:hover {
   background-color: var(--dashflow-glass-bg-hover);
   border-color: var(--dashflow-glass-border-hover);
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.35), 0 0 20px var(--dashflow-primary-glow);
+  box-shadow:
+    0 6px 24px rgb(0 0 0 / 0.35),
+    0 0 20px var(--dashflow-primary-glow);
   transform: translateY(-1px);
 }
 

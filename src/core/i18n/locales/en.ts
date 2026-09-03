@@ -97,7 +97,8 @@ export const en = {
   backup: {
     title: 'Configuration Import & Export',
     exportTitle: 'Export Dashboard State',
-    exportDesc: 'Save current widget layout, grid, and colors to a JSON file to transfer to another device.',
+    exportDesc:
+      'Save current widget layout, grid, and colors to a JSON file to transfer to another device.',
     importTitle: 'Import from JSON',
     importDesc: 'Paste previously exported JSON configuration to restore.',
     download: 'Download JSON Configuration',

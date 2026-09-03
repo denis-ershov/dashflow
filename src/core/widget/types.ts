@@ -1,5 +1,5 @@
 import type React from 'react';
-import type { TranslationKey } from '@/core/i18n';
+import type { TranslationKey } from '@/core/i18n/i18n';
 
 /**
  * Категории виджетов DashFlow
@@ -44,13 +44,7 @@ export interface WidgetSize {
  * Доступные типы полей настроек виджетов
  */
 export type WidgetSettingFieldType =
-  | 'text'
-  | 'number'
-  | 'boolean'
-  | 'select'
-  | 'slider'
-  | 'color'
-  | 'multiselect';
+  'text' | 'number' | 'boolean' | 'select' | 'slider' | 'color' | 'multiselect';
 
 export interface WidgetSettingOption<V extends string | number = string | number> {
   labelKey: string;
@@ -100,7 +94,9 @@ export interface WidgetDefinition<S = Record<string, unknown>> {
   permissions?: WidgetPermission[];
   settingsSchema?: WidgetSettingFieldSchema<S>[];
   load: () => Promise<{ default: React.ComponentType<WidgetProps<S>> }>;
-  loadSettings?: () => Promise<{ default: React.ComponentType<{ settings: S; onChange: (newSettings: S) => void }> }>;
+  loadSettings?: () => Promise<{
+    default: React.ComponentType<{ settings: S; onChange: (newSettings: S) => void }>;
+  }>;
 }
 
 export type WidgetManifest<S = Record<string, unknown>> = WidgetDefinition<S>;

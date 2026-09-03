@@ -107,5 +107,3 @@ describe('bookmarkStyles helper', () => {
     expect(classes.titleClass).toContain('group-hover/tile:');
   });
 });
-
-

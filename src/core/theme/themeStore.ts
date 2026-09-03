@@ -201,14 +201,7 @@ export const useThemeStore = create<ThemeStoreState>((set, get) => ({
       scrim: DEFAULT_SCRIM,
     });
 
-    syncToDom(
-      DEFAULT_PRESET_ID,
-      undefined,
-      '',
-      false,
-      null,
-      DEFAULT_SCRIM,
-    );
+    syncToDom(DEFAULT_PRESET_ID, undefined, '', false, null, DEFAULT_SCRIM);
   },
 
   initialize: (raw?: unknown) => {

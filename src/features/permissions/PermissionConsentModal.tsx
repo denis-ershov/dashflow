@@ -32,17 +32,10 @@ export const PermissionConsentModal: React.FC<PermissionConsentModalProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const validPerms = permissions.filter(
-    (p): p is PermissionType => p in PERMISSION_DEFINITIONS,
-  );
+  const validPerms = permissions.filter((p): p is PermissionType => p in PERMISSION_DEFINITIONS);
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onDeny}
-      title={t('permissions.title')}
-      maxWidth="md"
-    >
+    <Modal isOpen={isOpen} onClose={onDeny} title={t('permissions.title')} maxWidth="md">
       <div className="space-y-5 select-none">
         {/* Заголовок виджета */}
         <div className="p-3.5 rounded-xl bg-surface border border-line flex items-center gap-3">
@@ -86,9 +79,7 @@ export const PermissionConsentModal: React.FC<PermissionConsentModalProps> = ({
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-fg-muted mt-0.5 leading-relaxed">
-                      {desc}
-                    </p>
+                    <p className="text-[11px] text-fg-muted mt-0.5 leading-relaxed">{desc}</p>
                   </div>
                 </div>
               );
@@ -104,18 +95,10 @@ export const PermissionConsentModal: React.FC<PermissionConsentModalProps> = ({
 
         {/* Кнопки действий (зоны нажатия >= 44x44 px) */}
         <div className="flex items-center justify-end gap-3 pt-2">
-          <Button
-            variant="ghost"
-            onClick={onDeny}
-            className="min-h-[44px]"
-          >
+          <Button variant="ghost" onClick={onDeny} className="min-h-[44px]">
             {t('permissions.deny')}
           </Button>
-          <Button
-            variant="primary"
-            onClick={onAllow}
-            className="min-h-[44px]"
-          >
+          <Button variant="primary" onClick={onAllow} className="min-h-[44px]">
             {t('permissions.allow')}
           </Button>
         </div>

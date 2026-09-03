@@ -9,7 +9,7 @@ describe('Tooltip', () => {
     render(
       <Tooltip content="Текст подсказки">
         <button type="button">Наведи</button>
-      </Tooltip>
+      </Tooltip>,
     );
 
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
@@ -27,7 +27,7 @@ describe('Tooltip', () => {
     render(
       <Tooltip content="Клавиатурная подсказка">
         <button type="button">Фокус</button>
-      </Tooltip>
+      </Tooltip>,
     );
 
     await user.tab();

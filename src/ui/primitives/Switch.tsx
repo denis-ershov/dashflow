@@ -58,11 +58,7 @@ export const Switch: React.FC<SwitchProps> = ({
           )}
         />
       </button>
-      {label && (
-        <span className="text-sm font-medium text-fg">
-          {label}
-        </span>
-      )}
+      {label && <span className="text-sm font-medium text-fg">{label}</span>}
     </label>
   );
 };

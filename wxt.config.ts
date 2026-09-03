@@ -10,8 +10,8 @@ export default defineConfig({
 
     return {
       name: 'DashFlow — Personal Start Page',
-      description: 'Персональное рабочее пространство и Dashboard в новой вкладке Chrome.',
-      version: '3.7.0',
+      description: 'Персональное рабочее пространство и Dashboard в новой вкладке браузера.',
+      version: '3.7.1',
       default_locale: 'ru',
       permissions: ['storage', 'bookmarks', 'geolocation'],
       host_permissions: [
@@ -32,9 +32,18 @@ export default defineConfig({
       action: {
         default_title: 'DashFlow',
       },
+      browser_specific_settings: {
+        gecko: {
+          id: 'dashflow@addon',
+          strict_min_version: '109.0',
+        },
+      },
     };
   },
   vite: () => ({
     plugins: [tailwindcss()],
+    build: {
+      chunkSizeWarningLimit: 650,
+    },
   }),
 });

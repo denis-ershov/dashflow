@@ -1,8 +1,4 @@
-import {
-  DeclarativePluginManifest,
-  DeclarativePluginType,
-  PluginPermission,
-} from './types';
+import { DeclarativePluginManifest, DeclarativePluginType, PluginPermission } from './types';
 
 const ALLOWED_TYPES: DeclarativePluginType[] = ['rss', 'embed', 'links', 'api'];
 const ALLOWED_PERMISSIONS: PluginPermission[] = ['storage', 'network', 'bookmarks'];
@@ -66,7 +62,9 @@ export const validatePluginManifest = (input: unknown): ValidationResult => {
   } else {
     for (const p of raw.permissions) {
       if (!ALLOWED_PERMISSIONS.includes(p as PluginPermission)) {
-        errors.push(`Недопустимое разрешение: ${String(p)}. Допустимы: ${ALLOWED_PERMISSIONS.join(', ')}`);
+        errors.push(
+          `Недопустимое разрешение: ${String(p)}. Допустимы: ${ALLOWED_PERMISSIONS.join(', ')}`,
+        );
       }
     }
   }

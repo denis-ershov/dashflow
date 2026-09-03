@@ -32,13 +32,13 @@ describe('QuickLinksWidget Component & Manifest', () => {
     });
   });
 
-  it('должен открывать форму добавления и сохранять новую ссылку', () => {
+  it('должен открывать форму добавления и сохранять новую ссылку', async () => {
     vi.spyOn(StorageAdapter, 'get').mockResolvedValue([]);
     const setSpy = vi.spyOn(StorageAdapter, 'set').mockResolvedValue();
 
     render(<QuickLinksWidget instanceId="links-1" settings={{ showTitles: true }} />);
 
-    const addBtn = screen.getByRole('button', { name: /добавить/i });
+    const addBtn = await screen.findByRole('button', { name: /добавить/i });
     fireEvent.click(addBtn);
 
     const titleInput = screen.getByPlaceholderText(/название ссылки/i);
@@ -50,14 +50,16 @@ describe('QuickLinksWidget Component & Manifest', () => {
     const saveBtn = screen.getByRole('button', { name: /сохранить/i });
     fireEvent.click(saveBtn);
 
-    expect(setSpy).toHaveBeenCalledWith(
-      STORAGE_KEYS.QUICK_LINKS,
-      expect.arrayContaining([
-        expect.objectContaining({
-          title: 'MDN Web Docs',
-          url: 'https://developer.mozilla.org',
-        }),
-      ]),
-    );
+    await waitFor(() => {
+      expect(setSpy).toHaveBeenCalledWith(
+        STORAGE_KEYS.QUICK_LINKS,
+        expect.arrayContaining([
+          expect.objectContaining({
+            title: 'MDN Web Docs',
+            url: 'https://developer.mozilla.org',
+          }),
+        ]),
+      );
+    });
   });
 });

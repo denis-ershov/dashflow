@@ -25,7 +25,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full flex flex-col gap-1">
         {label && (
-          <label htmlFor={inputId} className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
+          <label
+            htmlFor={inputId}
+            className="text-xs font-semibold text-fg-muted uppercase tracking-wider"
+          >
             {label}
           </label>
         )}
@@ -51,9 +54,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {rightElement && (
-            <div className="absolute right-3 text-fg-muted flex items-center">
-              {rightElement}
-            </div>
+            <div className="absolute right-3 text-fg-muted flex items-center">{rightElement}</div>
           )}
         </div>
         {error && (

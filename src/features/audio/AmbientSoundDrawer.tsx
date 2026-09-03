@@ -41,7 +41,11 @@ export const AmbientSoundDrawer: React.FC<AmbientSoundDrawerProps> = ({ isOpen, 
                 aria-label={isMuted ? 'Включить звук' : 'Выключить звук'}
                 className="p-1 rounded-lg text-fg-muted hover:text-fg hover:bg-surface transition-colors cursor-pointer"
               >
-                {isMuted ? <VolumeX className="w-4 h-4 text-danger" /> : <Volume2 className="w-4 h-4 text-primary" />}
+                {isMuted ? (
+                  <VolumeX className="w-4 h-4 text-danger" />
+                ) : (
+                  <Volume2 className="w-4 h-4 text-primary" />
+                )}
               </button>
               {isAnyPlaying && (
                 <Button
@@ -96,9 +100,7 @@ export const AmbientSoundDrawer: React.FC<AmbientSoundDrawerProps> = ({ isOpen, 
                       <div className="text-sm font-semibold text-fg tracking-tight">
                         {sound.name}
                       </div>
-                      <div className="text-xs text-fg-muted mt-1">
-                        {sound.description}
-                      </div>
+                      <div className="text-xs text-fg-muted mt-1">{sound.description}</div>
                     </div>
                   </div>
 

@@ -8,7 +8,7 @@ describe('Drawer', () => {
     render(
       <Drawer isOpen={false} onClose={() => {}} title="Панель">
         <div>Контент панели</div>
-      </Drawer>
+      </Drawer>,
     );
 
     expect(screen.queryByText('Контент панели')).not.toBeInTheDocument();
@@ -18,7 +18,7 @@ describe('Drawer', () => {
     render(
       <Drawer isOpen={true} onClose={() => {}} title="Каталог" subtitle="Доступные виджеты">
         <div>Контент панели</div>
-      </Drawer>
+      </Drawer>,
     );
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -33,7 +33,7 @@ describe('Drawer', () => {
     render(
       <Drawer isOpen={true} onClose={handleClose} title="Боковая панель">
         <div>Тело</div>
-      </Drawer>
+      </Drawer>,
     );
 
     await user.click(screen.getByRole('button', { name: 'Закрыть' }));

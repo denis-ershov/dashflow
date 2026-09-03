@@ -120,7 +120,9 @@ describe('applyWallpaper', () => {
 
   it('устанавливает CSS-переменные обоев и scrim на documentElement', () => {
     applyWallpaper('https://images.unsplash.com/photo-1', 0.45);
-    expect(document.documentElement.style.getPropertyValue('--app-bg-image')).toBe('url("https://images.unsplash.com/photo-1")');
+    expect(document.documentElement.style.getPropertyValue('--app-bg-image')).toBe(
+      'url("https://images.unsplash.com/photo-1")',
+    );
     expect(document.documentElement.style.getPropertyValue('--app-scrim')).toBe('0.45');
   });
 
@@ -146,9 +148,15 @@ describe('applyFullAppearance', () => {
       scrim: 0.2,
     });
 
-    expect(document.getElementById(THEME_STYLE_ID)?.textContent).toContain('--dashflow-canvas: rgb(6 32 38)');
-    expect(document.getElementById(CUSTOM_CSS_STYLE_ID)?.textContent).toBe('.ocean-accent { color: cyan; }');
-    expect(document.documentElement.style.getPropertyValue('--app-bg-image')).toBe('url("https://images.unsplash.com/ocean")');
+    expect(document.getElementById(THEME_STYLE_ID)?.textContent).toContain(
+      '--dashflow-canvas: rgb(6 32 38)',
+    );
+    expect(document.getElementById(CUSTOM_CSS_STYLE_ID)?.textContent).toBe(
+      '.ocean-accent { color: cyan; }',
+    );
+    expect(document.documentElement.style.getPropertyValue('--app-bg-image')).toBe(
+      'url("https://images.unsplash.com/ocean")',
+    );
     expect(document.documentElement.style.getPropertyValue('--app-scrim')).toBe('0.2');
   });
 });

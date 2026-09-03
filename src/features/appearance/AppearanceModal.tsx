@@ -23,12 +23,7 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
   ];
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Внешний вид & Темы"
-      maxWidth="2xl"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="Внешний вид & Темы" maxWidth="2xl">
       <div className="space-y-6">
         {/* Вкладки */}
         <div className="flex items-center gap-1 p-1 bg-surface/50 rounded-xl border border-line">

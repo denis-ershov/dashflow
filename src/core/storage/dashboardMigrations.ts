@@ -53,7 +53,8 @@ export interface HeroSettings {
   showSearchBar: boolean;
   showSpeedDial?: boolean;
   alignment?: 'left' | 'center' | 'right';
-  defaultSearchEngine: 'google' | 'yandex' | 'duckduckgo' | 'bing' | 'github' | 'youtube' | 'perplexity';
+  defaultSearchEngine:
+    'google' | 'yandex' | 'duckduckgo' | 'bing' | 'github' | 'youtube' | 'perplexity';
 }
 
 export interface SpeedDialLink {
@@ -124,12 +125,7 @@ export function isRectangleColliding(
   a: { x: number; y: number; w: number; h: number },
   b: { x: number; y: number; w: number; h: number },
 ): boolean {
-  return !(
-    a.x + a.w <= b.x ||
-    a.x >= b.x + b.w ||
-    a.y + a.h <= b.y ||
-    a.y >= b.y + b.h
-  );
+  return !(a.x + a.w <= b.x || a.x >= b.x + b.w || a.y + a.h <= b.y || a.y >= b.y + b.h);
 }
 
 /**
@@ -165,10 +161,7 @@ export function findFirstAvailablePosition(
  * Устраняет любые наложения (коллизии) между элементами раскладки,
  * вытесняя перекрывающиеся элементы вниз (vertical compaction & collision resolution)
  */
-export function resolveLayoutCollisions(
-  layout: LayoutItem[],
-  cols: number = 12,
-): LayoutItem[] {
+export function resolveLayoutCollisions(layout: LayoutItem[], cols: number = 12): LayoutItem[] {
   const resolved: LayoutItem[] = [];
 
   for (const item of layout) {
@@ -178,9 +171,7 @@ export function resolveLayoutCollisions(
     let y = Math.max(0, item.y ?? 0);
 
     // Пока текущая позиция (x, y, w, h) перекрывает любой уже размещенный элемент, смещаем y вниз
-    while (
-      resolved.some((placed) => isRectangleColliding({ x, y, w, h }, placed))
-    ) {
+    while (resolved.some((placed) => isRectangleColliding({ x, y, w, h }, placed))) {
       y++;
     }
 
@@ -286,17 +277,10 @@ export function migrateDashboardState(rawState: unknown): MigratedDashboardState
     if (Array.isArray(rawLayouts.xl)) {
       const baseCols: BaseColumns =
         rawObj.baseColumns === 16 || rawObj.baseColumns === 24 ? rawObj.baseColumns : 12;
-      const sanitizedLayouts = deriveResponsiveLayouts(
-        rawLayouts.xl as LayoutItem[],
-        baseCols,
-      );
+      const sanitizedLayouts = deriveResponsiveLayouts(rawLayouts.xl as LayoutItem[], baseCols);
 
       const layoutMode =
-        rawObj.layoutMode === 'zen'
-          ? 'zen'
-          : rawObj.layoutMode === 'canvas'
-            ? 'canvas'
-            : 'modular';
+        rawObj.layoutMode === 'zen' ? 'zen' : rawObj.layoutMode === 'canvas' ? 'canvas' : 'modular';
       const heroSettings =
         rawObj.heroSettings && typeof rawObj.heroSettings === 'object'
           ? { ...DEFAULT_HERO_SETTINGS, ...(rawObj.heroSettings as Partial<HeroSettings>) }
@@ -314,7 +298,8 @@ export function migrateDashboardState(rawState: unknown): MigratedDashboardState
         layoutMode,
         heroSettings,
         speedDialLinks,
-        activeModal: typeof rawObj.activeModal === 'string' ? (rawObj.activeModal as ActiveModal) : null,
+        activeModal:
+          typeof rawObj.activeModal === 'string' ? (rawObj.activeModal as ActiveModal) : null,
         instances: rawObj.instances as WidgetInstance[],
         layouts: sanitizedLayouts,
       };
@@ -329,7 +314,8 @@ export function migrateDashboardState(rawState: unknown): MigratedDashboardState
 
     for (const w of rawWidgets) {
       if (!w || typeof w !== 'object') continue;
-      const instanceId = typeof w.instanceId === 'string' ? w.instanceId : `widget-${Date.now()}-${Math.random()}`;
+      const instanceId =
+        typeof w.instanceId === 'string' ? w.instanceId : `widget-${Date.now()}-${Math.random()}`;
       const widgetId = typeof w.widgetId === 'string' ? w.widgetId : 'unknown';
       const settings = (w.settings && typeof w.settings === 'object' ? w.settings : {}) as Record<
         string,
@@ -366,7 +352,10 @@ export function migrateDashboardState(rawState: unknown): MigratedDashboardState
       speedDialLinks: [...DEFAULT_SPEED_DIAL_LINKS],
       activeModal: null,
       instances: instances.length > 0 ? instances : DEFAULT_INSTANCES,
-      layouts: deriveResponsiveLayouts(baseLayout.length > 0 ? baseLayout : DEFAULT_BASE_LAYOUT, baseCols),
+      layouts: deriveResponsiveLayouts(
+        baseLayout.length > 0 ? baseLayout : DEFAULT_BASE_LAYOUT,
+        baseCols,
+      ),
     };
   }
 

@@ -30,10 +30,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         'bg-primary text-primary-fg hover:bg-primary-hover shadow-1 hover:shadow-2 border border-primary/20',
       secondary:
         'bg-surface text-fg border border-line hover:bg-surface-hover hover:border-line-hover shadow-sm',
-      ghost:
-        'text-fg hover:bg-surface-hover hover:text-primary active:bg-surface-active',
-      danger:
-        'bg-danger text-primary-fg hover:opacity-90 shadow-1 border border-danger/20',
+      ghost: 'text-fg hover:bg-surface-hover hover:text-primary active:bg-surface-active',
+      danger: 'bg-danger text-primary-fg hover:opacity-90 shadow-1 border border-danger/20',
       glass:
         'glass-pill text-fg border border-line hover:border-line-hover hover:bg-surface-hover shadow-sm',
       outline:

@@ -21,7 +21,9 @@ describe('NavRail Component', () => {
     expect(screen.getAllByRole('button', { name: /поиск/i })).toHaveLength(2);
     expect(screen.getAllByRole('button', { name: /темы|оформление/i })).toHaveLength(2);
     expect(screen.getAllByRole('button', { name: /каталог|магазин/i })).toHaveLength(2);
-    expect(screen.getAllByRole('button', { name: /редактировать|настроить сетку/i })).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: /редактировать|настроить сетку/i })).toHaveLength(
+      2,
+    );
     expect(screen.getAllByRole('button', { name: /настройки/i })).toHaveLength(2);
   });
 

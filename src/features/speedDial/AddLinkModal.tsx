@@ -25,17 +25,24 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({ isOpen, onClose, onA
       return;
     }
 
-    const finalUrl = cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')
-      ? cleanUrl
-      : `https://${cleanUrl}`;
+    const finalUrl =
+      cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')
+        ? cleanUrl
+        : `https://${cleanUrl}`;
 
-    const finalTitle = cleanTitle || (() => {
-      try {
-        return new URL(finalUrl).hostname.replace('www.', '');
-      } catch {
-        return 'Ссылка';
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(finalUrl);
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        setError('Разрешены только веб-адреса с протоколом HTTP или HTTPS');
+        return;
       }
-    })();
+    } catch {
+      setError('Некорректный формат веб-адреса');
+      return;
+    }
+
+    const finalTitle = cleanTitle || parsedUrl.hostname.replace(/^www\./, '') || 'Ссылка';
 
     onAdd({
       title: finalTitle,

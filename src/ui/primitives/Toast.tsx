@@ -87,13 +87,9 @@ export const ToastContainer: React.FC = () => {
             {icons[type]}
             <div className="flex-1 min-w-0">
               {item.title && (
-                <div className="text-sm font-semibold text-fg tracking-tight">
-                  {item.title}
-                </div>
+                <div className="text-sm font-semibold text-fg tracking-tight">{item.title}</div>
               )}
-              <div className="text-xs text-fg-muted leading-relaxed mt-1">
-                {item.message}
-              </div>
+              <div className="text-xs text-fg-muted leading-relaxed mt-1">{item.message}</div>
             </div>
             <button
               onClick={() => removeToast(item.id)}

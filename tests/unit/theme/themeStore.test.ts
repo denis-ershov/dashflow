@@ -49,7 +49,9 @@ describe('useThemeStore', () => {
     expect(useThemeStore.getState().wallpaperUrl).toBe('https://images.unsplash.com/bg.jpg');
     expect(useThemeStore.getState().scrim).toBe(0.5);
 
-    expect(document.documentElement.style.getPropertyValue('--app-bg-image')).toBe('url("https://images.unsplash.com/bg.jpg")');
+    expect(document.documentElement.style.getPropertyValue('--app-bg-image')).toBe(
+      'url("https://images.unsplash.com/bg.jpg")',
+    );
     expect(document.documentElement.style.getPropertyValue('--app-scrim')).toBe('0.5');
 
     useThemeStore.getState().setWallpaper(null);

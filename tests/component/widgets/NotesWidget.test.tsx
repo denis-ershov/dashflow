@@ -29,23 +29,25 @@ describe('NotesWidget Component & Manifest', () => {
     });
   });
 
-  it('должен сохранять текст в StorageAdapter при изменении', () => {
+  it('должен сохранять текст в StorageAdapter при изменении', async () => {
     vi.useFakeTimers();
     vi.spyOn(StorageAdapter, 'get').mockResolvedValue('');
     const setSpy = vi.spyOn(StorageAdapter, 'set').mockResolvedValue();
 
     render(<NotesWidget instanceId="notes-1" settings={{ fontSize: 14 }} />);
 
-    const textarea = screen.getByRole('textbox', { name: /заметки/i });
-    act(() => {
-      fireEvent.change(textarea, { target: { value: 'Новая важная мысль' } });
-      vi.advanceTimersByTime(400);
+    await act(async () => {
+      await Promise.resolve();
     });
 
-    expect(setSpy).toHaveBeenCalledWith(
-      STORAGE_KEYS.NOTES_CONTENT,
-      'Новая важная мысль',
-    );
+    const textarea = screen.getByRole('textbox', { name: /заметки/i });
+    await act(async () => {
+      fireEvent.change(textarea, { target: { value: 'Новая важная мысль' } });
+      vi.advanceTimersByTime(400);
+      await Promise.resolve();
+    });
+
+    expect(setSpy).toHaveBeenCalledWith(STORAGE_KEYS.NOTES_CONTENT, 'Новая важная мысль');
 
     vi.useRealTimers();
   });

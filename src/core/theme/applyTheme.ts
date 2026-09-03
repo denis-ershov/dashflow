@@ -11,7 +11,11 @@
 import { relativeLuminance } from './color';
 import { buildThemeCss, resolveTheme, type ThemeTokens } from './tokens';
 import { DEFAULT_PRESET_ID, findPreset } from './presets';
-import { validateCustomCss, type CssValidationResult, type ValidateCssOptions } from './cssValidator';
+import {
+  validateCustomCss,
+  type CssValidationResult,
+  type ValidateCssOptions,
+} from './cssValidator';
 import { buildWallpaperStyle } from './wallpaper';
 
 export const THEME_STYLE_ID = 'dashflow-theme';

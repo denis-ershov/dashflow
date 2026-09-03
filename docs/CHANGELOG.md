@@ -7,6 +7,49 @@
 
 ---
 
+## [3.7.1] - 2026-09-03
+
+### Комплексный аудит качества, безопасности, производительности и устранение дефектов
+
+#### Добавлено / Изменено:
+
+1. **Аудит утечек памяти (`memory-leak-debugging`):**
+   - [`SystemMonitorWidget.tsx`](file:///e:/DEV/Project/dashflow/src/widgets/built-in/SystemMonitorWidget/SystemMonitorWidget.tsx): устранена утечка памяти при перерисовке/размонтировании виджета (сохранение ссылки на `BatteryManager` и снятие слушателей `levelchange` и `chargingchange` в cleanup-функции `useEffect`).
+   - [`soundSynthesizers.ts`](file:///e:/DEV/Project/dashflow/src/core/audio/soundSynthesizers.ts): устранены утечки узлов Web Audio API в звуковых генераторах (при вызове `stop()` теперь отключаются (`disconnect()`) не только источники звука, но и фильтры частот, LFO-модуляторы и узлы усиления `GainNode`). Для колокола Помодоро добавлен слушатель `onended` с автоматическим освобождением аудио-графа.
+
+2. **Архитектурная чистота и ликвидация циклических зависимостей (`senior-architect`):**
+   - Устранен скрытый циклический граф импортов: `widget/types.ts` импортировал `TranslationKey` через barrel `@/core/i18n`, запускавший цепочку `i18nStore -> storage -> migrations -> widget/types`. Импорт перенаправлен напрямую на `@/core/i18n/i18n`, количество циклических зависимостей снижено до **0**.
+   - Найден и удален мёртвый код: удалена неиспользуемая устаревшая директория `src/widgets/core/` (`WidgetRegistry.ts` и `types.ts`), содержавшая устаревший shim и множественные отключения линтера.
+
+3. **Безопасность и соответствие Chrome MV3 (`senior-security`, `senior-secops`):**
+   - Ликвидированы критические уязвимости в зависимостях через безопасные `overrides` в `package.json` (`adm-zip`, `tmp`, `shell-quote`, `tar`), количество уязвимостей снижено с 17 до 10 (оставшиеся относятся исключительно к локальному dev-серверу `vite`/`esbuild`).
+   - Внедрена строгая валидация протоколов ссылок в [`AddLinkModal.tsx`](file:///e:/DEV/Project/dashflow/src/features/speedDial/AddLinkModal.tsx) и [`QuickLinksWidget.tsx`](file:///e:/DEV/Project/dashflow/src/widgets/built-in/QuickLinksWidget/QuickLinksWidget.tsx) (разрешены строго протоколы `http:` и `https:`, блокируются опасные схемы `javascript:`, `data:`, `file:`).
+   - Подтверждена строгая изоляция iframe-песочниц (`IframeWidget`, `PluginHost`) и RPC-моста `SandboxBridge`.
+
+4. **Тестирование и устранение React 19 предупреждений (`python-testing-patterns`, `senior-qa`):**
+   - Устранены предупреждения `act(...)` в тестах React 19: скорректирована асинхронная синхронизация в `QuickLinksWidget.test.tsx`, `NotesWidget.test.tsx` и `App.test.tsx`.
+   - Прогон `vitest run` (85 файлов, 598 тестов) завершается со 100% успехом и нулевым выводом в `stderr`.
+   - Интегрирован `@vitest/coverage-v8` для генерации отчетов тестового покрытия.
+
+5. **Статический анализ и типизация (`lint-and-validate`, `senior-frontend`):**
+   - `npm run compile` (`tsc --noEmit`): 0 ошибок типов.
+   - `npm run lint` (`eslint .`): 0 ошибок, 0 предупреждений.
+   - Проведено скриптовое профилирование покрытия типами (`type_coverage.py`): 99% типизации, полное отсутствие типов `any` во всех 174 TS-файлах `src/`.
+   - Унифицировано форматирование Prettier во всех 135 файлах проекта (`npm run format:check` — 100% соответствие).
+
+6. **DevOps, кроссбраузерная поддержка Firefox и сборка бандла (`senior-devops`):**
+   - Добавлена полноценная поддержка Mozilla Firefox (Gecko): настроена секция `browser_specific_settings.gecko` (`id = "dashflow@addon"`, `strict_min_version = "109.0"`) в [`wxt.config.ts`](file:///e:/DEV/Project/dashflow/wxt.config.ts).
+   - Сборка регламентирована строго в директорию `.output/` без засорения корня репозитория.
+   - В `package.json` добавлены раздельные и общие команды сборки и упаковки:
+     - `build:chrome`, `build:firefox`, `build:all`;
+     - `zip:chrome`, `zip:firefox`, `zip:all`.
+   - Генерируются готовые архивы для магазинов расширений:
+     - Chrome Web Store: `.output/dashflow-3.7.1-chrome.zip` (238 kB);
+     - Firefox Add-ons (AMO): `.output/dashflow-3.7.1-firefox.zip` (238 kB) и `.output/dashflow-3.7.1-sources.zip` (21 MB).
+   - Синхронизирована архитектурная документация в [`docs/CORE_ARCHITECTURE.md`](file:///e:/DEV/Project/dashflow/docs/CORE_ARCHITECTURE.md).
+
+---
+
 ## [3.7.0] - 2026-08-28
 
 ### Релиз: Умная Метеостанция 3.0, авто-геолокация, 4 макета, 7-дневные термо-бары и подробные метрики

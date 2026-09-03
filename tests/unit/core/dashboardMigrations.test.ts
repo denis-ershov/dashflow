@@ -16,8 +16,24 @@ describe('Dashboard State Migrations & Collision Resolution', () => {
     gap: 16,
     activeModal: 'settings',
     widgets: [
-      { instanceId: 'clock-1', widgetId: 'clock', x: 0, y: 0, w: 4, h: 2, settings: { showSeconds: true } },
-      { instanceId: 'weather-1', widgetId: 'weather', x: 4, y: 0, w: 4, h: 2, settings: { city: 'Москва' } },
+      {
+        instanceId: 'clock-1',
+        widgetId: 'clock',
+        x: 0,
+        y: 0,
+        w: 4,
+        h: 2,
+        settings: { showSeconds: true },
+      },
+      {
+        instanceId: 'weather-1',
+        widgetId: 'weather',
+        x: 4,
+        y: 0,
+        w: 4,
+        h: 2,
+        settings: { city: 'Москва' },
+      },
       { instanceId: 'search-1', widgetId: 'search', x: 8, y: 0, w: 4, h: 2 },
     ],
   };
@@ -101,9 +117,7 @@ describe('Dashboard State Migrations & Collision Resolution', () => {
 
   describe('findFirstAvailablePosition', () => {
     it('должен находить свободную позицию на первом ряду при наличии места', () => {
-      const layout: LayoutItem[] = [
-        { i: 'w1', x: 0, y: 0, w: 4, h: 2 },
-      ];
+      const layout: LayoutItem[] = [{ i: 'w1', x: 0, y: 0, w: 4, h: 2 }];
       const pos = findFirstAvailablePosition(layout, 12, 4, 2);
       expect(pos).toEqual({ x: 4, y: 0 });
     });

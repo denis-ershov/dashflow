@@ -16,19 +16,7 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
 }
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  (
-    {
-      className,
-      label,
-      options,
-      error,
-      id,
-      variant = 'default',
-      children,
-      ...props
-    },
-    ref,
-  ) => {
+  ({ className, label, options, error, id, variant = 'default', children, ...props }, ref) => {
     const generatedId = React.useId();
     const selectId = id || (label ? generatedId : undefined);
     const errorId = selectId && error ? `${selectId}-error` : undefined;
@@ -36,14 +24,16 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     const variantStyles = {
       default:
         'bg-surface text-fg border border-line rounded-xl px-4 py-2 text-sm transition-colors duration-fast focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20',
-      glass:
-        'glass-input text-fg px-4 py-2 text-sm transition-all duration-fast',
+      glass: 'glass-input text-fg px-4 py-2 text-sm transition-all duration-fast',
     };
 
     return (
       <div className="w-full flex flex-col gap-1">
         {label && (
-          <label htmlFor={selectId} className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
+          <label
+            htmlFor={selectId}
+            className="text-xs font-semibold text-fg-muted uppercase tracking-wider"
+          >
             {label}
           </label>
         )}

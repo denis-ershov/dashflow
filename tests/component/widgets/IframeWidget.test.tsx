@@ -13,12 +13,7 @@ describe('IframeWidget Component & Manifest', () => {
   });
 
   it('должен рендерить iframe с безопасным sandbox без allow-same-origin', () => {
-    render(
-      <IframeWidget
-        instanceId="iframe-1"
-        settings={{ url: 'https://wxt.dev', zoom: 100 }}
-      />,
-    );
+    render(<IframeWidget instanceId="iframe-1" settings={{ url: 'https://wxt.dev', zoom: 100 }} />);
 
     const iframe = screen.getByTitle(/embed/i);
     expect(iframe).toBeInTheDocument();
@@ -31,10 +26,7 @@ describe('IframeWidget Component & Manifest', () => {
 
   it('должен блокировать небезопасные схемы url (javascript:, chrome:, file:) и показывать предупреждение', () => {
     render(
-      <IframeWidget
-        instanceId="iframe-1"
-        settings={{ url: 'javascript:alert(1)', zoom: 100 }}
-      />,
+      <IframeWidget instanceId="iframe-1" settings={{ url: 'javascript:alert(1)', zoom: 100 }} />,
     );
 
     expect(screen.queryByTitle(/embed/i)).not.toBeInTheDocument();

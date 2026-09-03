@@ -13,14 +13,18 @@ describe('SearchWidget Component & Manifest', () => {
   });
 
   it('должен рендерить поле ввода поиска в режиме bar', () => {
-    render(<SearchWidget instanceId="search-1" settings={{ engine: 'google', searchStyle: 'bar' }} />);
+    render(
+      <SearchWidget instanceId="search-1" settings={{ engine: 'google', searchStyle: 'bar' }} />,
+    );
 
     expect(screen.getByRole('textbox', { name: /строка поиска/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /выбрать поисковую систему/i })).toBeInTheDocument();
   });
 
   it('должен переключать активную поисковую систему по клику в режиме tiles', () => {
-    render(<SearchWidget instanceId="search-1" settings={{ engine: 'google', searchStyle: 'tiles' }} />);
+    render(
+      <SearchWidget instanceId="search-1" settings={{ engine: 'google', searchStyle: 'tiles' }} />,
+    );
 
     const yandexBtn = screen.getByRole('button', { name: /яндекс/i });
     fireEvent.click(yandexBtn);
@@ -46,7 +50,9 @@ describe('SearchWidget Component & Manifest', () => {
       configurable: true,
     });
 
-    render(<SearchWidget instanceId="search-1" settings={{ engine: 'google', searchStyle: 'bar' }} />);
+    render(
+      <SearchWidget instanceId="search-1" settings={{ engine: 'google', searchStyle: 'bar' }} />,
+    );
 
     const input = screen.getByRole('textbox', { name: /строка поиска/i });
     fireEvent.change(input, { target: { value: 'React 19' } });

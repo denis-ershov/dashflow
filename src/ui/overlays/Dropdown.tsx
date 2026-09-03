@@ -47,26 +47,26 @@ export const Dropdown: React.FC<DropdownProps> = ({
     };
   }, [isOpen]);
 
-  const triggerElement = React.isValidElement(trigger)
-    ? React.cloneElement(trigger as React.ReactElement<React.HTMLAttributes<HTMLElement>>, {
-        onClick: (e: React.MouseEvent) => {
-          (trigger.props as { onClick?: (e: React.MouseEvent) => void }).onClick?.(e);
-          setIsOpen((prev) => !prev);
-        },
-        'aria-haspopup': 'menu',
-        'aria-expanded': isOpen,
-      })
-    : (
-        <button
-          type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
-          aria-haspopup="menu"
-          aria-expanded={isOpen}
-          className="inline-flex items-center cursor-pointer"
-        >
-          {trigger}
-        </button>
-      );
+  const triggerElement = React.isValidElement(trigger) ? (
+    React.cloneElement(trigger as React.ReactElement<React.HTMLAttributes<HTMLElement>>, {
+      onClick: (e: React.MouseEvent) => {
+        (trigger.props as { onClick?: (e: React.MouseEvent) => void }).onClick?.(e);
+        setIsOpen((prev) => !prev);
+      },
+      'aria-haspopup': 'menu',
+      'aria-expanded': isOpen,
+    })
+  ) : (
+    <button
+      type="button"
+      onClick={() => setIsOpen((prev) => !prev)}
+      aria-haspopup="menu"
+      aria-expanded={isOpen}
+      className="inline-flex items-center cursor-pointer"
+    >
+      {trigger}
+    </button>
+  );
 
   return (
     <div className="relative inline-block text-left" ref={dropdownRef}>
@@ -92,9 +92,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
               }}
               className={cn(
                 'w-full flex items-center px-4 py-3 text-xs font-medium transition-colors duration-fast text-left cursor-pointer min-h-[44px]',
-                item.danger
-                  ? 'text-danger hover:bg-danger/10'
-                  : 'text-fg hover:bg-surface-hover',
+                item.danger ? 'text-danger hover:bg-danger/10' : 'text-fg hover:bg-surface-hover',
               )}
             >
               {item.icon && <span className="mr-3 shrink-0">{item.icon}</span>}

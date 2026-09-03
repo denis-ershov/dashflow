@@ -18,10 +18,7 @@ interface RootErrorBoundaryState {
  * Перехватывает критические сбои рендеринга всего приложения,
  * предотвращает показ пустого экрана и обеспечивает безопасное восстановление (ADR-011, Спецификация Секция 6).
  */
-export class RootErrorBoundary extends Component<
-  RootErrorBoundaryProps,
-  RootErrorBoundaryState
-> {
+export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErrorBoundaryState> {
   constructor(props: RootErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -37,7 +34,12 @@ export class RootErrorBoundary extends Component<
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // В логах не выводятся пользовательские настройки или приватные токены
-    console.error('CRITICAL [RootErrorBoundary]:', error.name, error.message, errorInfo.componentStack);
+    console.error(
+      'CRITICAL [RootErrorBoundary]:',
+      error.name,
+      error.message,
+      errorInfo.componentStack,
+    );
   }
 
   private handleReload = (): void => {
@@ -71,11 +73,10 @@ export class RootErrorBoundary extends Component<
             </div>
 
             <div className="space-y-2">
-              <h1 className="text-xl font-semibold tracking-tight text-fg">
-                Что-то пошло не так
-              </h1>
+              <h1 className="text-xl font-semibold tracking-tight text-fg">Что-то пошло не так</h1>
               <p className="text-sm text-fg-muted leading-relaxed">
-                В приложении произошла непредвиденная ошибка. Вы можете перезагрузить страницу или сбросить расположение виджетов до стандартного.
+                В приложении произошла непредвиденная ошибка. Вы можете перезагрузить страницу или
+                сбросить расположение виджетов до стандартного.
               </p>
             </div>
 
