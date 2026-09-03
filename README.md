@@ -1,17 +1,20 @@
 <div align="center">
 
+<img src="src/public/icons/icon-128.png" alt="DashFlow Logo" width="96" height="96" style="border-radius: 22px; margin-bottom: 12px;" />
+
 # ⚡ DashFlow
 
 **Ультра-премиальный, адаптивный и расширяемый дашборд новой вкладки для браузера**  
-*Создан на базе React 19, TypeScript, Tailwind CSS 4 и WXT (Chrome Manifest V3)*
+*Создан на базе React 19, TypeScript, Tailwind CSS 4 и WXT (Chrome Manifest V3 & Firefox)*
 
-[![Version](https://img.shields.io/badge/version-2.4.0-blue.svg?style=flat-square)](docs/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.7.1-blue.svg?style=flat-square)](docs/CHANGELOG.md)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-green.svg?style=flat-square)](LICENSE)
-[![Manifest V3](https://img.shields.io/badge/Chrome-Manifest_V3-orange.svg?style=flat-square)](wxt.config.ts)
+[![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest_V3-orange.svg?style=flat-square)](wxt.config.ts)
+[![Firefox](https://img.shields.io/badge/Firefox-Gecko_AMO-FF7139.svg?style=flat-square&logo=firefox-browser&logoColor=white)](wxt.config.ts)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat-square&logo=typescript&logoColor=white)](tsconfig.json)
 [![React 19](https://img.shields.io/badge/React-19.0-61dafb?style=flat-square&logo=react&logoColor=black)](package.json)
 [![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4.0-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white)](src/styles/globals.css)
-[![Tests](https://img.shields.io/badge/Tests-562_Passed-success.svg?style=flat-square)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-598_Passed-success.svg?style=flat-square)](tests/)
 
 [Возможности](#-основные-возможности) •
 [Каталог виджетов](#-встроенные-виджеты) •
@@ -103,11 +106,14 @@ npx tsc --noEmit
 # Проверка линтером (ESLint 9)
 npm run lint
 
-# Запуск тестов (Vitest, 562 теста)
+# Запуск тестов (Vitest, 598 тестов)
 npm test
 
-# Сборка production bundle (WXT / Chrome MV3)
-npm run build
+# Сборка production bundle (Chrome & Firefox)
+npm run build:all
+
+# Упаковка релизных архивов в .output/
+npm run zip:all
 ```
 
 ---

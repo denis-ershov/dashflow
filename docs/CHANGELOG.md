@@ -48,6 +48,16 @@
      - Firefox Add-ons (AMO): `.output/dashflow-3.7.1-firefox.zip` (238 kB) и `.output/dashflow-3.7.1-sources.zip` (21 MB).
    - Синхронизирована архитектурная документация в [`docs/CORE_ARCHITECTURE.md`](file:///e:/DEV/Project/dashflow/docs/CORE_ARCHITECTURE.md).
 
+7. **Дизайн, брендинг и официальный логотип (`design`):**
+   - Разработана дизайн-концепция и официальный логотип DashFlow: неоновый неоморфизм в стиле Apple / Linear / Raycast. Символизирует динамичный поток продуктивности («Flow») и модульную геометрию дашборда («Dash») с глубоким тёмным сквирклом (`#0B0F17`) и светящимся градиентом от Cyber Cyan (`#38BDF8`) до Electric Indigo/Violet (`#818CF8`).
+   - Сгенерирован полный набор иконок в [`src/public/icons/`](file:///e:/DEV/Project/dashflow/src/public/icons/):
+     - `icon-16.png`, `icon-32.png`, `icon-48.png`, `icon-128.png`, `icon-512.png`;
+     - `icon.png` (мастер-растр с альфа-каналом и сглаженными углами);
+     - `icon.svg` (масштабируемый векторный логотип).
+   - Скрипт автоматической генерации и нарезки иконок сохранён в [`scripts/generate_icons.py`](file:///e:/DEV/Project/dashflow/scripts/generate_icons.py).
+   - Иконки интегрированы в конфигурацию манифеста [`wxt.config.ts`](file:///e:/DEV/Project/dashflow/wxt.config.ts) (`icons` и `action.default_icon`).
+   - Обновлён заглавный баннер и бейджи в [`README.md`](file:///e:/DEV/Project/dashflow/README.md).
+
 ---
 
 ## [3.7.0] - 2026-08-28

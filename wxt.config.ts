@@ -29,8 +29,20 @@ export default defineConfig({
           : "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; frame-src https: 'self';",
         sandbox: "sandbox allow-scripts; script-src 'self'; object-src 'none';",
       },
+      icons: {
+        16: 'icons/icon-16.png',
+        32: 'icons/icon-32.png',
+        48: 'icons/icon-48.png',
+        128: 'icons/icon-128.png',
+      },
       action: {
         default_title: 'DashFlow',
+        default_icon: {
+          16: 'icons/icon-16.png',
+          32: 'icons/icon-32.png',
+          48: 'icons/icon-48.png',
+          128: 'icons/icon-128.png',
+        },
       },
       browser_specific_settings: {
         gecko: {

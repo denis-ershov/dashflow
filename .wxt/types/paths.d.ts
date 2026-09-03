@@ -7,6 +7,13 @@ declare module "wxt/browser" {
     | "/_locales/en/messages.json"
     | "/_locales/ru/messages.json"
     | "/background.js"
+    | "/icons/icon-128.png"
+    | "/icons/icon-16.png"
+    | "/icons/icon-32.png"
+    | "/icons/icon-48.png"
+    | "/icons/icon-512.png"
+    | "/icons/icon.png"
+    | "/icons/icon.svg"
     | "/newtab.html"
   type HtmlPublicPath = Extract<PublicPath, `${string}.html`>
   export interface WxtRuntime {
