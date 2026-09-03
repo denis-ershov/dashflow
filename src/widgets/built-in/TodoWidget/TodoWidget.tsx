@@ -173,10 +173,26 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings, onUp
 
   const completedCount = todos.filter((t) => t.completed).length;
 
-  const filteredTodos = todos.filter((todo) => {
+  const sortBy = settings?.sortBy || 'date';
+  const hideCompleted = Boolean(settings?.hideCompleted);
+  const density = settings?.density || 'comfortable';
+
+  let filteredTodos = todos.filter((todo) => {
+    if (hideCompleted && todo.completed) return false;
     if (activeFilter === 'active') return !todo.completed;
     if (activeFilter === 'completed') return todo.completed;
     return true;
+  });
+
+  filteredTodos = [...filteredTodos].sort((a, b) => {
+    if (sortBy === 'priority') {
+      const pMap = { high: 3, medium: 2, low: 1 };
+      return (pMap[b.priority] || 0) - (pMap[a.priority] || 0);
+    }
+    if (sortBy === 'text') {
+      return a.text.localeCompare(b.text);
+    }
+    return (b.createdAt || 0) - (a.createdAt || 0);
   });
 
   const priorityColorClass = {
@@ -312,7 +328,10 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings, onUp
               filteredTodos.map((todo) => (
                 <div
                   key={todo.id}
-                  className="group flex items-center justify-between p-2 rounded-xl bg-surface/60 hover:bg-surface border border-line hover:border-line-hover transition-all"
+                  className={cn(
+                    'group flex items-center justify-between bg-surface/60 hover:bg-surface border border-line hover:border-line-hover transition-all',
+                    density === 'compact' ? 'py-1.5 px-2.5 rounded-lg' : 'p-2.5 rounded-xl',
+                  )}
                 >
                   <button
                     type="button"

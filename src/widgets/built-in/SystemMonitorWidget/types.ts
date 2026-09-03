@@ -3,4 +3,6 @@ export interface SystemMonitorSettings {
   showNetwork?: boolean;
   showMemory?: boolean;
   showTabs?: boolean;
+  refreshInterval?: number; // секунды
+  layoutStyle?: 'grid' | 'bars';
 }

@@ -22,6 +22,8 @@ export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }
   const textAlign = settings?.textAlign || 'center';
   const showAuthor = settings?.showAuthor !== false;
   const showCopyButton = settings?.showCopyButton !== false;
+  const fontStyle = settings?.fontStyle || 'serif';
+  const autoRefreshInterval = Number(settings?.autoRefreshInterval || 0);
 
   const quotes = QUOTES_COLLECTION.filter((q) => {
     if (category === 'all') return true;
@@ -32,6 +34,23 @@ export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }
   const [copied, setCopied] = useState(false);
 
   const current = quotes[index % quotes.length] || quotes[0] || QUOTES_COLLECTION[0];
+
+  const fontClass = {
+    serif: 'font-serif text-sm sm:text-base italic',
+    sans: 'font-sans text-xs sm:text-sm font-medium not-italic tracking-wide',
+    mono: 'font-mono text-xs not-italic leading-relaxed',
+  }[fontStyle] || 'font-serif text-sm sm:text-base italic';
+
+  // Автоматическая смена цитаты по интервалу
+  React.useEffect(() => {
+    if (autoRefreshInterval <= 0) return;
+    const intervalMs = autoRefreshInterval * 60 * 60 * 1000;
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % quotes.length);
+      setCopied(false);
+    }, intervalMs);
+    return () => clearInterval(timer);
+  }, [autoRefreshInterval, quotes.length]);
 
   const nextQuote = () => {
     setIndex((prev) => (prev + 1) % quotes.length);
@@ -59,7 +78,7 @@ export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }
           textAlign === 'left' ? 'items-start text-left' : 'items-center text-center',
         )}
       >
-        <p className="text-xs sm:text-sm font-medium italic text-fg leading-relaxed">
+        <p className={cn('text-fg leading-relaxed', fontClass)}>
           «{current.text}»
         </p>
         {showAuthor && (

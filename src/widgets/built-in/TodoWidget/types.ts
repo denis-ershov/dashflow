@@ -18,9 +18,15 @@ export interface HabitItem {
   createdAt?: number;
 }
 
+export type TodoSortBy = 'date' | 'priority' | 'text';
+export type TodoDensity = 'compact' | 'comfortable';
+
 export interface TodoSettings {
   filter?: TodoFilter;
   defaultPriority?: TodoPriority;
   defaultTab?: TodoTab;
   showProgress?: boolean;
+  sortBy?: TodoSortBy;
+  hideCompleted?: boolean;
+  density?: TodoDensity;
 }

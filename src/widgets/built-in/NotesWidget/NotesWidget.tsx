@@ -15,6 +15,17 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings, on
   const fontSize = settings?.fontSize || 13;
   const showWordCount = settings?.showWordCount !== false;
   const showSaveStatus = settings?.showSaveStatus !== false;
+  const fontFamily = settings?.fontFamily || 'sans';
+  const lineWrapping = settings?.lineWrapping !== false;
+  const showCharCount = settings?.showCharCount !== false;
+
+  const fontClass = {
+    sans: 'font-sans',
+    mono: 'font-mono text-[12.5px] leading-relaxed',
+    serif: 'font-serif',
+  }[fontFamily];
+
+  const wrapClass = lineWrapping ? 'whitespace-pre-wrap' : 'whitespace-pre overflow-x-auto';
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -103,10 +114,10 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings, on
   };
 
   return (
-    <div className="flex flex-col h-full w-full p-2 select-none">
-      {/* Верхний тулбар: Переключатель режима и статус */}
-      <div className="flex items-center justify-between pb-2 border-b border-line mb-2">
-        <div className="flex items-center gap-1 bg-surface p-1 rounded-xl border border-line">
+    <div className="flex flex-col h-full gap-2 p-3 select-none">
+      {/* Шапка с переключателем режимов и статусом */}
+      <div className="flex items-center justify-between pb-2 border-b border-line">
+        <div className="flex items-center gap-1 bg-surface-elevated/60 p-0.5 rounded-xl border border-line">
           <button
             type="button"
             onClick={() => {
@@ -115,13 +126,13 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings, on
             }}
             aria-label="Режим редактирования"
             className={cn(
-              'flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer',
+              'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer',
               mode === 'edit'
-                ? 'bg-surface-hover text-primary font-semibold'
+                ? 'bg-surface text-primary font-semibold shadow-xs'
                 : 'text-fg-muted hover:text-fg',
             )}
           >
-            <Edit3 className="w-4 h-4" />
+            <Edit3 className="w-3.5 h-3.5" />
             <span>Правка</span>
           </button>
 
@@ -133,13 +144,13 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings, on
             }}
             aria-label="Режим предпросмотра"
             className={cn(
-              'flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer',
+              'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer',
               mode === 'preview'
-                ? 'bg-surface-hover text-primary font-semibold'
+                ? 'bg-surface text-primary font-semibold shadow-xs'
                 : 'text-fg-muted hover:text-fg',
             )}
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-3.5 h-3.5" />
             <span>Просмотр</span>
           </button>
         </div>
@@ -148,7 +159,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings, on
           <div className="flex items-center gap-1 text-[10px] text-fg-dim font-medium">
             {isSaved ? (
               <span className="flex items-center gap-1 text-success">
-                <Check className="w-4 h-4" /> Сохранено
+                <Check className="w-3.5 h-3.5" /> Сохранено
               </span>
             ) : (
               <span>Сохранение...</span>
@@ -165,10 +176,14 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings, on
           onChange={handleChange}
           style={{ fontSize: `${fontSize}px` }}
           placeholder={settings?.placeholder || 'Напишите здесь что-нибудь...'}
-          className="w-full flex-1 min-h-0 bg-transparent text-fg placeholder:text-fg-muted resize-none focus-visible:outline-none leading-relaxed font-sans"
+          className={cn(
+            'w-full flex-1 min-h-0 bg-transparent text-fg placeholder:text-fg-muted resize-none focus-visible:outline-none leading-relaxed',
+            fontClass,
+            wrapClass,
+          )}
         />
       ) : (
-        <div className="w-full flex-1 min-h-0 overflow-y-auto font-sans pr-1">
+        <div className={cn('w-full flex-1 min-h-0 overflow-y-auto pr-1', fontClass)}>
           {renderMarkdownPreview(content)}
         </div>
       )}
@@ -177,7 +192,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings, on
       {showWordCount && (
         <div className="flex items-center justify-between pt-2 border-t border-line text-[10px] text-fg-muted select-none mt-auto">
           <span>{wordCount} слов</span>
-          <span>{charCount} символов</span>
+          {showCharCount && <span>{charCount} знаков</span>}
         </div>
       )}
     </div>

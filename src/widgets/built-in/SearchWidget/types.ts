@@ -5,7 +5,10 @@ export type SearchEngine =
   | 'bing'
   | 'github'
   | 'youtube'
-  | 'perplexity';
+  | 'perplexity'
+  | 'chatgpt'
+  | 'claude'
+  | 'brave';
 
 export type SearchEngineId = SearchEngine;
 
@@ -16,4 +19,6 @@ export interface SearchSettings {
   showSearchButton?: boolean;
   openInNewTab?: boolean;
   placeholder?: string;
+  autoFocus?: boolean;
+  showHotkeyBadge?: boolean;
 }

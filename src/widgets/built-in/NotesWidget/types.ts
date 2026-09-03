@@ -4,4 +4,7 @@ export interface NotesSettings {
   showWordCount?: boolean;
   showSaveStatus?: boolean;
   placeholder?: string;
+  fontFamily?: 'sans' | 'mono' | 'serif';
+  lineWrapping?: boolean;
+  showCharCount?: boolean;
 }

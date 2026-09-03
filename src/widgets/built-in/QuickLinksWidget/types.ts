@@ -7,8 +7,13 @@ export interface QuickLink {
 
 export type QuickLinkItem = QuickLink;
 
+export type QuickLinkShape = 'squircle' | 'circle' | 'square';
+
 export interface QuickLinksSettings {
   showTitles?: boolean;
   openInNewTab?: boolean;
   columns?: 2 | 3 | 4 | 6;
+  shape?: QuickLinkShape;
+  showDomain?: boolean;
+  maxRows?: number;
 }

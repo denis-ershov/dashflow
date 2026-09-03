@@ -10,4 +10,6 @@ export interface QuotesSettings {
   showAuthor?: boolean;
   showCopyButton?: boolean;
   textAlign?: 'center' | 'left';
+  fontStyle?: 'serif' | 'sans' | 'mono';
+  autoRefreshInterval?: number; // часы
 }

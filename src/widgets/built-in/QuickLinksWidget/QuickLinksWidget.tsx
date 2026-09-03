@@ -16,10 +16,36 @@ const DEFAULT_LINKS: QuickLinkItem[] = [
 export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ settings }) => {
   const showTitles = settings?.showTitles ?? true;
   const openInNewTab = settings?.openInNewTab !== false;
+  const shape = settings?.shape || 'squircle';
+  const columns = settings?.columns || 4;
+  const showDomain = Boolean(settings?.showDomain);
+
   const [links, setLinks] = useState<QuickLinkItem[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
+
+  const shapeClass = {
+    squircle: 'rounded-2xl',
+    circle: 'rounded-full',
+    square: 'rounded-lg',
+  }[shape];
+
+  const colClass =
+    {
+      2: 'grid-cols-2',
+      3: 'grid-cols-2 sm:grid-cols-3',
+      4: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4',
+      6: 'grid-cols-3 sm:grid-cols-4 md:grid-cols-6',
+    }[columns] || 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4';
+
+  const getDomain = (rawUrl: string) => {
+    try {
+      return new URL(rawUrl).hostname.replace(/^www\./, '');
+    } catch {
+      return '';
+    }
+  };
 
   useEffect(() => {
     StorageAdapter.get<QuickLinkItem[]>(STORAGE_KEYS.QUICK_LINKS, DEFAULT_LINKS).then(setLinks);
@@ -66,32 +92,34 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ se
     saveLinks(links.filter((l) => l.id !== id));
   };
 
-  const getFaviconUrl = (domainUrl: string) => {
+  const getFaviconUrl = (siteUrl: string) => {
     try {
-      const hostname = new URL(domainUrl).hostname;
-      return `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
+      const u = new URL(siteUrl);
+      return `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=64`;
     } catch {
       return '';
     }
   };
 
   return (
-    <div className="flex flex-col h-full gap-2 p-1 select-none">
+    <div className="flex flex-col h-full w-full p-2 select-none">
       {isAdding ? (
-        <form onSubmit={handleAdd} className="flex flex-col gap-2 p-3 rounded-xl bg-surface border border-line">
+        <form onSubmit={handleAdd} className="flex flex-col gap-2 p-2 bg-surface/50 rounded-xl border border-line">
+          <span className="text-xs font-semibold text-fg">Новая ссылка</span>
           <input
             type="text"
-            placeholder="Название ссылки"
+            placeholder="Название ссылки (напр. GitHub)"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded-lg px-3 py-1 focus-visible:outline-none focus-visible:border-primary"
+            className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:border-primary"
+            autoFocus
           />
           <input
             type="text"
             placeholder="URL (напр. github.com)"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded-lg px-3 py-1 focus-visible:outline-none focus-visible:border-primary"
+            className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:border-primary"
           />
           <div className="flex justify-end gap-2 pt-1">
             <Button
@@ -108,7 +136,7 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ se
           </div>
         </form>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto flex-1 min-h-0 p-1">
+        <div className={cn('grid gap-2 overflow-y-auto flex-1 min-h-0 p-1', colClass)}>
           {links.map((link) => (
             <div
               key={link.id}
@@ -121,7 +149,7 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ se
               }}
               className="group relative flex flex-col items-center justify-center p-2 rounded-xl bg-surface hover:bg-surface-hover border border-line hover:border-line-hover transition-all cursor-pointer text-center"
             >
-              <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center overflow-hidden mb-1 border border-line group-hover:scale-105 transition-transform">
+              <div className={cn('w-10 h-10 bg-surface-elevated flex items-center justify-center overflow-hidden mb-1.5 border border-line shadow-xs group-hover:scale-105 transition-transform', shapeClass)}>
                 {getFaviconUrl(link.url) ? (
                   <img
                     src={getFaviconUrl(link.url)}
@@ -142,6 +170,12 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ se
                 </span>
               )}
 
+              {showDomain && (
+                <span className="text-[9px] text-fg-muted truncate w-full">
+                  {getDomain(link.url)}
+                </span>
+              )}
+
               <button
                 type="button"
                 aria-label="Удалить ссылку"
@@ -156,7 +190,6 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ se
             </div>
           ))}
 
-          {/* Кнопка добавления */}
           <button
             type="button"
             aria-label="Добавить ссылку"

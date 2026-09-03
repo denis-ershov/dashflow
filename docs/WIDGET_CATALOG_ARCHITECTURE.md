@@ -1,23 +1,25 @@
 # Архитектура каталога и встроенных виджетов DashFlow
 
-## 1. Структура компонентов и каталог 12 виджетов
+## 1. Структура компонентов и каталог 13 виджетов
 
-Все 12 встроенных виджетов переведены на модульную структуру манифестов с динамическим импортом (`load: () => import(...)`):
+Все 13 встроенных виджетов переведены на модульную структуру манифестов с динамическим импортом (`load: () => import(...)`):
 
-| Идентификатор | Название (i18n) | Категория | Поверхность | Разрешения | Описание |
+| Идентификатор | Название (i18n) | Категория | Поверхность | Разрешения | Описание и ключевые возможности |
 |---|---|---|---|---|---|
-| `clock` | `widgets.clock` | `utilities` | `chromeless` | — | Цифровые часы и дата с Intl форматированием 12/24ч, секунды и выбор шрифта |
-| `search` | `widgets.search` | `utilities` | `chromeless` | — | Поисковая строка Spotlight с переключателями систем (Google, Yandex, DuckDuckGo, Bing, YouTube, GitHub) |
-| `weather` | `widgets.weather` | `utilities` | `panel` | `network`, `storage`, `geolocation` | Умная метеостанция 3.0 с авто-геолокацией, 4 макетами (dashboard, compact, hourly, weekly), 24ч прогнозом, 7-дневными Apple-style термо-барами, сеткой атмосферных метрик и кастомными настройками |
-| `todo` | `widgets.todo` | `productivity` | `panel` | `storage` | Менеджер задач 2.0 со счетчиком прогресса дня, очисткой выполненных, приоритетами и фильтрами |
-| `notes` | `widgets.notes` | `productivity` | `panel` | `storage` | Заметки Pro с переключением Правка / Markdown предпросмотр, счетчиком слов и символов |
-| `quickLinks` | `widgets.quickLinks` | `productivity` | `tiles` | `storage` | Плитки быстрых ссылок со стеклянным нео-оформлением и авто-фавиконками |
-| `bookmarks` | `widgets.bookmarks` | `productivity` | `tiles` | `bookmarks` | Закладки Chrome с иерархией папок и Mobile First раскладкой |
-| `iframe` | `widgets.iframe` | `utilities` | `panel` | `network` | Встраивание безопасных HTTPS сайтов с изоляцией песочницы |
-| `pomodoro` | `widgets.pomodoro` | `productivity` | `panel` | `storage` | Pomodoro таймер с гармоническим колоколом процедурного синтеза Web Audio API |
-| `quotes` | `widgets.quotes` | `entertainment` | `panel` | — | Цитата дня (10 вдохновляющих высказываний) с копированием в буфер обмена |
-| `systemMonitor` | `widgets.systemMonitor` | `developer` | `panel` | — | Индикаторы сети, уровня батареи (Battery API), счетчика вкладок Chrome и памяти JS Heap |
-| `rssReader` | `widgets.rssReader` | `news` | `panel` | `network`, `storage` | RSS ридер с единым хронологическим потоком, фавиконками источников и санитизацией |
+| `clock` | `widgets.clock` | `utilities` | `chromeless` | — | Цифровые часы и дата с мировыми часовыми поясами (UTC, Лондон, Москва, Дубай, Токио и др.), неоновым свечением (Glow), пульсирующим двоеточием, форматами даты и Flip-карточками |
+| `search` | `widgets.search` | `utilities` | `chromeless` | — | Поисковая строка Spotlight с традиционными и AI-поисковиками (Perplexity AI, ChatGPT, Claude AI, Brave Search, Google, Yandex), шорткатом `[/]` и кастомным placeholder |
+| `greeting` | `widgets.greeting` | `hero` | `chromeless` | — | Персонализированное умное приветствие, пользовательский статус/девиз, неоновый ореол и адаптивная типографика |
+| `yearProgress` | `widgets.yearProgress` | `hero` | `chromeless` | — | Индикатор прогресса времени с переключением год / квартал (Q1-Q4) / месяц / неделя / день, расчетом оставшихся дней/часов и 4 неоновыми градиентами |
+| `weather` | `widgets.weather` | `utilities` | `panel` | `network`, `storage`, `geolocation` | Умная метеостанция 3.0 с авто-геолокацией, 4 макетами (dashboard, compact, hourly, weekly), 24ч таймлайном, 7-дневными термо-барами, сеткой атмосферных метрик и секционированными подсказками |
+| `todo` | `widgets.todo` | `productivity` | `panel` | `storage` | Менеджер задач со счетчиком прогресса, сортировкой (по дате, приоритету High→Low, алфавиту), скрытием выполненных и компактной плотностью |
+| `notes` | `widgets.notes` | `productivity` | `panel` | `storage` | Заметки Pro с гарнитурами шрифта (Sans, Code Mono для сниппетов, Serif), автопереносом строк, переключением Правка / Предпросмотр, счетчиком слов и знаков |
+| `pomodoro` | `widgets.pomodoro` | `productivity` | `panel` | `storage` | Pomodoro таймер глубокого фокуса: цикл из 4 сессий с точечным прогрессом, длинный перерыв, автостарт и гармонический колокол Web Audio API |
+| `quickLinks` | `widgets.quickLinks` | `productivity` | `tiles` | `storage` | Быстрые ссылки с геометрическими силуэтами (сквиркл, круг, квадрат), адаптивной плотностью колонок (2–6) и отображением домена |
+| `bookmarks` | `widgets.bookmarks` | `productivity` | `tiles` | `bookmarks` | Закладки браузера со структурированными секциями настроек, поиском, выбором папок и стилизацией плиток |
+| `quotes` | `widgets.quotes` | `entertainment` | `panel` | — | Вдохновляющие цитаты с выбором типографики (Serif, Sans, Mono), настраиваемым автообновлением (1ч, 4ч, 24ч) и анимацией копирования |
+| `systemMonitor` | `widgets.systemMonitor` | `developer` | `panel` | — | Монитор системы с двумя макетами (карточки и детальные горизонтальные шкалы Bars), неоновыми индикаторами батареи, памяти, сети и настраиваемой частотой опроса |
+| `iframe` | `widgets.iframe` | `utilities` | `panel` | `network` | Встраивание безопасных веб-страниц с тулбаром заголовка, кнопками перезагрузки, перехода во вкладку и управлением скроллом |
+| `rssReader` | `widgets.rssReader` | `news` | `panel` | `network`, `storage` | RSS ридер с сегментированным выбором режимов чтения (лента, вкладки, категории), макетами карточек и гибкими лимитами |
 
 ---
 
@@ -25,14 +27,14 @@
 
 Каждый виджет на дашборде оборачивается в компонент `WidgetShell` (`src/core/widget/WidgetShell.tsx`), который:
 1. Предоставляет изолированный `WidgetErrorBoundary`, перехватывающий любые исключения во время рендеринга виджета без падения всего дашборда.
-2. Безопасно логирует стек вызовов ошибки без раскрытия пользовательских настроек (Секция 10).
+2. Безопасно логирует стек вызовов ошибки без раскрытия пользовательских настроек.
 3. Обеспечивает отображение одной из трех поверхностей: `chromeless`, `panel` (нео-стекло `.glass-card`), `tiles`.
 4. Инкапсулирует элементы управления режима редактирования (ручка перетаскивания `GripVertical`, кнопка настроек, кнопка удаления).
 
 ---
 
-## 3. Безопасность и валидация ввода
+## 3. Безопасность и песочница
 
-1. **Iframe Security:** Запрещен флаг `allow-same-origin` в песочнице `sandbox="allow-scripts allow-forms allow-popups"`. Запрещены потенциально опасные схемы URL (`javascript:`, `data:`, `file:`, `chrome:`).
+1. **Iframe Security:** Запрещен флаг `allow-same-origin` в песочнице `sandbox="allow-scripts allow-forms allow-popups"` (ADR-007). Запрещены потенциально опасные схемы URL (`javascript:`, `data:`, `file:`, `chrome:`).
 2. **RSS Pipeline Security:** Все ссылки новостей валидируются на протоколы `https:` и `http:`. Тег `img` для превью картинок использует `referrerPolicy="no-referrer"`.
 3. **Хранилище:** Ключи виджетов централизованы в `STORAGE_KEYS` (`TODO_ITEMS`, `NOTES_CONTENT`, `QUICK_LINKS`, `WEATHER_CACHE`).

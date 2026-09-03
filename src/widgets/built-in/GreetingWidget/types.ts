@@ -3,4 +3,8 @@ export interface GreetingSettings {
   showIcon?: boolean;
   fontSize?: 'sm' | 'md' | 'lg' | 'xl';
   align?: 'center' | 'left' | 'right';
+  customGreeting?: string;
+  showMotivationSubtitle?: boolean;
+  motivationalStatus?: string;
+  glowEffect?: boolean;
 }

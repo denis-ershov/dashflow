@@ -14,6 +14,10 @@ interface BatteryManager extends EventTarget {
 export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> = ({ settings }) => {
   const showNetwork = settings?.showNetwork ?? true;
   const showBattery = settings?.showBattery ?? true;
+  const showTabs = settings?.showTabs ?? true;
+  const showMemory = settings?.showMemory ?? true;
+  const layoutStyle = settings?.layoutStyle || 'grid';
+  const refreshInterval = Math.max(1, settings?.refreshInterval || 2);
 
   const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
   const [batteryLevel, setBatteryLevel] = useState<number | null>(null);
@@ -51,31 +55,103 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
         .catch(() => {});
     }
 
-    // Подсчёт вкладок через Chrome API
-    if (typeof chrome !== 'undefined' && chrome.tabs?.query) {
-      chrome.tabs.query({}, (tabs) => {
-        if (tabs) setTabCount(tabs.length);
-      });
-    }
+    const updateMetrics = () => {
+      // Подсчёт вкладок через Chrome API
+      if (typeof chrome !== 'undefined' && chrome.tabs?.query) {
+        chrome.tabs.query({}, (tabs) => {
+          if (tabs) setTabCount(tabs.length);
+        });
+      }
 
-    // Использование памяти JS Heap
-    const perfMem = (performance as unknown as { memory?: { usedJSHeapSize?: number } }).memory;
-    if (perfMem?.usedJSHeapSize) {
-      setMemoryUsage(Math.round(perfMem.usedJSHeapSize / (1024 * 1024)));
-    }
+      // Использование памяти JS Heap
+      const perfMem = (performance as unknown as { memory?: { usedJSHeapSize?: number } }).memory;
+      if (perfMem?.usedJSHeapSize) {
+        setMemoryUsage(Math.round(perfMem.usedJSHeapSize / (1024 * 1024)));
+      }
+    };
+
+    updateMetrics();
+    const interval = setInterval(updateMetrics, refreshInterval * 1000);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      clearInterval(interval);
       if (batteryInstance && updateBatteryListener) {
         batteryInstance.removeEventListener('levelchange', updateBatteryListener);
         batteryInstance.removeEventListener('chargingchange', updateBatteryListener);
       }
     };
-  }, []);
+  }, [refreshInterval]);
 
+  if (layoutStyle === 'bars') {
+    return (
+      <div className="flex flex-col justify-center h-full w-full gap-2.5 p-3 select-none">
+        {showMemory && (
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between text-xs font-semibold text-fg">
+              <span className="flex items-center gap-1.5 text-secondary">
+                <Cpu className="w-3.5 h-3.5" /> Память JS Heap
+              </span>
+              <span className="font-mono text-fg-muted">{memoryUsage ?? 0} МБ</span>
+            </div>
+            <div className="w-full h-1.5 bg-surface-elevated rounded-full overflow-hidden border border-line">
+              <div
+                className="h-full bg-secondary rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, Math.max(5, ((memoryUsage || 30) / 250) * 100))}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {showBattery && (
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between text-xs font-semibold text-fg">
+              <span className="flex items-center gap-1.5 text-warning">
+                {isCharging ? <BatteryCharging className="w-3.5 h-3.5" /> : <Battery className="w-3.5 h-3.5" />}
+                Батарея
+              </span>
+              <span className="font-mono text-fg-muted">
+                {batteryLevel !== null ? `${batteryLevel}%` : 'Сеть AC'}
+              </span>
+            </div>
+            <div className="w-full h-1.5 bg-surface-elevated rounded-full overflow-hidden border border-line">
+              <div
+                className={cn(
+                  'h-full rounded-full transition-all duration-500',
+                  batteryLevel !== null && batteryLevel <= 20
+                    ? 'bg-danger'
+                    : isCharging
+                      ? 'bg-warning'
+                      : 'bg-primary',
+                )}
+                style={{ width: `${batteryLevel !== null ? batteryLevel : 100}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between pt-1 border-t border-line text-[11px] text-fg-muted font-medium">
+          {showNetwork && (
+            <span className="flex items-center gap-1">
+              {isOnline ? <Wifi className="w-3.5 h-3.5 text-success" /> : <WifiOff className="w-3.5 h-3.5 text-danger" />}
+              {isOnline ? 'Онлайн' : 'Офлайн'}
+            </span>
+          )}
+          {showTabs && tabCount !== null && (
+            <span className="flex items-center gap-1 font-mono">
+              <Layers className="w-3.5 h-3.5 text-primary" />
+              {tabCount} вкладок
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Режим Grid
   return (
-    <div className="grid grid-cols-2 gap-2 h-full items-center p-2 select-none">
+    <div className="grid grid-cols-2 gap-2 h-full p-2 select-none items-center">
       {/* Сеть */}
       {showNetwork && (
         <div className="flex items-center gap-2 p-2 rounded-xl bg-surface border border-line">
@@ -116,7 +192,7 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
       )}
 
       {/* Вкладки */}
-      {tabCount !== null && (
+      {showTabs && tabCount !== null && (
         <div className="flex items-center gap-2 p-2 rounded-xl bg-surface border border-line">
           <Layers className="w-5 h-5 text-primary shrink-0" />
           <div className="min-w-0">
@@ -129,7 +205,7 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
       )}
 
       {/* Память */}
-      {memoryUsage !== null && (
+      {showMemory && memoryUsage !== null && (
         <div className="flex items-center gap-2 p-2 rounded-xl bg-surface border border-line">
           <Cpu className="w-5 h-5 text-secondary shrink-0" />
           <div className="min-w-0">

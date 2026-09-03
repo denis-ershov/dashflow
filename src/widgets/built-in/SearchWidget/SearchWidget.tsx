@@ -63,6 +63,27 @@ const ENGINES: Record<SearchEngineId, SearchEngineConfig> = {
     placeholder: 'Спросить у AI ассистента...',
     icon: <Sparkles className="w-4 h-4 text-accent" />,
   },
+  chatgpt: {
+    id: 'chatgpt',
+    name: 'ChatGPT',
+    url: 'https://chatgpt.com/?q=',
+    placeholder: 'Спросить у ChatGPT...',
+    icon: <Sparkles className="w-4 h-4 text-emerald-400" />,
+  },
+  claude: {
+    id: 'claude',
+    name: 'Claude AI',
+    url: 'https://claude.ai/new?q=',
+    placeholder: 'Спросить у Claude AI...',
+    icon: <Sparkles className="w-4 h-4 text-amber-400" />,
+  },
+  brave: {
+    id: 'brave',
+    name: 'Brave Search',
+    url: 'https://search.brave.com/search?q=',
+    placeholder: 'Искать в Brave Search...',
+    icon: <Globe className="w-4 h-4 text-orange-400" />,
+  },
 };
 
 const ENGINES_LIST = Object.values(ENGINES);
@@ -84,10 +105,33 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
   const searchStyle = settings?.searchStyle || 'bar';
   const showEngineSelector = settings?.showEngineSelector !== false;
   const openInNewTab = Boolean(settings?.openInNewTab);
+  const showHotkeyBadge = settings?.showHotkeyBadge !== false;
+  const customPlaceholder = settings?.placeholder?.trim();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (settings?.autoFocus && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [settings?.autoFocus]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === '/' &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     if (settings?.engine) {
@@ -290,9 +334,16 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
               aria-label="Строка поиска"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={currentEngine.placeholder}
+              placeholder={customPlaceholder || currentEngine.placeholder}
               className="flex-1 bg-transparent border-none outline-none px-3 text-sm text-fg placeholder:text-fg-muted font-medium w-full min-w-0"
             />
+
+            {/* Подсказка горячей клавиши */}
+            {!query.trim() && showHotkeyBadge && (
+              <kbd className="hidden sm:inline-flex items-center justify-center h-5 min-w-[20px] px-1 mr-1 text-[10px] font-mono text-fg-muted bg-surface-elevated/80 border border-line rounded-md shadow-xs select-none pointer-events-none">
+                /
+              </kbd>
+            )}
 
             {/* Кнопка очистки */}
             {query.trim() && (
