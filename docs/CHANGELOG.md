@@ -7,6 +7,59 @@
 
 ---
 
+## [3.7.2] - 2026-09-30
+
+### Полная готовность к Production: Observability, Network Resilience, Feature Flags, CI/CD и Compliance
+
+#### Добавлено / Изменено:
+
+1. **Подсистема наблюдаемости и Crash Tracking (`src/core/observability/`):**
+   - [`crashLogger.ts`](file:///e:/DEV/Project/dashflow/src/core/observability/crashLogger.ts): Реализован локальный кольцевой буфер сбоев (до 20 записей) с автоматическим сохранением в `chrome.storage.local`.
+   - [`sanitizer.ts`](file:///e:/DEV/Project/dashflow/src/core/observability/sanitizer.ts): Полная деперсонализация (Privacy by Design) логов — автоматическое маскирование путей файловой системы (`C:\Users\...`, `/home/...`), email-адресов и секретных токенов в URL.
+   - [`webVitals.ts`](file:///e:/DEV/Project/dashflow/src/core/observability/webVitals.ts): Мониторинг ключевых показателей скорости страницы (LCP, CLS, время загрузки DOM) и расхода памяти (`performance.memory`).
+   - Интеграция перехвата сбоев в [`RootErrorBoundary.tsx`](file:///e:/DEV/Project/dashflow/src/ui/feedback/RootErrorBoundary.tsx) и [`WidgetShell.tsx`](file:///e:/DEV/Project/dashflow/src/core/widget/WidgetShell.tsx).
+
+2. **Сетевая устойчивость и Circuit Breaker (`src/core/network/`):**
+   - [`circuitBreaker.ts`](file:///e:/DEV/Project/dashflow/src/core/network/circuitBreaker.ts): Реализован конечный автомат предохранителя сетевых запросов (`CLOSED`, `OPEN`, `HALF_OPEN`) для защиты от каскадных сбоев внешних сервисов.
+   - [`resilientFetch.ts`](file:///e:/DEV/Project/dashflow/src/core/network/resilientFetch.ts): Устойчивый HTTP-клиент с поддержкой таймаутов (`AbortController`), экспоненциального отката (Exponential Backoff + Jitter), детектора отсутствия сети (`NetworkOfflineError`) и изоляции сбоев.
+   - Перевод [`weatherService.ts`](file:///e:/DEV/Project/dashflow/src/widgets/built-in/WeatherWidget/weatherService.ts) на `resilientFetch`.
+
+3. **Система флагов функциональности Feature Flags (`src/core/featureFlags/`):**
+   - [`flags.ts`](file:///e:/DEV/Project/dashflow/src/core/featureFlags/flags.ts): Типизированный менеджер переключения возможностей (`aiSearchEngines`, `ambientAudio`, `systemMonitorBars`, `webVitalsMonitoring`, `offlineIndicator`, `experimentalPlugins`).
+   - [`useFeatureFlags.ts`](file:///e:/DEV/Project/dashflow/src/core/featureFlags/useFeatureFlags.ts): Реактивный хук подписки на изменения конфигурации.
+
+4. **Интерфейс диагностики и здоровья системы:**
+   - [`DiagnosticsSection.tsx`](file:///e:/DEV/Project/dashflow/src/features/settings/components/DiagnosticsSection.tsx): Интерактивная панель мониторинга в модальном окне настроек:
+     - Индикатор стабильности системы («Система стабильна» / количество зафиксированных ошибок).
+     - Сводка Core Web Vitals и объема выделенной оперативной памяти JS Heap.
+     - Статус сетевых предохранителей (Circuit Breakers).
+     - Кнопка выгрузки санитизированного диагностического JSON-отчета для оформления баг-репорта на GitHub.
+     - Интерактивные переключатели Feature Flags.
+   - Вкладки в [`SettingsModal.tsx`](file:///e:/DEV/Project/dashflow/src/features/settings/components/SettingsModal.tsx) («Параметры и макет» и «Диагностика и система»).
+
+5. **CI/CD релизный конвейер:**
+   - [`.github/workflows/release.yml`](file:///e:/DEV/Project/dashflow/.github/workflows/release.yml): Автоматизированная публикация релизов при пуше тега `v*` (проверка типов, линтер, тесты, сборка для Chrome и Firefox и создание GitHub Release).
+   - Обновлен [`.github/workflows/ci.yml`](file:///e:/DEV/Project/dashflow/.github/workflows/ci.yml) для кроссбраузерной проверки и генерации релизных архивов.
+
+6. **Юридическая и операционная документация (Production Operations):**
+   - [`PRIVACY.md`](file:///e:/DEV/Project/dashflow/PRIVACY.md) / [`PRIVACY_EN.md`](file:///e:/DEV/Project/dashflow/PRIVACY_EN.md): Русскоязычная и официальная англоязычная политики конфиденциальности для модераторов Chrome Web Store и Mozilla Add-ons.
+   - [`TERMS_OF_SERVICE.md`](file:///e:/DEV/Project/dashflow/TERMS_OF_SERVICE.md): Условия использования расширения.
+   - [`docs/DEPLOYMENT_PROCEDURES.md`](file:///e:/DEV/Project/dashflow/docs/DEPLOYMENT_PROCEDURES.md): Регламент релизов, публикация в CWS и Firefox AMO, pre-flight чеклисты.
+   - [`docs/ROLLBACK_STRATEGY.md`](file:///e:/DEV/Project/dashflow/docs/ROLLBACK_STRATEGY.md): Детальный регламент экстренного отката, hotfixes и аварийного сброса.
+   - [`docs/MONITORING.md`](file:///e:/DEV/Project/dashflow/docs/MONITORING.md): Стратегия наблюдаемости без внешней телеметрии, Web Vitals и Circuit Breaker.
+   - [`docs/SLO.md`](file:///e:/DEV/Project/dashflow/docs/SLO.md): Service Level Objectives, показатели доступности и Error Budget.
+   - [`docs/BACKUP_STRATEGY.md`](file:///e:/DEV/Project/dashflow/docs/BACKUP_STRATEGY.md): Стратегия резервного копирования и восстановления данных пользователя.
+   - [`docs/INCIDENT_RESPONSE.md`](file:///e:/DEV/Project/dashflow/docs/INCIDENT_RESPONSE.md): Регламент реагирования на инциденты (SEV-1 - SEV-3), runbooks и шаблоны коммуникации.
+   - [`docs/COMPLIANCE_CHECKLIST.md`](file:///e:/DEV/Project/dashflow/docs/COMPLIANCE_CHECKLIST.md): Чеклист соответствия GDPR, CCPA, Chrome Web Store User Data Policy и AMO Review Guidelines.
+
+7. **Тестовое покрытие и бенчмарки:**
+   - Добавлено 28 новых тестов (всего **91 тестовый файл, 626 тестов, 100% успех**).
+   - Unit-тесты: `crashLogger.test.ts`, `circuitBreaker.test.ts`, `resilience.test.ts`, `featureFlags.test.ts`.
+   - Accessibility-тесты доступности: `accessibility.test.tsx`.
+   - Бенчмарки производительности: `performanceBenchmarks.test.ts`.
+
+---
+
 ## [3.7.1] - 2026-09-03
 
 ### Комплексный аудит качества, безопасности, производительности и устранение дефектов

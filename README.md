@@ -7,14 +7,14 @@
 **Ультра-премиальный, адаптивный и расширяемый дашборд новой вкладки для браузера**  
 *Создан на базе React 19, TypeScript, Tailwind CSS 4 и WXT (Chrome Manifest V3 & Firefox)*
 
-[![Version](https://img.shields.io/badge/version-3.7.1-blue.svg?style=flat-square)](docs/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.7.2-blue.svg?style=flat-square)](docs/CHANGELOG.md)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-green.svg?style=flat-square)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest_V3-orange.svg?style=flat-square)](wxt.config.ts)
 [![Firefox](https://img.shields.io/badge/Firefox-Gecko_AMO-FF7139.svg?style=flat-square&logo=firefox-browser&logoColor=white)](wxt.config.ts)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat-square&logo=typescript&logoColor=white)](tsconfig.json)
 [![React 19](https://img.shields.io/badge/React-19.0-61dafb?style=flat-square&logo=react&logoColor=black)](package.json)
 [![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4.0-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white)](src/styles/globals.css)
-[![Tests](https://img.shields.io/badge/Tests-598_Passed-success.svg?style=flat-square)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-626_Passed-success.svg?style=flat-square)](tests/)
 
 [Возможности](#-основные-возможности) •
 [Каталог виджетов](#-встроенные-виджеты) •
@@ -131,17 +131,29 @@ npm run zip:all
 
 ---
 
-## 📚 Документация
+## 📚 Документация и эксплуатация (Production Ready)
 
-Подробная архитектурная документация проекта доступна в каталоге [`docs/`](docs/):
-
+### Архитектура
 - [`docs/CORE_ARCHITECTURE.md`](docs/CORE_ARCHITECTURE.md) — ядро системы, жизненный цикл и хранилище.
 - [`docs/LAYOUT_AND_NAVIGATION_ARCHITECTURE.md`](docs/LAYOUT_AND_NAVIGATION_ARCHITECTURE.md) — архитектура Dual Mode, Hero Section и Floating Dock.
 - [`docs/AUDIO_ARCHITECTURE.md`](docs/AUDIO_ARCHITECTURE.md) — процедурный звуковой движок на Web Audio API.
 - [`docs/THEME_ENGINE_ARCHITECTURE.md`](docs/THEME_ENGINE_ARCHITECTURE.md) — цветовая математика, Glassmorphism токены и WCAG AAA.
 - [`docs/WIDGET_CATALOG_ARCHITECTURE.md`](docs/WIDGET_CATALOG_ARCHITECTURE.md) — архитектура 12 встроенных виджетов.
 - [`docs/SECURITY_ARCHITECTURE.md`](docs/SECURITY_ARCHITECTURE.md) — модель безопасности Manifest V3 и песочница iframe.
-- [`docs/CHANGELOG.md`](docs/CHANGELOG.md) — история всех версий и изменений.
+
+### Эксплуатация, надежность и релиз
+- [`docs/DEPLOYMENT_PROCEDURES.md`](docs/DEPLOYMENT_PROCEDURES.md) — регламент развертывания и публикация в Chrome Web Store и Mozilla AMO.
+- [`docs/ROLLBACK_STRATEGY.md`](docs/ROLLBACK_STRATEGY.md) — стратегия отката версий, emergency hotfixes и аварийный сброс.
+- [`docs/MONITORING.md`](docs/MONITORING.md) — стратегия наблюдаемости, In-App Web Vitals, Crash Logger и Circuit Breaker.
+- [`docs/SLO.md`](docs/SLO.md) — Service Level Objectives, показатели доступности и Error Budget.
+- [`docs/BACKUP_STRATEGY.md`](docs/BACKUP_STRATEGY.md) — стратегия резервного копирования и восстановления данных пользователя.
+- [`docs/INCIDENT_RESPONSE.md`](docs/INCIDENT_RESPONSE.md) — регламент реагирования на инциденты и классификация критичности (SEV-1 - SEV-3).
+- [`docs/COMPLIANCE_CHECKLIST.md`](docs/COMPLIANCE_CHECKLIST.md) — чеклист соответствия GDPR, CCPA, CWS и AMO.
+
+### Юридическая информация и изменения
+- [`PRIVACY.md`](PRIVACY.md) / [`PRIVACY_EN.md`](PRIVACY_EN.md) — политика конфиденциальности (RU / EN для Web Store).
+- [`TERMS_OF_SERVICE.md`](TERMS_OF_SERVICE.md) — условия использования сервиса.
+- [`docs/CHANGELOG.md`](docs/CHANGELOG.md) — история всех версий и релизов.
 
 ---
 

@@ -2,6 +2,7 @@ import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Settings, Trash2, GripVertical } from 'lucide-react';
 import { ErrorState } from '@/ui/feedback';
 import { cn } from '@/ui/lib/cn';
+import { crashLogger } from '@/core/observability';
 import type { WidgetSurfaceType } from './types';
 
 interface ErrorBoundaryProps {
@@ -32,6 +33,9 @@ class WidgetErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   public override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    crashLogger.logError(error, 'widget', {
+      componentStack: errorInfo.componentStack || '',
+    });
     // Безопасное логирование без утечки приватных настроек пользователя (Секция 10)
     console.error('[DashFlow:WidgetError]', {
       name: error.name,
@@ -121,7 +125,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
             {isEditMode && (
               <button
                 type="button"
-                className="widget-drag-handle flex items-center justify-center w-8 h-8 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover cursor-grab active:cursor-grabbing transition-colors"
+                className="widget-drag-handle flex items-center justify-center w-8 h-8 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover cursor-grab transition-colors"
                 aria-label="Перетащить виджет"
               >
                 <GripVertical className="w-4 h-4" />

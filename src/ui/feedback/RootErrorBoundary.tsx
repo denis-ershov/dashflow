@@ -2,6 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RotateCcw, RefreshCw } from 'lucide-react';
 import { Button } from '@/ui/primitives';
 import { StorageAdapter, STORAGE_KEYS } from '@/core/storage';
+import { crashLogger } from '@/core/observability';
 
 export interface RootErrorBoundaryProps {
   children: ReactNode;
@@ -33,7 +34,9 @@ export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErr
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // В логах не выводятся пользовательские настройки или приватные токены
+    crashLogger.logFatal(error, 'root', {
+      componentStack: errorInfo.componentStack || '',
+    });
     console.error(
       'CRITICAL [RootErrorBoundary]:',
       error.name,
@@ -89,7 +92,7 @@ export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErr
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full mt-2">
               <Button
                 variant="primary"
-                className="flex-1 min-h-[44px]"
+                className="flex-1 min-h-11"
                 onClick={this.handleReload}
                 aria-label="Перезагрузить страницу"
               >
@@ -98,7 +101,7 @@ export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErr
               </Button>
               <Button
                 variant="secondary"
-                className="flex-1 min-h-[44px]"
+                className="flex-1 min-h-11"
                 onClick={() => {
                   void this.handleResetLayout();
                 }}

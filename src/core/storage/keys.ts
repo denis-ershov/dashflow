@@ -32,6 +32,10 @@ export const STORAGE_KEYS = {
   PERMISSION_GRANTS: 'dashflow_permission_grants',
   /** Префикс данных плагинов */
   PLUGIN_DATA_PREFIX: 'dashflow_plugin_',
+  /** Журнал сбоев и диагностических событий для мониторинга здоровья */
+  CRASH_LOGS_V1: 'dashflow_crash_logs_v1',
+  /** Пользовательские переопределения флагов функциональности */
+  FEATURE_FLAGS: 'dashflow_feature_flags',
 } as const;
 
 export type KnownStorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

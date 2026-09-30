@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   audit-and-build:
-    name: Typecheck, Lint, Test & Build
+    name: Typecheck, Lint, Test & Cross-Browser Build
     runs-on: ubuntu-latest
 
     steps:
@@ -37,12 +37,29 @@ jobs:
       - name: Unit & Component Tests
         run: npm test
 
-      - name: WXT Chrome MV3 Production Build
-        run: npm run build
+      - name: WXT Chrome MV3 & Firefox Gecko Production Build
+        run: npm run build:all
 
-      - name: Upload Build Artifact
+      - name: WXT Package Bundling
+        run: npm run zip:all
+
+      - name: Upload Chrome Extension Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chrome-mv3-extension
+          name: dashflow-chrome-mv3
           path: .output/chrome-mv3/
           retention-days: 7
+
+      - name: Upload Firefox Extension Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashflow-firefox-mv2
+          path: .output/firefox-mv2/
+          retention-days: 7
+
+      - name: Upload Release Zips
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashflow-store-packages
+          path: .output/*.zip
+          retention-days: 14

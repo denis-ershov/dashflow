@@ -5,7 +5,8 @@ import { useAppStore } from '@/stores/useAppStore';
 import { getTranslation } from '@/services/localization/i18n';
 import { Switch, Slider, Button } from '@/ui/primitives';
 import { ImportExportModal } from './ImportExportModal';
-import { Globe, Layout, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { Globe, Layout, Sparkles, SlidersHorizontal, Activity } from 'lucide-react';
+import { DiagnosticsSection } from './DiagnosticsSection';
 
 export const SettingsModal: React.FC = () => {
   const {
@@ -22,6 +23,7 @@ export const SettingsModal: React.FC = () => {
   } = useDashboardStore();
   const { language, setLanguage, animationsEnabled, setAnimationsEnabled } = useAppStore();
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'general' | 'diagnostics'>('general');
 
   const isOpen = activeModal === 'settings';
 
@@ -33,7 +35,39 @@ export const SettingsModal: React.FC = () => {
       maxWidth="xl"
     >
       <div className="space-y-6">
-        {/* Секция 1: Режим макета рабочего стола */}
+        {/* Переключатель вкладок настроек */}
+        <div className="flex border-b border-line pb-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab('general')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === 'general'
+                ? 'bg-primary/10 text-primary border border-primary/30'
+                : 'text-fg-muted hover:text-fg hover:bg-surface'
+            }`}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span>Параметры и макет</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('diagnostics')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === 'diagnostics'
+                ? 'bg-primary/10 text-primary border border-primary/30'
+                : 'text-fg-muted hover:text-fg hover:bg-surface'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5" />
+            <span>Диагностика и система</span>
+          </button>
+        </div>
+
+        {activeTab === 'diagnostics' ? (
+          <DiagnosticsSection />
+        ) : (
+          <>
+            {/* Секция 1: Режим макета рабочего стола */}
         <div className="p-4 rounded-xl bg-surface border border-line space-y-4">
           <div className="flex items-center gap-2 text-sm font-semibold text-secondary">
             <Layout className="w-4 h-4" />
@@ -158,7 +192,7 @@ export const SettingsModal: React.FC = () => {
                 <select
                   value={heroSettings?.clockStyle || 'digital'}
                   onChange={(e) => updateHeroSettings({ clockStyle: e.target.value as any })}
-                  className="bg-surface text-xs text-fg border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:border-primary cursor-pointer"
+                  className="bg-surface text-xs text-fg border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer"
                 >
                   <option value="digital">Digital (Современный)</option>
                   <option value="minimal">Minimal (Тонкий)</option>
@@ -263,6 +297,8 @@ export const SettingsModal: React.FC = () => {
         </div>
 
         <ImportExportModal isOpen={isImportOpen} onClose={() => setIsImportOpen(false)} />
+          </>
+        )}
       </div>
     </Modal>
   );

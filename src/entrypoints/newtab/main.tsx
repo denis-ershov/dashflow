@@ -2,13 +2,15 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { registerBuiltInWidgets } from '@/widgets/built-in';
+import { webVitals } from '@/core/observability';
 import App from './App';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import '@/styles/globals.css';
 
-// Синхронная регистрация всех 12 встроенных виджетов до рендеринга UI
+// Синхронная регистрация встроенных виджетов и запуск наблюдаемости Web Vitals
 registerBuiltInWidgets();
+webVitals.init();
 
 const queryClient = new QueryClient({
   defaultOptions: {

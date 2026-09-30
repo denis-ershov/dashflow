@@ -1,5 +1,6 @@
 import { StorageAdapter } from '@/core/storage/StorageAdapter';
 import { STORAGE_KEYS } from '@/core/storage/keys';
+import { resilientFetch } from '@/core/network';
 import type {
   CitySearchResult,
   DailyForecastItem,
@@ -42,8 +43,9 @@ export async function searchCities(query: string): Promise<CitySearchResult[]> {
   if (!trimmed || trimmed.length < 2) return [];
 
   try {
-    const res = await fetch(
+    const res = await resilientFetch(
       `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmed)}&count=8&language=ru&format=json`,
+      { timeoutMs: 5000, retries: 1, circuitBreakerName: 'geocoding', silent: true },
     );
     if (!res.ok) return [];
     const data = await res.json();
@@ -68,8 +70,9 @@ export async function searchCities(query: string): Promise<CitySearchResult[]> {
  */
 export async function reverseGeocode(lat: number, lon: number): Promise<{ name: string; country?: string }> {
   try {
-    const res = await fetch(
+    const res = await resilientFetch(
       `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ru`,
+      { timeoutMs: 5000, retries: 1, circuitBreakerName: 'geocoding', silent: true },
     );
     if (res.ok) {
       const data = await res.json();
@@ -86,9 +89,15 @@ export async function reverseGeocode(lat: number, lon: number): Promise<{ name: 
   }
 
   try {
-    const res = await fetch(
+    const res = await resilientFetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&accept-language=ru`,
-      { headers: { 'User-Agent': 'DashFlow-Weather/3.0' } },
+      {
+        headers: { 'User-Agent': 'DashFlow-Weather/3.0' },
+        timeoutMs: 5000,
+        retries: 1,
+        circuitBreakerName: 'geocoding',
+        silent: true,
+      },
     );
     if (res.ok) {
       const data = await res.json();
@@ -194,7 +203,13 @@ export async function fetchFullWeatherData(params: {
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${activeCoords.lat}&longitude=${activeCoords.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,surface_pressure,visibility,wind_speed_10m,uv_index,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max&timezone=auto`;
 
-    const res = await fetch(url);
+    const isTestEnv = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
+    const res = await resilientFetch(url, {
+      timeoutMs: isTestEnv ? 1000 : 8000,
+      retries: isTestEnv ? 0 : 2,
+      baseDelayMs: isTestEnv ? 0 : 800,
+      circuitBreakerName: 'open-meteo',
+    });
     if (!res.ok) {
       throw new Error(`Open-Meteo HTTP Error ${res.status}`);
     }
