@@ -235,7 +235,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
       </div>
 
       {/* Содержимое активной вкладки */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-75">
         {activeTab === 'my-feeds' && (
           <div className="space-y-4">
             {/* Поиск по лентам */}

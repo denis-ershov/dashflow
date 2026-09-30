@@ -55,7 +55,7 @@ export const CustomCssEditor: React.FC = () => {
             if (error) setError(null);
           }}
           placeholder="/* Пример: .glass-panel { border-radius: 16px; } */"
-          className="w-full h-56 bg-canvas text-fg font-mono text-xs border border-line rounded-xl p-4 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 resize-y"
+          className="w-full h-56 bg-canvas text-fg font-mono text-xs border border-line rounded-xl p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 resize-y"
         />
 
         <div className="flex items-center justify-between text-xs text-fg-muted px-1">

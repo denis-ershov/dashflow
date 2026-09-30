@@ -35,6 +35,14 @@
     outline: 2px solid var(--dashflow-primary);
     outline-offset: 2px;
   }
+
+  input,
+  textarea,
+  select,
+  button {
+    color: inherit;
+    font-family: inherit;
+  }
 }
 
 /* ── Glassmorphism 2.0 Utilities ────────────────────────────────────────── */

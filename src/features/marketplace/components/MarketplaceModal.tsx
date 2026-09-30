@@ -239,7 +239,7 @@ export const MarketplaceModal: React.FC = () => {
                 value={importJson}
                 onChange={(e) => setImportJson(e.target.value)}
                 placeholder={`{\n  "id": "my_feed",\n  "name": "Мой RSS",\n  "version": "1.0.0",\n  "author": "User",\n  "type": "rss",\n  "description": "Пользовательская лента новостей",\n  "permissions": ["network", "storage"],\n  "size": { "defaultW": 6, "defaultH": 4 },\n  "config": {\n    "feedUrl": "https://example.com/feed.xml"\n  }\n}`}
-                className="w-full h-48 bg-canvas border border-line rounded-xl p-3 text-xs font-mono text-fg placeholder:text-fg-muted/60 focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full h-48 bg-canvas border border-line rounded-xl p-3 text-xs font-mono placeholder:text-fg-muted/60 focus:outline-none focus:ring-2 focus:ring-primary"
               />
 
               {importStatus && (
@@ -261,7 +261,7 @@ export const MarketplaceModal: React.FC = () => {
                   icon={<Upload className="w-4 h-4" />}
                   onClick={handleImportJson}
                   disabled={!importJson.trim()}
-                  className="min-h-[44px]"
+                  className="min-h-11"
                 >
                   Проверить и Установить
                 </Button>

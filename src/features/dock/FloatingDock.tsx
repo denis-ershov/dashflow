@@ -44,7 +44,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
     <nav
       aria-label="Панель быстрого управления"
       className={cn(
-        'fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-[var(--z-rail,30)]',
+        'fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-(--z-rail,30)',
         'glass-pill px-2.5 sm:px-3 py-1.5 sm:py-2 flex items-center gap-1 sm:gap-2 shadow-3 border border-line',
         'max-w-[calc(100vw-1.5rem)] duration-normal select-none overflow-x-auto no-scrollbar backdrop-blur-xl',
         className,
@@ -57,7 +57,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
           onClick={onToggleLayoutMode}
           aria-label={layoutMode === 'zen' ? 'Включить виджеты' : 'Режим Zen'}
           className={cn(
-            'p-2 rounded-full transition-all min-w-[40px] min-h-[40px] flex items-center justify-center cursor-pointer',
+            'p-2 rounded-full transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer',
             layoutMode === 'zen'
               ? 'bg-primary text-primary-fg shadow-1 hover:bg-primary-hover'
               : 'text-fg-muted hover:text-fg hover:bg-surface-hover',
@@ -79,7 +79,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
           type="button"
           onClick={onOpenAddWidget}
           aria-label="Добавить виджет"
-          className="p-2 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-[40px] min-h-[40px] flex items-center justify-center cursor-pointer active:scale-90"
+          className="p-2 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer active:scale-90"
         >
           <Plus className="w-4 h-4" />
         </button>
@@ -91,7 +91,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
           type="button"
           onClick={onOpenCommandPalette}
           aria-label="Командная палитра"
-          className="p-2 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-[40px] min-h-[40px] flex items-center justify-center cursor-pointer active:scale-90"
+          className="p-2 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer active:scale-90"
         >
           <Search className="w-4 h-4" />
         </button>
@@ -103,7 +103,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
           type="button"
           onClick={onOpenAppearance}
           aria-label="Темы и обои"
-          className="p-2 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-[40px] min-h-[40px] flex items-center justify-center cursor-pointer active:scale-90"
+          className="p-2 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer active:scale-90"
         >
           <Palette className="w-4 h-4" />
         </button>
@@ -116,7 +116,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
           onClick={onOpenAudio}
           aria-label="Звуки природы"
           className={cn(
-            'p-2 rounded-full transition-all min-w-[40px] min-h-[40px] flex items-center justify-center cursor-pointer active:scale-90',
+            'p-2 rounded-full transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer active:scale-90',
             isAudioPlaying
               ? 'text-primary bg-primary/15 shadow-[0_0_12px_var(--dashflow-primary-glow)]'
               : 'text-fg-muted hover:text-fg hover:bg-surface-hover',
@@ -134,7 +134,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
             onClick={onToggleEditMode}
             aria-label={isEditMode ? 'Завершить редактирование' : 'Редактировать сетку'}
             className={cn(
-              'p-2 rounded-full transition-all min-w-[40px] min-h-[40px] flex items-center justify-center cursor-pointer active:scale-90',
+              'p-2 rounded-full transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer active:scale-90',
               isEditMode
                 ? 'bg-warning/20 text-warning border border-warning/40'
                 : 'text-fg-muted hover:text-fg hover:bg-surface-hover',
@@ -153,7 +153,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
           type="button"
           onClick={onOpenSettings}
           aria-label="Настройки"
-          className="p-2 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-[40px] min-h-[40px] flex items-center justify-center cursor-pointer active:scale-90"
+          className="p-2 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer active:scale-90"
         >
           <Settings className="w-4 h-4" />
         </button>

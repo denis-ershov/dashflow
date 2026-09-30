@@ -177,7 +177,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings, on
           style={{ fontSize: `${fontSize}px` }}
           placeholder={settings?.placeholder || 'Напишите здесь что-нибудь...'}
           className={cn(
-            'w-full flex-1 min-h-0 bg-transparent text-fg placeholder:text-fg-muted resize-none focus-visible:outline-none leading-relaxed',
+            'w-full flex-1 min-h-0 bg-transparent placeholder:text-fg-muted resize-none focus-visible:outline-none leading-relaxed',
             fontClass,
             wrapClass,
           )}

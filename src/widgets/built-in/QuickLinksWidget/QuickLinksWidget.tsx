@@ -111,7 +111,7 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ se
             placeholder="Название ссылки (напр. GitHub)"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:border-primary"
+            className="bg-surface text-xs placeholder:text-fg-muted border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             autoFocus
           />
           <input
@@ -119,7 +119,7 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ se
             placeholder="URL (напр. github.com)"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:border-primary"
+            className="bg-surface text-xs placeholder:text-fg-muted border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           />
           <div className="flex justify-end gap-2 pt-1">
             <Button
@@ -194,7 +194,7 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ se
             type="button"
             aria-label="Добавить ссылку"
             onClick={() => setIsAdding(true)}
-            className="flex flex-col items-center justify-center p-2 rounded-xl border border-dashed border-line hover:border-primary text-fg-muted hover:text-primary transition-all cursor-pointer min-h-[64px]"
+            className="flex flex-col items-center justify-center p-2 rounded-xl border border-dashed border-line hover:border-primary text-fg-muted hover:text-primary transition-all cursor-pointer min-h-16"
           >
             <Plus className="w-5 h-5 mb-1" />
             <span className="text-[10px] font-medium">Добавить</span>

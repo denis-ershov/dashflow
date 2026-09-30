@@ -8,7 +8,7 @@ export const WallpaperBackground: React.FC = () => {
   return (
     <div
       aria-hidden="true"
-      className="fixed inset-0 pointer-events-none z-[var(--z-base)] overflow-hidden select-none"
+      className="fixed inset-0 pointer-events-none z-(--z-base) overflow-hidden select-none"
     >
       {/* Слой фонового изображения обоев */}
       {wallpaperUrl ? (

@@ -28,20 +28,28 @@
    - [`flags.ts`](file:///e:/DEV/Project/dashflow/src/core/featureFlags/flags.ts): Типизированный менеджер переключения возможностей (`aiSearchEngines`, `ambientAudio`, `systemMonitorBars`, `webVitalsMonitoring`, `offlineIndicator`, `experimentalPlugins`).
    - [`useFeatureFlags.ts`](file:///e:/DEV/Project/dashflow/src/core/featureFlags/useFeatureFlags.ts): Реактивный хук подписки на изменения конфигурации.
 
-4. **Интерфейс диагностики и здоровья системы:**
+4. **Интерфейс диагностики и интерактивный журнал Live Log Viewer:**
    - [`DiagnosticsSection.tsx`](file:///e:/DEV/Project/dashflow/src/features/settings/components/DiagnosticsSection.tsx): Интерактивная панель мониторинга в модальном окне настроек:
      - Индикатор стабильности системы («Система стабильна» / количество зафиксированных ошибок).
      - Сводка Core Web Vitals и объема выделенной оперативной памяти JS Heap.
      - Статус сетевых предохранителей (Circuit Breakers).
+     - **Live Log Viewer**: встроенный журнал сбоев и сетевых ошибок с бейджами уровней (`warning`, `error`), фильтрами («Все», «Ошибки», «Предупреждения»), аккордеоном деталей, стеком ошибок и возможностью копирования отдельной записи.
      - Кнопка выгрузки санитизированного диагностического JSON-отчета для оформления баг-репорта на GitHub.
      - Интерактивные переключатели Feature Flags.
    - Вкладки в [`SettingsModal.tsx`](file:///e:/DEV/Project/dashflow/src/features/settings/components/SettingsModal.tsx) («Параметры и макет» и «Диагностика и система»).
+   - Автоматическая синхронизация версии расширения в [`wxt.config.ts`](file:///e:/DEV/Project/dashflow/wxt.config.ts) напрямую из `package.json`.
 
-5. **CI/CD релизный конвейер:**
+5. **Нормализация CSS, устранение предупреждений Tailwind v4 и удаление мёртвого кода:**
+   - Удален устаревший неиспользуемый код (Rule 28): `FloatingToolbar.tsx`, `WidgetCard.tsx`, плагин-дубликат `src/plugins/rss-reader/`.
+   - Приведены к каноническому стандарту Tailwind CSS v4 классы во всех виджетах и оверлеях: замена устаревших `bg-gradient-*` на `bg-linear-*`, перевод arbitrary values (`min-h-[44px]`, `min-w-[40px]`, `max-w-[120px]`, `stroke-[3]`) на канонические шкалы (`min-h-11`, `min-w-10`, `max-w-30`, `stroke-3`).
+   - Устранены конфликты свойств `border-color` и `outline` в формах с переходом на дизайн-токены `ring-2 ring-primary/40` и наследование `color: inherit` для элементов ввода в `globals.css`.
+   - Устранено мерцание ширины поля поиска в `BookmarksWidget.tsx` с фиксацией стабильной ширины без CLS.
+
+6. **CI/CD релизный конвейер:**
    - [`.github/workflows/release.yml`](file:///e:/DEV/Project/dashflow/.github/workflows/release.yml): Автоматизированная публикация релизов при пуше тега `v*` (проверка типов, линтер, тесты, сборка для Chrome и Firefox и создание GitHub Release).
    - Обновлен [`.github/workflows/ci.yml`](file:///e:/DEV/Project/dashflow/.github/workflows/ci.yml) для кроссбраузерной проверки и генерации релизных архивов.
 
-6. **Юридическая и операционная документация (Production Operations):**
+7. **Юридическая и операционная документация (Production Operations):**
    - [`PRIVACY.md`](file:///e:/DEV/Project/dashflow/PRIVACY.md) / [`PRIVACY_EN.md`](file:///e:/DEV/Project/dashflow/PRIVACY_EN.md): Русскоязычная и официальная англоязычная политики конфиденциальности для модераторов Chrome Web Store и Mozilla Add-ons.
    - [`TERMS_OF_SERVICE.md`](file:///e:/DEV/Project/dashflow/TERMS_OF_SERVICE.md): Условия использования расширения.
    - [`docs/DEPLOYMENT_PROCEDURES.md`](file:///e:/DEV/Project/dashflow/docs/DEPLOYMENT_PROCEDURES.md): Регламент релизов, публикация в CWS и Firefox AMO, pre-flight чеклисты.

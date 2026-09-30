@@ -83,7 +83,7 @@ const BookmarkFavicon: React.FC<{
     return (
       <div
         className={cn(
-          'w-full h-full bg-gradient-to-br flex items-center justify-center font-bold text-xs shadow-inner select-none',
+          'w-full h-full bg-linear-to-br flex items-center justify-center font-bold text-xs shadow-inner select-none',
           gradientClass,
         )}
       >
@@ -504,7 +504,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               <button
                 type="button"
                 onClick={() => setIsFolderMenuOpen(!isFolderMenuOpen)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-surface hover:bg-surface-hover border border-line text-xs font-semibold text-fg transition-colors cursor-pointer max-w-[200px]"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-surface hover:bg-surface-hover border border-line text-xs font-semibold text-fg transition-colors cursor-pointer max-w-50"
               >
                 <Folder className="w-3.5 h-3.5 text-warning shrink-0" />
                 <span className="truncate">
@@ -572,7 +572,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                 placeholder="Поиск..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded-lg pl-7 pr-6 py-1 w-20 sm:w-28 focus:w-36 transition-all focus-visible:outline-none focus-visible:border-primary"
+                className="bg-surface text-xs placeholder:text-fg-muted border border-line rounded-lg pl-7 pr-6 py-1 w-32 sm:w-40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               />
               {searchQuery && (
                 <button
@@ -863,7 +863,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
             placeholder="Название"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            className="w-full bg-surface text-xs text-fg border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:border-primary"
+            className="w-full bg-surface text-xs text-fg border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             autoFocus
           />
 
@@ -873,7 +873,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               placeholder="URL (https://...)"
               value={newUrl}
               onChange={(e) => setNewUrl(e.target.value)}
-              className="w-full bg-surface text-xs text-fg border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:border-primary"
+              className="w-full bg-surface text-xs text-fg border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             />
           )}
 

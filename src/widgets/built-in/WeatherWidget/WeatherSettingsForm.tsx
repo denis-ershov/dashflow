@@ -168,7 +168,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
                 if (isUserEditing && suggestions.length > 0) setShowSuggestions(true);
               }}
               placeholder="Введите город (напр. Москва, Сочи, Лондон)..."
-              className="w-full bg-surface border border-line rounded-xl pl-9 pr-8 py-2 text-sm text-fg placeholder:text-fg-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+              className="w-full bg-surface border border-line rounded-xl pl-9 pr-8 py-2 text-sm placeholder:text-fg-muted focus:ring-2 focus:ring-primary/40 outline-none transition-all"
             />
             {isSearching && (
               <RefreshCw className="w-3.5 h-3.5 text-primary absolute right-3 animate-spin" />
@@ -255,7 +255,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-fg">{mode.title}</span>
-                    {isSelected && <Check className="w-3.5 h-3.5 text-primary stroke-[3]" />}
+                    {isSelected && <Check className="w-3.5 h-3.5 text-primary stroke-3" />}
                   </div>
                   <p className="text-[11px] text-fg-muted mt-0.5 line-clamp-2 leading-tight">
                     {mode.desc}

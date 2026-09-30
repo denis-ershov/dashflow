@@ -28,7 +28,7 @@ export const Drawer: React.FC<DrawerProps> = ({
   if (!isOpen) return null;
 
   const drawerContent = (
-    <div className="fixed inset-0 z-[var(--z-modal)] overflow-hidden">
+    <div className="fixed inset-0 z-(--z-modal) overflow-hidden">
       {/* Backdrop */}
       <button
         type="button"
@@ -63,7 +63,7 @@ export const Drawer: React.FC<DrawerProps> = ({
               size="sm"
               onClick={onClose}
               aria-label="Закрыть"
-              className="p-1 h-auto min-h-[44px] min-w-[44px]"
+              className="p-1 h-auto min-h-11 min-w-11"
             >
               <X className="w-5 h-5 text-fg-muted hover:text-fg" />
             </Button>

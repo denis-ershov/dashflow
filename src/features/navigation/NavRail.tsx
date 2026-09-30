@@ -22,7 +22,7 @@ export const NavRail: React.FC = () => {
       >
         {/* Верхний логотип / бренд-иконка */}
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-primary-fg shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-primary to-secondary flex items-center justify-center text-primary-fg shadow-sm">
             <Sparkles className="w-5 h-5" />
           </div>
 

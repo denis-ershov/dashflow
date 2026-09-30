@@ -1,5 +1,6 @@
 import { defineConfig } from 'wxt';
 import tailwindcss from '@tailwindcss/vite';
+import pkg from './package.json';
 
 // https://wxt.dev/api/config.html
 export default defineConfig({
@@ -11,7 +12,7 @@ export default defineConfig({
     return {
       name: 'DashFlow — Personal Start Page',
       description: 'Персональное рабочее пространство и Dashboard в новой вкладке браузера.',
-      version: '3.7.1',
+      version: pkg.version,
       default_locale: 'ru',
       permissions: ['storage', 'bookmarks', 'geolocation'],
       host_permissions: [

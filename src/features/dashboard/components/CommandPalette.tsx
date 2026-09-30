@@ -155,7 +155,7 @@ export const CommandPalette: React.FC = () => {
       role="dialog"
       aria-modal="true"
       aria-label="Командная палитра"
-      className="fixed inset-0 z-[var(--z-modal,50)] flex items-start justify-center pt-20 p-4 select-none"
+      className="fixed inset-0 z-(--z-modal,50) flex items-start justify-center pt-20 p-4 select-none"
     >
       {/* Backdrop */}
       <div
@@ -164,7 +164,7 @@ export const CommandPalette: React.FC = () => {
       />
 
       {/* Palette Container */}
-      <div className="relative w-full max-w-xl glass-panel border border-line rounded-2xl shadow-3 overflow-hidden z-[var(--z-modal,50)] duration-fast">
+      <div className="relative w-full max-w-xl glass-panel border border-line rounded-2xl shadow-3 overflow-hidden z-(--z-modal,50) duration-fast">
         <div className="flex items-center px-4 py-3 border-b border-line bg-surface">
           <Search className="w-5 h-5 text-fg-muted mr-3 shrink-0" />
           <input
@@ -174,7 +174,7 @@ export const CommandPalette: React.FC = () => {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleInputKeyDown}
             placeholder="Введите команду, тему, виджет или поисковый запрос..."
-            className="w-full bg-transparent text-sm text-fg placeholder:text-fg-muted focus:outline-none min-h-[36px]"
+            className="w-full bg-transparent text-sm placeholder:text-fg-muted focus:outline-none min-h-9"
           />
           <kbd className="px-2 py-1 text-xs text-fg-muted bg-surface border border-line rounded-md font-mono select-none">
             ESC
@@ -195,7 +195,7 @@ export const CommandPalette: React.FC = () => {
                 onClick={cmd.action}
                 onMouseEnter={() => setSelectedIndex(idx)}
                 className={cn(
-                  'w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer min-h-[40px]',
+                  'w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer min-h-10',
                   selectedIndex === idx
                     ? 'bg-primary text-primary-fg shadow-1'
                     : 'text-fg hover:bg-surface-hover',

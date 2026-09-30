@@ -95,10 +95,10 @@ export const PermissionConsentModal: React.FC<PermissionConsentModalProps> = ({
 
         {/* Кнопки действий (зоны нажатия >= 44x44 px) */}
         <div className="flex items-center justify-end gap-3 pt-2">
-          <Button variant="ghost" onClick={onDeny} className="min-h-[44px]">
+          <Button variant="ghost" onClick={onDeny} className="min-h-11">
             {t('permissions.deny')}
           </Button>
-          <Button variant="primary" onClick={onAllow} className="min-h-[44px]">
+          <Button variant="primary" onClick={onAllow} className="min-h-11">
             {t('permissions.allow')}
           </Button>
         </div>

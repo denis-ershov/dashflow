@@ -270,14 +270,14 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
 
           {/* Строка поиска (если включена) */}
           {showSearch && (
-            <div className="relative flex-1 max-w-[200px] min-w-0">
+            <div className="relative flex-1 max-w-50 min-w-0">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-fg-muted pointer-events-none" />
               <input
                 type="text"
                 placeholder="Поиск новостей..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-7 pr-6 py-1 text-xs rounded-lg bg-surface border border-line text-fg placeholder:text-fg-muted/60 focus:outline-none focus:border-primary/70 transition-all"
+                className="w-full pl-7 pr-6 py-1 text-xs rounded-lg bg-surface border border-line placeholder:text-fg-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
               />
               {searchQuery && (
                 <button
@@ -336,7 +336,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
                   className="w-2 h-2 rounded-full shrink-0"
                   style={{ backgroundColor: feed.color || '#65a30d' }}
                 />
-                <span className="truncate max-w-[120px]">{feed.name}</span>
+                <span className="truncate max-w-30">{feed.name}</span>
               </button>
             ))}
           </div>
@@ -371,7 +371,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
                 )}
               >
                 <Folder className="w-3 h-3 text-primary" />
-                <span className="truncate max-w-[120px]">{folder}</span>
+                <span className="truncate max-w-30">{folder}</span>
               </button>
             ))}
           </div>
@@ -525,7 +525,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
 
                       <div className="flex items-center gap-2 shrink-0 text-[10px] text-fg-muted">
                         {showSource && (
-                          <span className="hidden sm:inline-block px-1.5 py-0.5 rounded-md bg-surface-hover/80 border border-line/40 font-medium truncate max-w-[100px]">
+                          <span className="hidden sm:inline-block px-1.5 py-0.5 rounded-md bg-surface-hover/80 border border-line/40 font-medium truncate max-w-25">
                             {item.feedName}
                           </span>
                         )}

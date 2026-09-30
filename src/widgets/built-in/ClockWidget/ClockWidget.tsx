@@ -97,14 +97,14 @@ export const ClockWidget: React.FC<WidgetProps<ClockSettings>> = ({ settings }) 
       case 'flip':
         return (
           <div className="flex items-center gap-2 sm:gap-3 select-none">
-            <div className="relative overflow-hidden glass-panel px-3 py-2 sm:px-4 sm:py-3 rounded-2xl shadow-2 text-center min-w-[55px] sm:min-w-[75px] border border-line/70">
+            <div className="relative overflow-hidden glass-panel px-3 py-2 sm:px-4 sm:py-3 rounded-2xl shadow-2 text-center min-w-13.75 sm:min-w-18.75 border border-line/70">
               <div className="absolute inset-x-0 top-1/2 h-px bg-line/80 pointer-events-none" />
               <span className="text-3xl sm:text-5xl font-display font-bold text-fg tracking-tight" style={glowStyle}>
                 {hours}
               </span>
             </div>
             <span className={cn('text-2xl sm:text-4xl', colonClass)}>:</span>
-            <div className="relative overflow-hidden glass-panel px-3 py-2 sm:px-4 sm:py-3 rounded-2xl shadow-2 text-center min-w-[55px] sm:min-w-[75px] border border-line/70">
+            <div className="relative overflow-hidden glass-panel px-3 py-2 sm:px-4 sm:py-3 rounded-2xl shadow-2 text-center min-w-13.75 sm:min-w-18.75 border border-line/70">
               <div className="absolute inset-x-0 top-1/2 h-px bg-line/80 pointer-events-none" />
               <span className="text-3xl sm:text-5xl font-display font-bold text-fg tracking-tight" style={glowStyle}>
                 {minutes}
@@ -113,7 +113,7 @@ export const ClockWidget: React.FC<WidgetProps<ClockSettings>> = ({ settings }) 
             {showSeconds && (
               <>
                 <span className="text-lg sm:text-2xl text-fg-dim">:</span>
-                <div className="relative overflow-hidden glass-subtle px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl text-center min-w-[38px] sm:min-w-[48px] border border-line/50">
+                <div className="relative overflow-hidden glass-subtle px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl text-center min-w-9.5 sm:min-w-12 border border-line/50">
                   <div className="absolute inset-x-0 top-1/2 h-px bg-line/50 pointer-events-none" />
                   <span className="text-xl sm:text-3xl font-mono text-fg-muted">{seconds}</span>
                 </div>

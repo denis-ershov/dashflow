@@ -264,7 +264,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
           variant={isRunning ? 'secondary' : 'primary'}
           aria-label={isRunning ? 'Пауза' : 'Запустить таймер'}
           onClick={() => setIsRunning(!isRunning)}
-          className="min-h-[36px] min-w-[36px]"
+          className="min-h-9 min-w-9"
         >
           {isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
         </Button>
@@ -274,7 +274,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
           variant="ghost"
           aria-label="Сброс таймера"
           onClick={reset}
-          className="min-h-[36px] min-w-[36px]"
+          className="min-h-9 min-w-9"
         >
           <RotateCcw className="w-4 h-4" />
         </Button>
@@ -284,7 +284,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
           variant={soundActive ? 'secondary' : 'ghost'}
           aria-label={soundActive ? 'Выключить белый шум' : 'Включить белый шум'}
           onClick={toggleSound}
-          className={cn('min-h-[36px] min-w-[36px]', soundActive && 'text-primary')}
+          className={cn('min-h-9 min-w-9', soundActive && 'text-primary')}
         >
           {soundActive ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
         </Button>

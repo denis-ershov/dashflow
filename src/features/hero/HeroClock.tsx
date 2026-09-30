@@ -90,13 +90,13 @@ export const HeroClock: React.FC<HeroClockProps> = ({
     ),
     flip: (
       <div className="flex items-center gap-3 select-none">
-        <div className="glass-panel px-4 py-3 rounded-2xl shadow-2 text-center min-w-[70px] md:min-w-[90px]">
+        <div className="glass-panel px-4 py-3 rounded-2xl shadow-2 text-center min-w-17.5 md:min-w-22.5">
           <span className="text-4xl md:text-6xl font-display font-bold text-fg tracking-tight">
             {hours}
           </span>
         </div>
         <span className="text-3xl md:text-5xl font-bold text-primary animate-pulse">:</span>
-        <div className="glass-panel px-4 py-3 rounded-2xl shadow-2 text-center min-w-[70px] md:min-w-[90px]">
+        <div className="glass-panel px-4 py-3 rounded-2xl shadow-2 text-center min-w-17.5 md:min-w-22.5">
           <span className="text-4xl md:text-6xl font-display font-bold text-fg tracking-tight">
             {minutes}
           </span>
@@ -104,7 +104,7 @@ export const HeroClock: React.FC<HeroClockProps> = ({
         {showSeconds && (
           <>
             <span className="text-xl md:text-3xl text-fg-dim">:</span>
-            <div className="glass-subtle px-3 py-2 rounded-xl text-center min-w-[45px] md:min-w-[60px]">
+            <div className="glass-subtle px-3 py-2 rounded-xl text-center min-w-11.25 md:min-w-15">
               <span className="text-2xl md:text-4xl font-mono text-fg-muted">{seconds}</span>
             </div>
           </>

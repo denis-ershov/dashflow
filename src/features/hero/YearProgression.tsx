@@ -74,7 +74,7 @@ export const YearProgression: React.FC<YearProgressionProps> = ({ className }) =
       onClick={handleNextMode}
       aria-label={`Прогресс времени: ${active.label} завершен на ${active.percent}%`}
       className={cn(
-        'glass-pill flex items-center gap-3 px-4 py-2 border border-line hover:border-line-hover text-xs select-none transition-all cursor-pointer group min-h-[36px]',
+        'glass-pill flex items-center gap-3 px-4 py-2 border border-line hover:border-line-hover text-xs select-none transition-all cursor-pointer group min-h-9',
         className,
       )}
     >
@@ -90,7 +90,7 @@ export const YearProgression: React.FC<YearProgressionProps> = ({ className }) =
         />
       </div>
 
-      <span className="font-mono text-fg font-semibold min-w-[40px] text-right">
+      <span className="font-mono text-fg font-semibold min-w-10 text-right">
         {active.percent}%
       </span>
     </button>

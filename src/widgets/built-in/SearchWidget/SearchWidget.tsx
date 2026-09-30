@@ -244,8 +244,8 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
         <form onSubmit={handleSearch} className="w-full relative flex items-center">
           <div
             className={cn(
-              'glass-pill w-full flex items-center p-1.5 transition-all duration-normal border border-line focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20',
-              'min-h-[46px] shadow-2',
+              'glass-pill w-full flex items-center p-1.5 transition-all duration-normal border border-line focus-within:ring-2 focus-within:ring-primary/40',
+              'min-h-11.5 shadow-2',
             )}
           >
             {/* Селектор поисковика */}
@@ -264,7 +264,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
                   )}
                 >
                   <span className="shrink-0">{currentEngine.icon}</span>
-                  <span className="hidden sm:inline-block max-w-[80px] truncate">
+                  <span className="hidden sm:inline-block max-w-20 truncate">
                     {currentEngine.name}
                   </span>
                   <ChevronDown
@@ -281,7 +281,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
                   createPortal(
                     <div
                       ref={dropdownMenuRef}
-                      className="fixed z-[99999] w-56 p-1.5 rounded-2xl shadow-3 border border-line animate-fade-in backdrop-blur-xl"
+                      className="fixed z-99999 w-56 p-1.5 rounded-2xl shadow-3 border border-line animate-fade-in backdrop-blur-xl"
                       style={{
                         top: `${dropdownPos.top}px`,
                         left: `${dropdownPos.left}px`,
@@ -335,12 +335,12 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={customPlaceholder || currentEngine.placeholder}
-              className="flex-1 bg-transparent border-none outline-none px-3 text-sm text-fg placeholder:text-fg-muted font-medium w-full min-w-0"
+              className="flex-1 bg-transparent border-none outline-none px-3 text-sm placeholder:text-fg-muted font-medium w-full min-w-0"
             />
 
             {/* Подсказка горячей клавиши */}
             {!query.trim() && showHotkeyBadge && (
-              <kbd className="hidden sm:inline-flex items-center justify-center h-5 min-w-[20px] px-1 mr-1 text-[10px] font-mono text-fg-muted bg-surface-elevated/80 border border-line rounded-md shadow-xs select-none pointer-events-none">
+              <kbd className="hidden sm:inline-flex items-center justify-center h-5 min-w-5 px-1 mr-1 text-[10px] font-mono text-fg-muted bg-surface-elevated/80 border border-line rounded-md shadow-xs select-none pointer-events-none">
                 /
               </kbd>
             )}
@@ -362,7 +362,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
               type="submit"
               aria-label="Искать"
               disabled={!query.trim()}
-              className="p-2 rounded-xl bg-primary text-primary-fg hover:opacity-90 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer min-w-[34px] min-h-[34px] flex items-center justify-center shadow-1 shrink-0"
+              className="p-2 rounded-xl bg-primary text-primary-fg hover:opacity-90 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer min-w-8.5 min-h-8.5 flex items-center justify-center shadow-1 shrink-0"
             >
               <ArrowRight className="w-4 h-4" />
             </button>
@@ -383,7 +383,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
               type="button"
               onClick={() => handleSelectEngine(eng.id)}
               className={cn(
-                'inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer min-h-[32px] shrink-0',
+                'inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer min-h-8 shrink-0',
                 activeEngine === eng.id
                   ? 'bg-primary text-primary-fg shadow-1'
                   : 'bg-surface text-fg-muted hover:text-fg hover:bg-surface-hover border border-line',
@@ -407,17 +407,18 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={`Искать в ${currentEngine.name}...`}
-          className="w-full bg-surface text-sm text-fg placeholder:text-fg-muted border border-line rounded-xl pl-10 pr-10 py-2 min-h-[44px] transition-colors focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 font-medium"
+          className="w-full bg-surface text-sm placeholder:text-fg-muted border border-line rounded-xl pl-10 pr-10 py-2 min-h-11 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 font-medium"
         />
 
-        <button
-          type="submit"
-          aria-label="Найти"
-          disabled={!query.trim()}
-          className="absolute right-2 p-2 rounded-lg bg-primary text-primary-fg opacity-0 group-focus-within:opacity-100 disabled:opacity-0 transition-opacity cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center"
-        >
-          <ArrowRight className="w-4 h-4" />
-        </button>
+        {query.trim() && (
+          <button
+            type="submit"
+            aria-label="Найти"
+            className="absolute right-2 p-2 rounded-lg bg-primary text-primary-fg hover:opacity-90 animate-fade-in transition-all cursor-pointer min-w-8 min-h-8 flex items-center justify-center shadow-1"
+          >
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </form>
   );

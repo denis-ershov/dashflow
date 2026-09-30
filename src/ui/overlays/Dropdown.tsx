@@ -76,7 +76,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
         <div
           role="menu"
           className={cn(
-            'absolute mt-2 w-48 rounded-md bg-surface border border-line shadow-2 z-[var(--z-overlay)] py-1 overflow-hidden animate-fade-in duration-fast',
+            'absolute mt-2 w-48 rounded-md bg-surface border border-line shadow-2 z-(--z-overlay) py-1 overflow-hidden animate-fade-in duration-fast',
             align === 'right' ? 'right-0' : 'left-0',
             className,
           )}
@@ -91,7 +91,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                 setIsOpen(false);
               }}
               className={cn(
-                'w-full flex items-center px-4 py-3 text-xs font-medium transition-colors duration-fast text-left cursor-pointer min-h-[44px]',
+                'w-full flex items-center px-4 py-3 text-xs font-medium transition-colors duration-fast text-left cursor-pointer min-h-11',
                 item.danger ? 'text-danger hover:bg-danger/10' : 'text-fg hover:bg-surface-hover',
               )}
             >

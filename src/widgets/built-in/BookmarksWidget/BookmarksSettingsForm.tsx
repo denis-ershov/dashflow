@@ -105,7 +105,7 @@ export const BookmarksSettingsForm: React.FC<BookmarksSettingsFormProps> = ({
         <select
           value={mode}
           onChange={(e) => setMode(e.target.value as any)}
-          className="w-full bg-surface text-xs text-fg border border-line rounded-xl px-3 py-2 focus:outline-none focus:border-primary"
+          className="w-full bg-surface text-xs text-fg border border-line rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           <option value="folder">Папка закладок Chrome</option>
           <option value="single">Одиночная плитка (1 сайт = 1 виджет)</option>
@@ -302,7 +302,7 @@ export const BookmarksSettingsForm: React.FC<BookmarksSettingsFormProps> = ({
               type="text"
               value={singleTitle}
               onChange={(e) => setSingleTitle(e.target.value)}
-              className="w-full bg-surface-hover text-xs text-fg border border-line rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-primary"
+              className="w-full bg-surface-hover text-xs text-fg border border-line rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
           <div>
@@ -311,7 +311,7 @@ export const BookmarksSettingsForm: React.FC<BookmarksSettingsFormProps> = ({
               type="text"
               value={singleUrl}
               onChange={(e) => setSingleUrl(e.target.value)}
-              className="w-full bg-surface-hover text-xs text-fg border border-line rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-primary"
+              className="w-full bg-surface-hover text-xs text-fg border border-line rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
           <div>
@@ -321,7 +321,7 @@ export const BookmarksSettingsForm: React.FC<BookmarksSettingsFormProps> = ({
               value={singleIconUrl}
               onChange={(e) => setSingleIconUrl(e.target.value)}
               placeholder="https://.../icon.png"
-              className="w-full bg-surface-hover text-xs text-fg border border-line rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-primary"
+              className="w-full bg-surface-hover text-xs text-fg border border-line rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
         </div>
@@ -337,7 +337,7 @@ export const BookmarksSettingsForm: React.FC<BookmarksSettingsFormProps> = ({
             <select
               value={selectedFolderId}
               onChange={(e) => setSelectedFolderId(e.target.value)}
-              className="w-full bg-surface text-xs text-fg border border-line rounded-xl px-3 py-2 focus:outline-none focus:border-primary"
+              className="w-full bg-surface text-xs text-fg border border-line rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
             >
               {availableFolders.map((f) => (
                 <option key={f.id} value={f.id}>

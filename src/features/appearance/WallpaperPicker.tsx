@@ -80,7 +80,7 @@ export const WallpaperPicker: React.FC = () => {
                 onClick={() => setWallpaper(preset.url)}
                 aria-label={preset.name}
                 className={cn(
-                  'h-24 rounded-xl border transition-all duration-normal overflow-hidden relative flex items-end p-2 cursor-pointer shadow-1 text-left min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary hover:scale-[1.02] active:scale-[0.98]',
+                  'h-24 rounded-xl border transition-all duration-normal overflow-hidden relative flex items-end p-2 cursor-pointer shadow-1 text-left min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary hover:scale-[1.02] active:scale-[0.98]',
                   isSelected
                     ? 'border-primary ring-2 ring-primary/40'
                     : 'border-line hover:border-line-hover',
@@ -92,7 +92,7 @@ export const WallpaperPicker: React.FC = () => {
                 }}
               >
                 <div className="absolute inset-0 bg-canvas/40 transition-opacity hover:bg-canvas/10" />
-                <div className="relative flex items-center justify-between w-full z-[var(--z-raised,10)]">
+                <div className="relative flex items-center justify-between w-full z-(--z-raised,10)">
                   <span className="text-xs font-semibold text-fg bg-surface/90 px-2 py-1 rounded-md backdrop-blur-md truncate">
                     {preset.name}
                   </span>

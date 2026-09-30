@@ -99,7 +99,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
             value={importJson}
             onChange={(e) => setImportJson(e.target.value)}
             placeholder="Вставьте JSON конфигурацию здесь..."
-            className="w-full h-28 bg-surface text-xs font-mono text-fg border border-line rounded-md p-3 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
+            className="w-full h-28 bg-surface text-xs font-mono text-fg border border-line rounded-md p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           />
 
           {status === 'success' && (

@@ -285,7 +285,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings, onUp
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={activeTab === 'todos' ? 'Новая задача...' : 'Новая привычка (напр. Чтение 20 мин)...'}
-          className="flex-1 bg-surface text-xs text-fg placeholder:text-fg-muted border border-line rounded-xl px-3 py-2 min-h-[38px] focus-visible:outline-none focus-visible:border-primary"
+          className="flex-1 bg-surface text-xs placeholder:text-fg-muted border border-line rounded-xl px-3 py-2 min-h-9.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         />
 
         {activeTab === 'todos' && (
@@ -295,7 +295,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings, onUp
               id={prioritySelectId}
               value={priority}
               onChange={(e) => setPriority(e.target.value as TodoPriority)}
-              className="bg-surface text-xs text-fg border border-line rounded-xl px-2 py-2 min-h-[38px] focus-visible:outline-none cursor-pointer"
+              className="bg-surface text-xs border border-line rounded-xl px-2 py-2 min-h-9.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer"
             >
               <option value="low">Низкий</option>
               <option value="medium">Средний</option>
@@ -311,7 +311,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings, onUp
           aria-label="Добавить"
           disabled={!input.trim()}
           icon={<Plus className="w-4 h-4" />}
-          className="min-h-[38px] min-w-[38px]"
+          className="min-h-9.5 min-w-9.5"
         />
       </form>
 

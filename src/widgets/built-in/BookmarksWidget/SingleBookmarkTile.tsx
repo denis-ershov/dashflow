@@ -76,7 +76,7 @@ export const SingleBookmarkTile: React.FC<SingleBookmarkTileProps> = ({ settings
           ) : (
             <div
               className={cn(
-                'w-full h-full bg-gradient-to-br flex items-center justify-center font-bold text-xs shadow-inner select-none',
+                'w-full h-full bg-linear-to-br flex items-center justify-center font-bold text-xs shadow-inner select-none',
                 gradientClass,
               )}
             >

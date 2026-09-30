@@ -36,7 +36,7 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-3 sm:p-4">
+    <div className="fixed inset-0 z-(--z-modal) flex items-center justify-center p-3 sm:p-4">
       {/* Backdrop */}
       <button
         type="button"
@@ -69,7 +69,7 @@ export const Modal: React.FC<ModalProps> = ({
               size="sm"
               onClick={onClose}
               aria-label="Закрыть"
-              className="p-1 h-auto min-h-[44px] min-w-[44px]"
+              className="p-1 h-auto min-h-11 min-w-11"
             >
               <X className="w-5 h-5 text-fg-muted hover:text-fg" />
             </Button>

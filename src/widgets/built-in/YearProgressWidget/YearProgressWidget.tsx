@@ -169,7 +169,7 @@ export const YearProgressWidget: React.FC<WidgetProps<YearProgressSettings>> = (
       >
         <div
           className={cn(
-            'h-full bg-gradient-to-r rounded-full transition-all duration-700 ease-out',
+            'h-full bg-linear-to-r rounded-full transition-all duration-700 ease-out',
             gradientClass,
           )}
           style={{ width: `${current.percent}%` }}

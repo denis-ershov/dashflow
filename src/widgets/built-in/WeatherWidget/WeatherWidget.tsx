@@ -173,7 +173,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
   // 1. Компактный режим (Compact View)
   if (viewMode === 'compact') {
     return (
-      <div className={cn('relative flex flex-col justify-between h-full p-3 select-none overflow-hidden bg-gradient-to-b', weatherGlow)}>
+      <div className={cn('relative flex flex-col justify-between h-full p-3 select-none overflow-hidden bg-linear-to-b', weatherGlow)}>
         {/* Шапка: Город + Обновление */}
         <div className="flex items-center justify-between text-xs text-fg-muted">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -207,7 +207,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
                 </span>
               )}
             </div>
-            <p className="text-xs text-fg-dim truncate max-w-[150px] mt-0.5">
+            <p className="text-xs text-fg-dim truncate max-w-37.5 mt-0.5">
               {getWeatherDescription(data.weathercode, data.metrics?.isDay)}
             </p>
           </div>
@@ -241,7 +241,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
   // 2. Режим "По часам" (Hourly Focused View)
   if (viewMode === 'hourly') {
     return (
-      <div className={cn('relative flex flex-col h-full p-3 select-none overflow-hidden bg-gradient-to-b', weatherGlow)}>
+      <div className={cn('relative flex flex-col h-full p-3 select-none overflow-hidden bg-linear-to-b', weatherGlow)}>
         {/* Шапка */}
         <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -287,7 +287,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
   // 3. Режим "На 7 дней" (Weekly Focused View)
   if (viewMode === 'weekly') {
     return (
-      <div className={cn('relative flex flex-col h-full p-3 select-none overflow-hidden bg-gradient-to-b', weatherGlow)}>
+      <div className={cn('relative flex flex-col h-full p-3 select-none overflow-hidden bg-linear-to-b', weatherGlow)}>
         <div className="flex items-center justify-between pb-2">
           <span className="text-xs font-bold text-fg truncate">{data.city} • 7 дней</span>
           <button
@@ -318,7 +318,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
 
   // 4. Главный режим: Умная Метеостанция (Dashboard Mode)
   return (
-    <div className={cn('relative flex flex-col h-full select-none overflow-hidden bg-gradient-to-b', weatherGlow)}>
+    <div className={cn('relative flex flex-col h-full select-none overflow-hidden bg-linear-to-b', weatherGlow)}>
       {/* 1. Верхняя панель: Город, маркер геолокации, кнопки табов и обновление */}
       <div className="flex items-center justify-between px-3 pt-2.5 pb-1 border-b border-line/40 shrink-0">
         <div className="flex items-center gap-1.5 min-w-0">
@@ -443,7 +443,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
                     <div
                       key={i}
                       className={cn(
-                        'flex flex-col items-center gap-1.5 p-2 rounded-xl border min-w-[56px] shrink-0 transition-all text-center',
+                        'flex flex-col items-center gap-1.5 p-2 rounded-xl border min-w-14 shrink-0 transition-all text-center',
                         i === 0
                           ? 'bg-primary/15 border-primary/40 shadow-1'
                           : 'bg-surface/40 border-line/40 hover:bg-surface/70',
@@ -667,7 +667,7 @@ const DailyRow: React.FC<DailyRowProps> = ({ item, weekMin, weekMax, tempUnit, g
 
         <div className="flex-1 h-1.5 rounded-full bg-surface-elevated overflow-hidden relative">
           <div
-            className="absolute top-0 bottom-0 rounded-full bg-gradient-to-r from-cyan-400 via-amber-400 to-rose-400"
+            className="absolute top-0 bottom-0 rounded-full bg-linear-to-r from-cyan-400 via-amber-400 to-rose-400"
             style={{
               left: `${leftPercent}%`,
               right: `${rightPercent}%`,
