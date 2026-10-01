@@ -27,7 +27,7 @@ export const Slider: React.FC<SliderProps> = ({
   const percentage = Math.min(100, Math.max(0, ((value - min) / (max - min || 1)) * 100));
 
   return (
-    <div className={cn('flex flex-col gap-2 w-full min-h-[44px] justify-center', className)}>
+    <div className={cn('flex flex-col gap-2 w-full min-h-11 justify-center', className)}>
       {label && (
         <div className="flex items-center justify-between text-sm font-medium">
           <span className="text-fg">{label}</span>
@@ -49,7 +49,7 @@ export const Slider: React.FC<SliderProps> = ({
         style={{
           background: `linear-gradient(to right, var(--dashflow-primary, #3b82f6) ${percentage}%, var(--dashflow-line, rgba(255, 255, 255, 0.1)) ${percentage}%)`,
         }}
-        className="w-full h-2 rounded-full appearance-none cursor-pointer accent-primary border border-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+        className="w-full h-2 rounded-full appearance-none cursor-pointer accent-primary border border-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40 disabled:pointer-events-none transition-all"
       />
     </div>
   );
