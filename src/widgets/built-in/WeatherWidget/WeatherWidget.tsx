@@ -39,6 +39,7 @@ import {
   formatPressure,
   formatTemperature,
   formatWindSpeed,
+  getCachedWeatherData,
   getUvIndexInfo,
   getWeatherDescription,
   getWindDirectionText,
@@ -65,12 +66,29 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
   // Внутренний интерактивный таб (для режима dashboard)
   const [activeTab, setActiveTab] = useState<'overview' | 'hourly' | 'daily' | 'metrics'>('overview');
 
-  const { data, isLoading, isFetching, error, refetch } = useQuery<WeatherData>({
+  // Фолбэк на кешированные данные из хранилища (Stale-While-Revalidate)
+  const [cachedFallback, setCachedFallback] = React.useState<WeatherData | null>(null);
+
+  React.useEffect(() => {
+    let active = true;
+    getCachedWeatherData().then((cached) => {
+      if (active && cached) {
+        setCachedFallback({ ...cached, isOffline: true });
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const { data: remoteData, isLoading, isFetching, error, refetch } = useQuery<WeatherData>({
     queryKey: ['weather', city, autoLocation, coords?.lat, coords?.lon],
     queryFn: () => fetchFullWeatherData({ city, coords, autoLocation }),
     staleTime: 1000 * 60 * 20, // 20 минут
     refetchOnWindowFocus: false,
   });
+
+  const data = remoteData || cachedFallback;
 
   // Расчет глобального недельного минимума и максимума для термо-баров
   const weekExtremes = useMemo(() => {
@@ -126,7 +144,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
     return 'from-primary/10 via-transparent to-transparent';
   }, [data]);
 
-  if (isLoading) {
+  if (isLoading && !data) {
     return (
       <div className="flex flex-col justify-between h-full p-4 space-y-4">
         <div className="flex items-center justify-between">
@@ -146,7 +164,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
     );
   }
 
-  if (error || !data) {
+  if (!data) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-4 text-center space-y-3">
         <div className="p-3 rounded-2xl bg-danger/10 text-danger border border-danger/20">
@@ -154,12 +172,14 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
         </div>
         <div>
           <h4 className="text-sm font-semibold text-fg">Не удалось загрузить погоду</h4>
-          <p className="text-xs text-fg-muted mt-1">Проверьте подключение к сети или название города</p>
+          <p className="text-xs text-fg-muted mt-1 max-w-64">
+            Сервер погоды Open-Meteo временно недоступен или заблокирован провайдером. Проверьте интернет или VPN.
+          </p>
         </div>
         <button
           type="button"
           onClick={() => refetch()}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-fg text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer shadow-1"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-fg text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer shadow-1 min-h-9 relative before:absolute before:-inset-1 before:content-['']"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>Повторить</span>

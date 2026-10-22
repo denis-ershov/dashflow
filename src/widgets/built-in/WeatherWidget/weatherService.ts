@@ -205,9 +205,9 @@ export async function fetchFullWeatherData(params: {
 
     const isTestEnv = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
     const res = await resilientFetch(url, {
-      timeoutMs: isTestEnv ? 1000 : 8000,
-      retries: isTestEnv ? 0 : 2,
-      baseDelayMs: isTestEnv ? 0 : 800,
+      timeoutMs: isTestEnv ? 1000 : 4500,
+      retries: isTestEnv ? 0 : 1,
+      baseDelayMs: isTestEnv ? 0 : 500,
       circuitBreakerName: 'open-meteo',
     });
     if (!res.ok) {
@@ -333,15 +333,22 @@ export async function fetchFullWeatherData(params: {
 
     return result;
   } catch (err) {
-    try {
-      const cached = await StorageAdapter.getLarge<WeatherData>(STORAGE_KEYS.WEATHER_CACHE);
-      if (cached) {
-        return { ...cached, isOffline: true };
-      }
-    } catch {
-      // Игнорируем
+    const cached = await getCachedWeatherData();
+    if (cached) {
+      return { ...cached, isOffline: true };
     }
     throw err;
+  }
+}
+
+/**
+ * Получение кешированных данных погоды из локального хранилища
+ */
+export async function getCachedWeatherData(): Promise<WeatherData | null> {
+  try {
+    return await StorageAdapter.getLarge<WeatherData>(STORAGE_KEYS.WEATHER_CACHE);
+  } catch {
+    return null;
   }
 }
 
