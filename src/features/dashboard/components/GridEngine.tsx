@@ -12,7 +12,7 @@ import { WidgetSettingsDrawer } from './WidgetSettingsDrawer';
 import { useGridMetrics } from '../hooks/useGridMetrics';
 import { EmptyState } from '@/ui/feedback/EmptyState';
 import { Button } from '@/ui/primitives/Button';
-import type { BaseColumns } from '@/core/storage';
+import type { BaseColumns, Breakpoint } from '@/core/storage';
 
 // Синхронная гарантированная регистрация встроенных манифестов
 registerBuiltInWidgets();
@@ -46,6 +46,7 @@ export const GridEngine: React.FC = () => {
   } = useDashboardStore();
 
   const [activeSettingsInstanceId, setActiveSettingsInstanceId] = useState<string | null>(null);
+  const [currentBreakpoint, setCurrentBreakpoint] = useState<Breakpoint>('xl');
   const { width, containerRef, mounted } = useContainerWidth();
 
   const responsiveCols = getResponsiveCols(columns);
@@ -66,7 +67,7 @@ export const GridEngine: React.FC = () => {
         w: item.w,
         h: item.h,
       }));
-      updateLayout(updated);
+      updateLayout(currentBreakpoint, updated);
     }
   };
 
@@ -192,6 +193,7 @@ export const GridEngine: React.FC = () => {
           handles: ['se'],
         }}
         compactor={verticalCompactor}
+        onBreakpointChange={(bp) => setCurrentBreakpoint(bp as Breakpoint)}
         onLayoutChange={handleLayoutChange}
       >
         {widgets.map((item) => {

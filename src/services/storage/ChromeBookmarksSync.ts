@@ -137,8 +137,18 @@ export const useChromeBookmarksStore = create<ChromeBookmarksState>()((set) => {
     },
 
     deleteBookmark: async (id) => {
-      if (typeof chrome !== 'undefined' && chrome.bookmarks?.remove) {
-        await chrome.bookmarks.remove(id);
+      if (typeof chrome !== 'undefined' && chrome.bookmarks) {
+        if (chrome.bookmarks.removeTree) {
+          try {
+            await chrome.bookmarks.removeTree(id);
+            return;
+          } catch {
+            // Fallback на обычный remove, если это одиночная закладка
+          }
+        }
+        if (chrome.bookmarks.remove) {
+          await chrome.bookmarks.remove(id);
+        }
       }
     },
 

@@ -3,7 +3,7 @@ import { Modal } from '@/ui/overlays';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useThemeStore } from '@/core/theme/themeStore';
 import { useAppStore } from '@/stores/useAppStore';
-import { StorageAdapter } from '@/services/storage/StorageAdapter';
+import { StorageAdapter, STORAGE_KEYS, migrateDashboardState } from '@/core/storage';
 import { Button } from '@/ui/primitives';
 import { Download, Upload, CheckCircle2, AlertTriangle } from 'lucide-react';
 
@@ -22,10 +22,21 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleExport = () => {
+    const dashState = useDashboardStore.getState();
     const data = {
       version: '2.0',
       exportedAt: new Date().toISOString(),
       theme: { activePresetId, wallpaperUrl, scrim, customCss },
+      dashboard: {
+        version: 2,
+        instances: dashState.instances,
+        layouts: dashState.layouts,
+        baseColumns: dashState.baseColumns,
+        gap: dashState.gap,
+        layoutMode: dashState.layoutMode,
+        heroSettings: dashState.heroSettings,
+        speedDialLinks: dashState.speedDialLinks,
+      },
       layout: { columns, gap },
       widgets,
       settings: { language, theme },
@@ -48,26 +59,45 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
       setErrorMsg('');
 
       const parsed = JSON.parse(importJson) as Record<string, unknown>;
-      if (!parsed.widgets || !Array.isArray(parsed.widgets)) {
-        throw new Error('Некорректный формат JSON файла (отсутствуют виджеты)');
+      if (typeof parsed !== 'object' || parsed === null) {
+        throw new Error('Некорректный формат JSON файла');
       }
 
-      const layout = parsed.layout as Record<string, unknown> | undefined;
-      if (layout?.columns) {
-        await StorageAdapter.set('dash_columns', layout.columns);
+      const rawDashboard = parsed.dashboard || parsed;
+      const hasDashboardData = Boolean(
+        parsed.dashboard ||
+          (Array.isArray(parsed.widgets) && parsed.widgets.length > 0) ||
+          (Array.isArray((parsed as Record<string, unknown>).instances) &&
+            ((parsed as Record<string, unknown>).instances as unknown[]).length > 0) ||
+          parsed.layout,
+      );
+
+      if (hasDashboardData) {
+        const migrated = migrateDashboardState(rawDashboard);
+        // Сохраняем в формате zustand persist
+        await StorageAdapter.set(STORAGE_KEYS.DASHBOARD, {
+          state: migrated,
+          version: 2,
+        });
+        useDashboardStore.setState({
+          ...migrated,
+          columns: migrated.baseColumns,
+        });
       }
-      if (layout?.gap) {
-        await StorageAdapter.set('dash_gap', layout.gap);
-      }
-      if (parsed.widgets) {
-        await StorageAdapter.set('dash_widgets', parsed.widgets);
-      }
+
       if (parsed.theme) {
         useThemeStore.getState().initialize(parsed.theme);
       }
 
+      if (parsed.settings && typeof parsed.settings === 'object') {
+        const settings = parsed.settings as Record<string, unknown>;
+        if (typeof settings.language === 'string') {
+          await useAppStore.getState().setLanguage(settings.language as 'ru' | 'en');
+        }
+      }
+
       setStatus('success');
-      setTimeout(() => window.location.reload(), 1000);
+      setTimeout(() => window.location.reload(), 800);
     } catch (err: unknown) {
       setStatus('error');
       setErrorMsg(err instanceof Error ? err.message : 'Ошибка чтения JSON');

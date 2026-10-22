@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { StorageAdapter, STORAGE_KEYS } from '@/core/storage';
 import { WidgetRegistry } from '@/core/widget/registry';
 import { WidgetManifest, WidgetProps } from '@/core/widget/types';
+import { PermissionManager } from '@/core/permissions/permissionManager';
+import type { PermissionType } from '@/core/permissions/types';
 import type { IframeSettings } from '@/widgets/built-in/IframeWidget/types';
 import type { RssSettings } from '@/widgets/built-in/RssWidget/types';
 import { DeclarativePluginManifest, EmbedPluginConfig, RssPluginConfig } from './types';
@@ -99,6 +101,8 @@ export const usePluginStore = create<PluginState>((set, get) => ({
           validPlugins.push(check.manifest);
           // Регистрируем плагин в общем реестре виджетов
           WidgetRegistry.register(createWidgetManifestFromPlugin(check.manifest));
+          const perms = (check.manifest.permissions || ['storage']) as PermissionType[];
+          await PermissionManager.grantPermissions(check.manifest.id, perms);
         }
       }
 
@@ -131,6 +135,10 @@ export const usePluginStore = create<PluginState>((set, get) => ({
     // Регистрируем в реестре
     WidgetRegistry.register(createWidgetManifestFromPlugin(manifest));
 
+    // Выдаем права плагина
+    const permissionsToGrant = (manifest.permissions || ['storage']) as PermissionType[];
+    await PermissionManager.grantPermissions(manifest.id, permissionsToGrant);
+
     // Сохраняем в хранилище
     await StorageAdapter.set(STORAGE_KEYS.CUSTOM_PLUGINS, updated);
     set({ plugins: updated });
@@ -144,6 +152,7 @@ export const usePluginStore = create<PluginState>((set, get) => ({
     if (updated.length === current.length) return false;
 
     WidgetRegistry.unregister(pluginId);
+    await PermissionManager.revokePermissions(pluginId);
     await StorageAdapter.set(STORAGE_KEYS.CUSTOM_PLUGINS, updated);
     set({ plugins: updated });
     return true;

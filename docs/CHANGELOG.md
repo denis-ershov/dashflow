@@ -7,6 +7,49 @@
 
 ---
 
+## [3.7.3] - 2026-10-22
+
+### Комплексный аудит стабильности, безопасности и целостности архитектуры (Full Codebase Revision)
+
+#### Исправлено и улучшено:
+
+1. **Theme Engine & Персистентность тем (`src/core/theme/themeStore.ts`):**
+   - Добавлен middleware `persist` с интеграцией `StorageAdapter` по ключу `STORAGE_KEYS.THEME` (`dashflow_theme_store`) и автоматической синхронизацией сохраненных настроек в DOM.
+   - Метод `initialize()` больше не затирает состояние по умолчанию при открытии новой вкладки.
+   - В [`src/styles/tokens.css`](file:///e:/DEV/Project/dashflow/src/styles/tokens.css) удален устаревший временный блок `[data-theme='light']`, перекрывавший палитры светлых пресетов Theme Engine.
+   - В [`src/stores/useAppStore.ts`](file:///e:/DEV/Project/dashflow/src/stores/useAppStore.ts) устранена коллизия атрибута `data-theme` и настроена реактивная трансляция пресетов темы.
+
+2. **Единая система локализации i18n (`src/core/i18n`):**
+   - [`SettingsModal.tsx`](file:///e:/DEV/Project/dashflow/src/features/settings/components/SettingsModal.tsx) полностью переведен на ядро `@/core/i18n` (`useTranslation`, `useI18nStore`). Переключение языка в настройках теперь мгновенно переводит весь интерфейс приложения.
+   - Настроена двусторонняя реактивная синхронизация языка между `useAppStore` и `useI18nStore`.
+   - Файл [`src/services/localization/i18n.ts`](file:///e:/DEV/Project/dashflow/src/services/localization/i18n.ts) переведен в режим обратной совместимости как фасад над `@/core/i18n`.
+
+3. **Безопасность песочницы плагинов и Service Worker (`src/core/plugins/SandboxBridge.ts`, `src/entrypoints/background.ts`):**
+   - В `SandboxBridge.ts` устранен обход прав доступа (`|| true`), теперь операции с изолированным хранилищем строго проверяются через `PermissionManager.hasPermission(pluginId, 'storage')`.
+   - В `pluginStore.ts` права плагинов автоматически регистрируются и выдаются при установке и корректно отзываются при деинсталляции (`revokePermissions`).
+   - В `background.ts` внедрен фильтр защиты от SSRF (`isSafeUrl`) для фонового RSS-прокси, блокирующий обращения к `localhost`, приватным подсетям (RFC 1918) и адресам метаданных облачных сервисов (AWS/GCP metadata `169.254.169.254`). Добавлена валидация отправителя сообщения (`sender.id === chrome.runtime.id`).
+   - Добавлен обработчик `chrome.action.onClicked`, открывающий вкладку DashFlow по нажатию на иконку расширения.
+
+4. **Устойчивость виджетов и расчет времени:**
+   - **WeatherWidget (`weatherService.ts`):** Исправлено сопоставление времени для почасового прогноза (устранено смещение UTC против локального времени через расчет минимальной дельты временных меток).
+   - **PomodoroWidget (`PomodoroWidget.tsx`):** Таймер переведен на системные отметки времени (`endTimeRef` и `Date.now()`), что исключает замедление обратного отсчета при троттлинге фоновых вкладок браузера Chrome. Добавлена обработка события `visibilitychange`.
+   - **Многоэкземплярность виджетов (`NotesWidget`, `TodoWidget`, `QuickLinksWidget`):** Данные изолируются по `instanceId` с обратной совместимостью и сохранением существующих записей в глобальных ключах.
+   - **Chrome Bookmarks (`ChromeBookmarksSync.ts`):** Исправлен сбой при удалении папок с закладками путем безопасного вызова `removeTree(id)`.
+   - **Hero Search (`SearchBar2.tsx`):** Добавлена реактивная синхронизация выбранной поисковой системы при изменении настроек по умолчанию. Нормализованы классы Tailwind к каноническим (`min-h-9`, `min-w-9`), устранены конфликты правил линтера Tailwind CSS через `cn()`, интерактивные хитбоксы кнопок расширены до $44 \times 44$ px (`relative before:-inset-1`) по стандарту WCAG (Правило 16).
+
+5. **Импорт / Экспорт и сетка дашборда:**
+   - **ImportExportModal (`ImportExportModal.tsx`):** Исправлен импорт данных — конфигурация сохраняется в актуальные персистентные ключи `STORAGE_KEYS.DASHBOARD` и `STORAGE_KEYS.THEME` с автоматической миграцией версий.
+   - **GridEngine (`GridEngine.tsx`):** Добавлено отслеживание активного брейкпоинта (`currentBreakpoint`) для предотвращения затирания десктопной раскладки (12/16/24 колонок) при редактировании с мобильных устройств и планшетов.
+
+6. **Очистка мертвого кода и доступность (A11y):**
+   - Удален сиротский модуль `src/sdk/index.ts`.
+   - Устранен дублирующий импорт CSS-стилей `react-grid-layout` в `main.tsx`.
+   - Добавлена загрузка плагинов при старте приложения (`loadPlugins`).
+   - Во [`FloatingDock.tsx`](file:///e:/DEV/Project/dashflow/src/features/dock/FloatingDock.tsx) добавлена кнопка открытия Маркетплейса (`MarketplaceModal`).
+   - Все интерактивные кнопки в `FloatingDock`, `WidgetShell` и `PomodoroWidget` приведены к размеру зоны нажатия не менее 44×44px в соответствии с WCAG 2.5.5 и Правилом 16 UI/UX.
+
+---
+
 ## [3.7.2] - 2026-09-30
 
 ### Полная готовность к Production: Observability, Network Resilience, Feature Flags, CI/CD и Compliance

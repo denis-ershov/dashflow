@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SandboxBridge } from '@/core/plugins/SandboxBridge';
 import { StorageAdapter, STORAGE_KEYS } from '@/core/storage';
+import { PermissionManager } from '@/core/permissions/permissionManager';
 
 describe('Sandbox Bridge Security & RPC', () => {
   const fakeWindow = {} as Window;
@@ -8,6 +9,8 @@ describe('Sandbox Bridge Security & RPC', () => {
 
   beforeEach(async () => {
     await StorageAdapter.set(`${STORAGE_KEYS.PLUGIN_DATA_PREFIX}my_plugin_score`, 100);
+    await PermissionManager.grantPermissions('my_plugin', ['storage']);
+    await PermissionManager.revokePermissions('unauthorized_plugin');
   });
 
   it('должен отклонять сообщения от неизвестного source', async () => {
@@ -91,5 +94,21 @@ describe('Sandbox Bridge Security & RPC', () => {
     const res = await SandboxBridge.handleMessage(event, 'my_plugin', fakeWindow);
     expect(res?.success).toBe(false);
     expect(res?.error).toBe('Недопустимый ключ хранилища');
+  });
+
+  it('должен отклонять доступ к хранилищу если у плагина нет разрешения storage', async () => {
+    const event = {
+      data: {
+        source: 'dashflow-plugin',
+        requestId: 'req-no-perm',
+        type: 'STORAGE_GET',
+        key: 'score',
+      },
+      source: fakeWindow,
+    } as MessageEvent;
+
+    const res = await SandboxBridge.handleMessage(event, 'unauthorized_plugin', fakeWindow);
+    expect(res?.success).toBe(false);
+    expect(res?.error).toBe('Отсутствует разрешение storage');
   });
 });

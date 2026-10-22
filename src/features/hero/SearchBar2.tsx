@@ -84,6 +84,13 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
 
   const activeEngine = SEARCH_ENGINES[engine] || SEARCH_ENGINES.google;
 
+  // Синхронизация движка при изменении настроек в SettingsModal
+  useEffect(() => {
+    if (defaultEngine) {
+      setEngine(defaultEngine);
+    }
+  }, [defaultEngine]);
+
   // Быстрый фокус по нажатию клавиши '/'
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -145,7 +152,11 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
     <div className={cn('relative w-full max-w-2xl mx-auto', className)}>
       <form
         onSubmit={handleSubmit}
-        className="glass-panel flex items-center gap-2 px-3 py-2 rounded-2xl border border-line shadow-2 hover:border-line-hover focus-within:border-primary focus-within:shadow-[0_0_24px_var(--dashflow-primary-glow)] transition-all duration-normal"
+        className={cn(
+          'glass-panel flex items-center gap-2 px-3 py-2 rounded-2xl border shadow-2 transition-all duration-normal',
+          'border-line hover:border-line-hover',
+          'focus-within:border-primary focus-within:shadow-[0_0_24px_var(--dashflow-primary-glow)]',
+        )}
       >
         {/* Кнопка выбора поисковика */}
         <div className="relative shrink-0" ref={dropdownRef}>
@@ -153,7 +164,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
             type="button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             aria-label={`Выбрать поисковую систему (текущая: ${activeEngine.name})`}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface hover:bg-surface-hover text-fg text-xs font-medium border border-line transition-colors min-h-[36px] cursor-pointer"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface hover:bg-surface-hover text-fg text-xs font-medium border border-line transition-colors min-h-9 cursor-pointer relative before:absolute before:-inset-1 before:content-['']"
           >
             {activeEngine.icon}
             <span className="hidden sm:inline">{activeEngine.name}</span>
@@ -195,14 +206,18 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
             onChange={(e) => setQuery(e.target.value)}
             placeholder={activeEngine.placeholder}
             aria-label="Строка поиска"
-            className="w-full bg-transparent text-fg placeholder:text-fg-muted text-sm px-2 py-2 focus:outline-none min-h-[36px]"
+            className={cn(
+              'w-full bg-transparent text-sm px-2 py-2 focus:outline-none min-h-9',
+              'text-fg',
+              'placeholder:text-fg-muted',
+            )}
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery('')}
               aria-label="Очистить поиск"
-              className="text-fg-muted hover:text-fg p-1 rounded-md hover:bg-surface-hover transition-colors"
+              className="text-fg-muted hover:text-fg p-1 rounded-md hover:bg-surface-hover transition-colors relative before:absolute before:-inset-2 before:content-['']"
             >
               <X className="w-4 h-4" />
             </button>
@@ -219,7 +234,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
           <button
             type="submit"
             aria-label="Искать"
-            className="p-2 rounded-xl bg-primary text-primary-fg hover:bg-primary-hover shadow-1 active:scale-95 transition-all min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+            className="p-2 rounded-xl bg-primary text-primary-fg hover:bg-primary-hover shadow-1 active:scale-95 transition-all min-w-9 min-h-9 flex items-center justify-center cursor-pointer relative before:absolute before:-inset-1 before:content-['']"
           >
             <Search className="w-4 h-4" />
           </button>

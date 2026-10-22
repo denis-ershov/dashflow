@@ -30,47 +30,77 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
   const strokeDashoffset = circumference * (1 - progress);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const endTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     setTimeLeft(
       mode === 'work' ? workDuration : mode === 'longBreak' ? longBreakDuration : breakDuration,
     );
+    endTimeRef.current = null;
   }, [workDuration, breakDuration, longBreakDuration, mode]);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
-    if (isRunning && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      if (soundEnabled) {
-        playPomodoroBell();
+
+    if (isRunning) {
+      if (!endTimeRef.current) {
+        endTimeRef.current = Date.now() + timeLeft * 1000;
       }
 
-      if (mode === 'work') {
-        const nextCycle = (cycle + 1) % 4;
-        setCycle(nextCycle);
-        if (nextCycle === 0) {
-          setMode('longBreak');
-          setTimeLeft(longBreakDuration);
-        } else {
-          setMode('break');
-          setTimeLeft(breakDuration);
+      const updateRemaining = () => {
+        if (!endTimeRef.current) return;
+        const remaining = Math.max(0, Math.round((endTimeRef.current - Date.now()) / 1000));
+        setTimeLeft(remaining);
+
+        if (remaining === 0) {
+          endTimeRef.current = null;
+          if (soundEnabled) {
+            playPomodoroBell();
+          }
+
+          if (mode === 'work') {
+            const nextCycle = (cycle + 1) % 4;
+            setCycle(nextCycle);
+            if (nextCycle === 0) {
+              setMode('longBreak');
+              setTimeLeft(longBreakDuration);
+              if (autoStartBreaks) {
+                endTimeRef.current = Date.now() + longBreakDuration * 1000;
+              }
+            } else {
+              setMode('break');
+              setTimeLeft(breakDuration);
+              if (autoStartBreaks) {
+                endTimeRef.current = Date.now() + breakDuration * 1000;
+              }
+            }
+            setIsRunning(autoStartBreaks);
+          } else {
+            setMode('work');
+            setTimeLeft(workDuration);
+            setIsRunning(false);
+          }
         }
-        setIsRunning(autoStartBreaks);
-      } else {
-        setMode('work');
-        setTimeLeft(workDuration);
-        setIsRunning(false);
-      }
+      };
+
+      interval = setInterval(updateRemaining, 500);
+
+      const handleVisibilityChange = () => {
+        if (!document.hidden) {
+          updateRemaining();
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      return () => {
+        if (interval) clearInterval(interval);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    } else {
+      endTimeRef.current = null;
     }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
   }, [
     isRunning,
-    timeLeft,
     mode,
     cycle,
     workDuration,
@@ -148,6 +178,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
 
   const reset = () => {
     setIsRunning(false);
+    endTimeRef.current = null;
     setTimeLeft(
       mode === 'work' ? workDuration : mode === 'longBreak' ? longBreakDuration : breakDuration,
     );
@@ -264,7 +295,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
           variant={isRunning ? 'secondary' : 'primary'}
           aria-label={isRunning ? 'Пауза' : 'Запустить таймер'}
           onClick={() => setIsRunning(!isRunning)}
-          className="min-h-9 min-w-9"
+          className="min-h-11 min-w-11"
         >
           {isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
         </Button>
@@ -274,7 +305,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
           variant="ghost"
           aria-label="Сброс таймера"
           onClick={reset}
-          className="min-h-9 min-w-9"
+          className="min-h-11 min-w-11"
         >
           <RotateCcw className="w-4 h-4" />
         </Button>
@@ -284,7 +315,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
           variant={soundActive ? 'secondary' : 'ghost'}
           aria-label={soundActive ? 'Выключить белый шум' : 'Включить белый шум'}
           onClick={toggleSound}
-          className={cn('min-h-9 min-w-9', soundActive && 'text-primary')}
+          className={cn('min-h-11 min-w-11', soundActive && 'text-primary')}
         >
           {soundActive ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
         </Button>

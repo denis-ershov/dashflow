@@ -3,13 +3,13 @@ import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { registerBuiltInWidgets } from '@/widgets/built-in';
 import { webVitals } from '@/core/observability';
+import { usePluginStore } from '@/core/plugins/pluginStore';
 import App from './App';
-import 'react-grid-layout/css/styles.css';
-import 'react-resizable/css/styles.css';
 import '@/styles/globals.css';
 
-// Синхронная регистрация встроенных виджетов и запуск наблюдаемости Web Vitals
+// Синхронная регистрация встроенных виджетов, плагинов и запуск наблюдаемости Web Vitals
 registerBuiltInWidgets();
+void usePluginStore.getState().loadPlugins();
 webVitals.init();
 
 const queryClient = new QueryClient({

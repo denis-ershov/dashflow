@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '@/ui/overlays';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useAppStore } from '@/stores/useAppStore';
-import { getTranslation } from '@/services/localization/i18n';
+import { useTranslation } from '@/core/i18n';
 import { Switch, Slider, Button } from '@/ui/primitives';
 import { ImportExportModal } from './ImportExportModal';
 import { Globe, Layout, Sparkles, SlidersHorizontal, Activity } from 'lucide-react';
@@ -22,6 +22,7 @@ export const SettingsModal: React.FC = () => {
     updateHeroSettings,
   } = useDashboardStore();
   const { language, setLanguage, animationsEnabled, setAnimationsEnabled } = useAppStore();
+  const { t } = useTranslation();
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'general' | 'diagnostics'>('general');
 
@@ -31,7 +32,7 @@ export const SettingsModal: React.FC = () => {
     <Modal
       isOpen={isOpen}
       onClose={() => setActiveModal(null)}
-      title={getTranslation(language, 'settings.title')}
+      title={t('settings.title')}
       maxWidth="xl"
     >
       <div className="space-y-6">
@@ -209,7 +210,7 @@ export const SettingsModal: React.FC = () => {
         <div className="p-4 rounded-xl bg-surface border border-line space-y-4">
           <div className="flex items-center gap-2 text-sm font-semibold text-secondary">
             <SlidersHorizontal className="w-4 h-4" />
-            <span>{getTranslation(language, 'settings.layout')}</span>
+            <span>{t('settings.layout')}</span>
           </div>
 
           <div className="flex items-center justify-between">
@@ -256,11 +257,11 @@ export const SettingsModal: React.FC = () => {
         <div className="p-4 rounded-xl bg-surface border border-line space-y-4">
           <div className="flex items-center gap-2 text-sm font-semibold text-secondary">
             <Globe className="w-4 h-4" />
-            <span>{getTranslation(language, 'settings.general')}</span>
+            <span>{t('settings.general')}</span>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-fg">{getTranslation(language, 'settings.language')}</span>
+            <span className="text-xs font-medium text-fg">{t('settings.language')}</span>
             <div className="flex gap-2">
               <Button
                 size="sm"
@@ -280,7 +281,7 @@ export const SettingsModal: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <span className="text-xs font-medium text-fg">{getTranslation(language, 'settings.animations')}</span>
+            <span className="text-xs font-medium text-fg">{t('settings.animations')}</span>
             <Switch checked={animationsEnabled} onChange={setAnimationsEnabled} />
           </div>
         </div>

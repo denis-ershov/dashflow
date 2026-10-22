@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { StorageAdapter } from '@/services/storage/StorageAdapter';
-import { SupportedLanguage, detectBrowserLanguage } from '@/services/localization/i18n';
+import { type SupportedLanguage, useI18nStore, detectBrowserLanguage } from '@/core/i18n';
+import { useThemeStore } from '@/core/theme/themeStore';
 
 export type ThemeMode = 'dark' | 'light' | 'custom';
 
@@ -25,7 +26,11 @@ export const useAppStore = create<AppState>()(
     isInitialized: false,
 
     initialize: async () => {
-      const savedLang = await StorageAdapter.get<SupportedLanguage>('app_language', detectBrowserLanguage());
+      const i18nLang = useI18nStore.getState().language;
+      const savedLang = await StorageAdapter.get<SupportedLanguage>(
+        'app_language',
+        i18nLang || detectBrowserLanguage(),
+      );
       const savedTheme = await StorageAdapter.get<ThemeMode>('app_theme', 'dark');
       const savedAnim = await StorageAdapter.get<boolean>('app_animations', true);
 
@@ -36,14 +41,17 @@ export const useAppStore = create<AppState>()(
         state.isInitialized = true;
       });
 
-      // Применение темы к документ-элементу
-      document.documentElement.setAttribute('data-theme', savedTheme);
+      // Синхронизация с центральным хранилищем i18n
+      if (useI18nStore.getState().language !== savedLang) {
+        useI18nStore.getState().setLanguage(savedLang);
+      }
     },
 
     setLanguage: async (lang) => {
       set((state) => {
         state.language = lang;
       });
+      useI18nStore.getState().setLanguage(lang);
       await StorageAdapter.set('app_language', lang);
     },
 
@@ -51,8 +59,14 @@ export const useAppStore = create<AppState>()(
       set((state) => {
         state.theme = theme;
       });
-      document.documentElement.setAttribute('data-theme', theme);
       await StorageAdapter.set('app_theme', theme);
+
+      // Синхронизация с Theme Engine
+      if (theme === 'light') {
+        useThemeStore.getState().setPreset('default-light');
+      } else if (theme === 'dark') {
+        useThemeStore.getState().setPreset('neutral-dark');
+      }
     },
 
     setAnimationsEnabled: async (enabled) => {
@@ -61,5 +75,12 @@ export const useAppStore = create<AppState>()(
       });
       await StorageAdapter.set('app_animations', enabled);
     },
-  }))
+  })),
 );
+
+// Автоматическая реактивная синхронизация при любом вызове useAppStore.setState
+useAppStore.subscribe((state) => {
+  if (state.language && useI18nStore.getState().language !== state.language) {
+    useI18nStore.getState().setLanguage(state.language);
+  }
+});

@@ -13,7 +13,10 @@ const DEFAULT_LINKS: QuickLinkItem[] = [
   { id: '3', title: 'YouTube', url: 'https://youtube.com' },
 ];
 
-export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ settings }) => {
+export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
+  instanceId,
+  settings,
+}) => {
   const showTitles = settings?.showTitles ?? true;
   const openInNewTab = settings?.openInNewTab !== false;
   const shape = settings?.shape || 'squircle';
@@ -47,12 +50,21 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({ se
     }
   };
 
+  const storageKey = instanceId ? `${STORAGE_KEYS.QUICK_LINKS}_${instanceId}` : STORAGE_KEYS.QUICK_LINKS;
+
   useEffect(() => {
-    StorageAdapter.get<QuickLinkItem[]>(STORAGE_KEYS.QUICK_LINKS, DEFAULT_LINKS).then(setLinks);
-  }, []);
+    StorageAdapter.get<QuickLinkItem[]>(storageKey, []).then((saved) => {
+      if (saved && saved.length > 0) {
+        setLinks(saved);
+      } else {
+        StorageAdapter.get<QuickLinkItem[]>(STORAGE_KEYS.QUICK_LINKS, DEFAULT_LINKS).then(setLinks);
+      }
+    });
+  }, [storageKey]);
 
   const saveLinks = async (newLinks: QuickLinkItem[]) => {
     setLinks(newLinks);
+    await StorageAdapter.set(storageKey, newLinks);
     await StorageAdapter.set(STORAGE_KEYS.QUICK_LINKS, newLinks);
   };
 

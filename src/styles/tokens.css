@@ -101,50 +101,6 @@
   --dashflow-font-scale: 1;
 }
 
-/**
- * ВРЕМЕННЫЙ мост светлой темы. Пока переключение темы живёт в useAppStore и
- * ставит data-theme на <html>, у пользователя с сохранённым 'light' палитра
- * обязана остаться светлой. Специфичность :root и [data-theme] одинакова (0,1,0),
- * поэтому блок обязан идти после слоя 2 — решает порядок, а не вес селектора.
- *
- * Удаляется в задаче, которая вводит applyTheme(): после неё палитру печатает
- * Theme Engine, а data-theme исчезает вместе с этим блоком.
- *
- * Известный дефект, который здесь сознательно не чинится: --dashflow-fg-dim
- * (#94a3b8) на светлой канве даёт 2.45:1 и не проходит AA. Значение перенесено
- * из текущей темы без изменений, чтобы шаг не менял поведение; правильные
- * значения приходят вместе с измеренным пресетом «Default Light».
- */
-[data-theme='light'] {
-  --dashflow-canvas: #f8fafc;
-  --dashflow-surface: rgb(255 255 255 / 0.85);
-  --dashflow-surface-hover: rgb(241 245 249 / 0.95);
-  --dashflow-surface-active: rgb(226 232 240 / 1);
-
-  --dashflow-primary: #2563eb;
-  --dashflow-primary-hover: #1d4ed8;
-  /* Белый на #2563eb даёт 5.17:1 и проходит AA, тёмный #0f172a — только 3.40:1. */
-  --dashflow-primary-fg: #ffffff;
-  --dashflow-secondary: #0891b2;
-  --dashflow-accent: #7c3aed;
-
-  --dashflow-fg: #0f172a;
-  --dashflow-fg-muted: #475569;
-  --dashflow-fg-dim: #94a3b8;
-
-  --dashflow-line: rgb(0 0 0 / 0.08);
-  --dashflow-line-hover: rgb(0 0 0 / 0.2);
-
-  --dashflow-primary-glow: rgb(37 99 235 / 0.2);
-  --dashflow-line-glow: rgb(37 99 235 / 0.4);
-
-  --dashflow-glass-bg: rgb(255 255 255 / 0.8);
-  --dashflow-glass-border: rgb(0 0 0 / 0.08);
-
-  --shadow-1: 0 2px 10px rgb(0 0 0 / 0.04);
-  --shadow-2: 0 8px 30px rgb(0 0 0 / 0.08);
-  --shadow-3: 0 16px 50px rgb(0 0 0 / 0.12);
-}
 
 /* Обои и затемнение под ними — отдельный слой: тема их не трогает. */
 :root {

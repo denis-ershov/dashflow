@@ -8,7 +8,11 @@ import type { NotesSettings } from './types';
 
 const DEFAULT_NOTE = '# Заметки DashFlow\n- [x] Опробовать новую дизайн-систему\n- [ ] Настроить звуки природы\n\nСоздавайте быстрые списки и форматируйте текст с помощью **Markdown**!';
 
-export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings, onUpdateSettings }) => {
+export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
+  instanceId,
+  settings,
+  onUpdateSettings,
+}) => {
   const [content, setContent] = useState('');
   const [mode, setMode] = useState<'edit' | 'preview'>(settings?.defaultMode || 'edit');
   const [isSaved, setIsSaved] = useState(true);
@@ -28,6 +32,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings, on
   const wrapClass = lineWrapping ? 'whitespace-pre-wrap' : 'whitespace-pre overflow-x-auto';
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const storageKey = instanceId ? `${STORAGE_KEYS.NOTES_CONTENT}_${instanceId}` : STORAGE_KEYS.NOTES_CONTENT;
 
   useEffect(() => {
     if (settings?.defaultMode) {
@@ -36,8 +41,14 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings, on
   }, [settings?.defaultMode]);
 
   useEffect(() => {
-    StorageAdapter.get<string>(STORAGE_KEYS.NOTES_CONTENT, DEFAULT_NOTE).then(setContent);
-  }, []);
+    StorageAdapter.get<string>(storageKey, '').then((saved) => {
+      if (saved) {
+        setContent(saved);
+      } else {
+        StorageAdapter.get<string>(STORAGE_KEYS.NOTES_CONTENT, DEFAULT_NOTE).then(setContent);
+      }
+    });
+  }, [storageKey]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
@@ -49,6 +60,8 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({ settings, on
     }
 
     saveTimerRef.current = setTimeout(async () => {
+      await StorageAdapter.set(storageKey, val);
+      // Для обратной совместимости с тестами и v1
       await StorageAdapter.set(STORAGE_KEYS.NOTES_CONTENT, val);
       setIsSaved(true);
     }, 300);

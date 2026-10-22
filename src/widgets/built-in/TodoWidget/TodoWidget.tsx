@@ -67,7 +67,11 @@ const calculateStreak = (history: Record<string, boolean>) => {
   return streak;
 };
 
-export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings, onUpdateSettings }) => {
+export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
+  instanceId,
+  settings,
+  onUpdateSettings,
+}) => {
   const [activeTab, setActiveTab] = useState<TodoTab>(settings?.defaultTab || 'todos');
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [habits, setHabits] = useState<HabitItem[]>([]);
@@ -97,19 +101,53 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({ settings, onUp
     }
   }, [settings?.filter]);
 
+  const todoKey = instanceId ? `${STORAGE_KEYS.TODO_ITEMS}_${instanceId}` : STORAGE_KEYS.TODO_ITEMS;
+  const habitKey = instanceId ? `${STORAGE_KEYS.HABIT_ITEMS}_${instanceId}` : STORAGE_KEYS.HABIT_ITEMS;
+
   useEffect(() => {
-    StorageAdapter.get<TodoItem[]>(STORAGE_KEYS.TODO_ITEMS, DEFAULT_TODOS).then(setTodos);
-    StorageAdapter.get<HabitItem[]>(STORAGE_KEYS.HABIT_ITEMS, DEFAULT_HABITS).then(setHabits);
-  }, []);
+    StorageAdapter.get<TodoItem[]>(STORAGE_KEYS.TODO_ITEMS, DEFAULT_TODOS).then((baseTodos) => {
+      if (instanceId && todoKey !== STORAGE_KEYS.TODO_ITEMS) {
+        StorageAdapter.get<TodoItem[]>(todoKey, []).then((scoped) => {
+          if (scoped && scoped.length > 0) {
+            setTodos(scoped);
+          } else {
+            setTodos(baseTodos);
+          }
+        });
+      } else {
+        setTodos(baseTodos);
+      }
+    });
+
+    StorageAdapter.get<HabitItem[]>(STORAGE_KEYS.HABIT_ITEMS, DEFAULT_HABITS).then((baseHabits) => {
+      if (instanceId && habitKey !== STORAGE_KEYS.HABIT_ITEMS) {
+        StorageAdapter.get<HabitItem[]>(habitKey, []).then((scoped) => {
+          if (scoped && scoped.length > 0) {
+            setHabits(scoped);
+          } else {
+            setHabits(baseHabits);
+          }
+        });
+      } else {
+        setHabits(baseHabits);
+      }
+    });
+  }, [instanceId, todoKey, habitKey]);
 
   const saveTodos = async (newTodos: TodoItem[]) => {
     setTodos(newTodos);
     await StorageAdapter.set(STORAGE_KEYS.TODO_ITEMS, newTodos);
+    if (instanceId && todoKey !== STORAGE_KEYS.TODO_ITEMS) {
+      await StorageAdapter.set(todoKey, newTodos);
+    }
   };
 
   const saveHabits = async (newHabits: HabitItem[]) => {
     setHabits(newHabits);
     await StorageAdapter.set(STORAGE_KEYS.HABIT_ITEMS, newHabits);
+    if (instanceId && habitKey !== STORAGE_KEYS.HABIT_ITEMS) {
+      await StorageAdapter.set(habitKey, newHabits);
+    }
   };
 
   const addTodo = (e: React.FormEvent) => {

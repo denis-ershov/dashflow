@@ -104,6 +104,7 @@ function DashboardContent() {
           else setLayoutMode('modular');
         }}
         onOpenAddWidget={() => setActiveModal('addWidget')}
+        onOpenMarketplace={() => setActiveModal('marketplace')}
         onOpenAppearance={() => setActiveModal('themes')}
         onOpenAudio={() => setIsAudioDrawerOpen(true)}
         onOpenSettings={() => setActiveModal('settings')}

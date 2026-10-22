@@ -2,10 +2,12 @@
  * Zustand-хранилище состояния темы и внешнего вида.
  * Управляет выбранным пресетом, кастомными токенами, пользовательским CSS, обоями и затемнением.
  *
- * При каждом изменении синхронизирует состояние с DOM через applyFullAppearance.
+ * Интегрировано с персистентным хранилищем через StorageAdapter и синхронизирует состояние с DOM через applyFullAppearance.
  */
 
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { StorageAdapter, STORAGE_KEYS } from '@/core/storage';
 import { DEFAULT_PRESET_ID, findPreset, type PresetId } from './presets';
 import { type ThemeTokens } from './tokens';
 import { DEFAULT_SCRIM, validateScrim } from './wallpaper';
@@ -47,7 +49,7 @@ export interface ThemeStoreState {
   /** Сбрасывает тему и внешний вид к значениям по умолчанию. */
   resetTheme: () => void;
 
-  /** Инициализирует состояние из сырых данных (с автоматической миграцией v1 -> v2). */
+  /** Инициализирует состояние из сырых данных (с автоматической миграцией v1 -> v2) либо применяет текущее. */
   initialize: (raw?: unknown) => void;
 }
 
@@ -75,155 +77,218 @@ function syncToDom(
   });
 }
 
-export const useThemeStore = create<ThemeStoreState>((set, get) => ({
-  version: CURRENT_THEME_VERSION,
-  activePresetId: DEFAULT_THEME_STATE.activePresetId,
-  customTokens: DEFAULT_THEME_STATE.customTokens,
-  customCss: DEFAULT_THEME_STATE.customCss,
-  allowExternalCss: DEFAULT_THEME_STATE.allowExternalCss,
-  wallpaperUrl: DEFAULT_THEME_STATE.wallpaperUrl,
-  scrim: DEFAULT_THEME_STATE.scrim,
-  isInitialized: false,
-
-  getEffectiveTokens: () => {
-    const { activePresetId, customTokens } = get();
-    return resolveEffectiveTokens(activePresetId, customTokens);
-  },
-
-  setPreset: (id: PresetId) => {
-    const preset = findPreset(id);
-    const activePresetId = preset ? preset.id : DEFAULT_PRESET_ID;
-    set({ activePresetId });
-
-    const state = get();
-    syncToDom(
-      activePresetId,
-      state.customTokens,
-      state.customCss,
-      state.allowExternalCss,
-      state.wallpaperUrl,
-      state.scrim,
-    );
-  },
-
-  setCustomTokens: (customTokens: ThemeTokens | undefined) => {
-    set({ customTokens });
-
-    const state = get();
-    syncToDom(
-      state.activePresetId,
-      customTokens,
-      state.customCss,
-      state.allowExternalCss,
-      state.wallpaperUrl,
-      state.scrim,
-    );
-  },
-
-  setCustomCss: (css: string) => {
-    const { allowExternalCss } = get();
-    const result = validateCustomCss(css, { allowExternal: allowExternalCss });
-
-    if (result.ok) {
-      set({ customCss: result.css });
-    } else {
-      set({ customCss: '' });
-    }
-
-    const state = get();
-    syncToDom(
-      state.activePresetId,
-      state.customTokens,
-      state.customCss,
-      state.allowExternalCss,
-      state.wallpaperUrl,
-      state.scrim,
-    );
-
-    return result;
-  },
-
-  setAllowExternalCss: (allowExternalCss: boolean) => {
-    set({ allowExternalCss });
-
-    const state = get();
-    const revalidated = validateCustomCss(state.customCss, { allowExternal: allowExternalCss });
-    const customCss = revalidated.ok ? revalidated.css : '';
-    set({ customCss });
-
-    syncToDom(
-      state.activePresetId,
-      state.customTokens,
-      customCss,
-      allowExternalCss,
-      state.wallpaperUrl,
-      state.scrim,
-    );
-  },
-
-  setWallpaper: (url: string | null, customScrim?: number) => {
-    const scrim = customScrim !== undefined ? validateScrim(customScrim) : get().scrim;
-    set({ wallpaperUrl: url, scrim });
-
-    const state = get();
-    syncToDom(
-      state.activePresetId,
-      state.customTokens,
-      state.customCss,
-      state.allowExternalCss,
-      url,
-      scrim,
-    );
-  },
-
-  setScrim: (scrimInput: number) => {
-    const scrim = validateScrim(scrimInput);
-    set({ scrim });
-
-    const state = get();
-    syncToDom(
-      state.activePresetId,
-      state.customTokens,
-      state.customCss,
-      state.allowExternalCss,
-      state.wallpaperUrl,
-      scrim,
-    );
-  },
-
-  resetTheme: () => {
-    set({
-      activePresetId: DEFAULT_PRESET_ID,
-      customTokens: undefined,
-      customCss: '',
-      allowExternalCss: false,
-      wallpaperUrl: null,
-      scrim: DEFAULT_SCRIM,
-    });
-
-    syncToDom(DEFAULT_PRESET_ID, undefined, '', false, null, DEFAULT_SCRIM);
-  },
-
-  initialize: (raw?: unknown) => {
-    const migrated = migrateThemeState(raw);
-    set({
+export const useThemeStore = create<ThemeStoreState>()(
+  persist(
+    (set, get) => ({
       version: CURRENT_THEME_VERSION,
-      activePresetId: migrated.activePresetId,
-      customTokens: migrated.customTokens,
-      customCss: migrated.customCss,
-      allowExternalCss: migrated.allowExternalCss,
-      wallpaperUrl: migrated.wallpaperUrl,
-      scrim: migrated.scrim,
-      isInitialized: true,
-    });
+      activePresetId: DEFAULT_THEME_STATE.activePresetId,
+      customTokens: DEFAULT_THEME_STATE.customTokens,
+      customCss: DEFAULT_THEME_STATE.customCss,
+      allowExternalCss: DEFAULT_THEME_STATE.allowExternalCss,
+      wallpaperUrl: DEFAULT_THEME_STATE.wallpaperUrl,
+      scrim: DEFAULT_THEME_STATE.scrim,
+      isInitialized: false,
 
-    syncToDom(
-      migrated.activePresetId,
-      migrated.customTokens,
-      migrated.customCss,
-      migrated.allowExternalCss,
-      migrated.wallpaperUrl,
-      migrated.scrim,
-    );
-  },
-}));
+      getEffectiveTokens: () => {
+        const { activePresetId, customTokens } = get();
+        return resolveEffectiveTokens(activePresetId, customTokens);
+      },
+
+      setPreset: (id: PresetId) => {
+        const preset = findPreset(id);
+        const activePresetId = preset ? preset.id : DEFAULT_PRESET_ID;
+        set({ activePresetId });
+
+        const state = get();
+        syncToDom(
+          activePresetId,
+          state.customTokens,
+          state.customCss,
+          state.allowExternalCss,
+          state.wallpaperUrl,
+          state.scrim,
+        );
+      },
+
+      setCustomTokens: (customTokens: ThemeTokens | undefined) => {
+        set({ customTokens });
+
+        const state = get();
+        syncToDom(
+          state.activePresetId,
+          customTokens,
+          state.customCss,
+          state.allowExternalCss,
+          state.wallpaperUrl,
+          state.scrim,
+        );
+      },
+
+      setCustomCss: (css: string) => {
+        const { allowExternalCss } = get();
+        const result = validateCustomCss(css, { allowExternal: allowExternalCss });
+
+        if (result.ok) {
+          set({ customCss: result.css });
+        } else {
+          set({ customCss: '' });
+        }
+
+        const state = get();
+        syncToDom(
+          state.activePresetId,
+          state.customTokens,
+          state.customCss,
+          state.allowExternalCss,
+          state.wallpaperUrl,
+          state.scrim,
+        );
+
+        return result;
+      },
+
+      setAllowExternalCss: (allowExternalCss: boolean) => {
+        set({ allowExternalCss });
+
+        const state = get();
+        const revalidated = validateCustomCss(state.customCss, { allowExternal: allowExternalCss });
+        const customCss = revalidated.ok ? revalidated.css : '';
+        set({ customCss });
+
+        syncToDom(
+          state.activePresetId,
+          state.customTokens,
+          customCss,
+          allowExternalCss,
+          state.wallpaperUrl,
+          state.scrim,
+        );
+      },
+
+      setWallpaper: (url: string | null, customScrim?: number) => {
+        const scrim = customScrim !== undefined ? validateScrim(customScrim) : get().scrim;
+        set({ wallpaperUrl: url, scrim });
+
+        const state = get();
+        syncToDom(
+          state.activePresetId,
+          state.customTokens,
+          state.customCss,
+          state.allowExternalCss,
+          url,
+          scrim,
+        );
+      },
+
+      setScrim: (scrimInput: number) => {
+        const scrim = validateScrim(scrimInput);
+        set({ scrim });
+
+        const state = get();
+        syncToDom(
+          state.activePresetId,
+          state.customTokens,
+          state.customCss,
+          state.allowExternalCss,
+          state.wallpaperUrl,
+          scrim,
+        );
+      },
+
+      resetTheme: () => {
+        set({
+          activePresetId: DEFAULT_PRESET_ID,
+          customTokens: undefined,
+          customCss: '',
+          allowExternalCss: false,
+          wallpaperUrl: null,
+          scrim: DEFAULT_SCRIM,
+        });
+
+        syncToDom(DEFAULT_PRESET_ID, undefined, '', false, null, DEFAULT_SCRIM);
+      },
+
+      initialize: (raw?: unknown) => {
+        if (raw !== undefined) {
+          const migrated = migrateThemeState(raw);
+          set({
+            version: CURRENT_THEME_VERSION,
+            activePresetId: migrated.activePresetId,
+            customTokens: migrated.customTokens,
+            customCss: migrated.customCss,
+            allowExternalCss: migrated.allowExternalCss,
+            wallpaperUrl: migrated.wallpaperUrl,
+            scrim: migrated.scrim,
+            isInitialized: true,
+          });
+
+          syncToDom(
+            migrated.activePresetId,
+            migrated.customTokens,
+            migrated.customCss,
+            migrated.allowExternalCss,
+            migrated.wallpaperUrl,
+            migrated.scrim,
+          );
+          return;
+        }
+
+        const state = get();
+        set({ isInitialized: true });
+        syncToDom(
+          state.activePresetId,
+          state.customTokens,
+          state.customCss,
+          state.allowExternalCss,
+          state.wallpaperUrl,
+          state.scrim,
+        );
+      },
+    }),
+    {
+      name: STORAGE_KEYS.THEME,
+      version: CURRENT_THEME_VERSION,
+      storage: createJSONStorage(() => ({
+        getItem: async (name) => {
+          const val = await StorageAdapter.get(name, null);
+          return val ? JSON.stringify(val) : null;
+        },
+        setItem: async (name, value) => {
+          try {
+            await StorageAdapter.set(name, JSON.parse(value));
+          } catch {
+            // Ошибки квот обрабатываются в StorageAdapter
+          }
+        },
+        removeItem: async (name) => {
+          await StorageAdapter.remove(name);
+        },
+      })),
+      partialize: (state) => ({
+        version: state.version,
+        activePresetId: state.activePresetId,
+        customTokens: state.customTokens,
+        customCss: state.customCss,
+        allowExternalCss: state.allowExternalCss,
+        wallpaperUrl: state.wallpaperUrl,
+        scrim: state.scrim,
+      }),
+      migrate: (persistedState: unknown) => {
+        return migrateThemeState(persistedState);
+      },
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.isInitialized = true;
+          syncToDom(
+            state.activePresetId,
+            state.customTokens,
+            state.customCss,
+            state.allowExternalCss,
+            state.wallpaperUrl,
+            state.scrim,
+          );
+        }
+      },
+    },
+  ),
+);

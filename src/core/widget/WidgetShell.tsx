@@ -125,7 +125,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
             {isEditMode && (
               <button
                 type="button"
-                className="widget-drag-handle flex items-center justify-center w-8 h-8 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover cursor-grab transition-colors"
+                className="widget-drag-handle flex items-center justify-center w-8 h-8 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover cursor-grab transition-colors relative before:absolute before:-inset-2 before:content-['']"
                 aria-label="Перетащить виджет"
               >
                 <GripVertical className="w-4 h-4" />
@@ -147,7 +147,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
               <button
                 type="button"
                 onClick={onOpenSettings}
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors cursor-pointer"
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors cursor-pointer relative before:absolute before:-inset-2 before:content-['']"
                 aria-label="Настройки виджета"
               >
                 <Settings className="w-4 h-4" />
@@ -158,7 +158,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
               <button
                 type="button"
                 onClick={onRemove}
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-danger hover:bg-danger/15 transition-colors cursor-pointer"
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-danger hover:bg-danger/15 transition-colors cursor-pointer relative before:absolute before:-inset-2 before:content-['']"
                 aria-label="Удалить виджет"
               >
                 <Trash2 className="w-4 h-4" />

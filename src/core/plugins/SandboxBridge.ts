@@ -67,10 +67,7 @@ export class SandboxBridge {
     }
 
     // 4. Проверка прав плагина на доступ к хранилищу
-    const hasStorage =
-      (await PermissionManager.hasPermission(pluginId, 'storage')) ||
-      // Для встроенных/декларативных плагинов по умолчанию разрешено их изолированное хранилище
-      true;
+    const hasStorage = await PermissionManager.hasPermission(pluginId, 'storage');
 
     if (!hasStorage) {
       return {

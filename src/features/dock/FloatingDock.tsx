@@ -4,6 +4,7 @@ import {
   LayoutGrid,
   Sparkles,
   Plus,
+  ShoppingBag,
   Palette,
   Volume2,
   Settings,
@@ -17,6 +18,7 @@ export interface FloatingDockProps {
   layoutMode: 'zen' | 'modular' | 'canvas';
   onToggleLayoutMode: () => void;
   onOpenAddWidget: () => void;
+  onOpenMarketplace?: () => void;
   onOpenAppearance: () => void;
   onOpenAudio: () => void;
   onOpenSettings: () => void;
@@ -31,6 +33,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
   layoutMode,
   onToggleLayoutMode,
   onOpenAddWidget,
+  onOpenMarketplace,
   onOpenAppearance,
   onOpenAudio,
   onOpenSettings,
@@ -57,7 +60,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
           onClick={onToggleLayoutMode}
           aria-label={layoutMode === 'zen' ? 'Включить виджеты' : 'Режим Zen'}
           className={cn(
-            'p-2 rounded-full transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer',
+            'p-2.5 rounded-full transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer',
             layoutMode === 'zen'
               ? 'bg-primary text-primary-fg shadow-1 hover:bg-primary-hover'
               : 'text-fg-muted hover:text-fg hover:bg-surface-hover',
@@ -79,11 +82,25 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
           type="button"
           onClick={onOpenAddWidget}
           aria-label="Добавить виджет"
-          className="p-2 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer active:scale-90"
+          className="p-2.5 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90"
         >
           <Plus className="w-4 h-4" />
         </button>
       </Tooltip>
+
+      {/* Каталог виджетов и плагинов (Маркетплейс) */}
+      {onOpenMarketplace && (
+        <Tooltip content="Каталог виджетов и плагинов">
+          <button
+            type="button"
+            onClick={onOpenMarketplace}
+            aria-label="Каталог виджетов"
+            className="p-2.5 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90"
+          >
+            <ShoppingBag className="w-4 h-4" />
+          </button>
+        </Tooltip>
+      )}
 
       {/* Командная строка Ctrl+K */}
       <Tooltip content="Командная палитра (Ctrl+K)">
@@ -91,7 +108,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
           type="button"
           onClick={onOpenCommandPalette}
           aria-label="Командная палитра"
-          className="p-2 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer active:scale-90"
+          className="p-2.5 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90"
         >
           <Search className="w-4 h-4" />
         </button>
@@ -103,7 +120,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
           type="button"
           onClick={onOpenAppearance}
           aria-label="Темы и обои"
-          className="p-2 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer active:scale-90"
+          className="p-2.5 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90"
         >
           <Palette className="w-4 h-4" />
         </button>
@@ -116,7 +133,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
           onClick={onOpenAudio}
           aria-label="Звуки природы"
           className={cn(
-            'p-2 rounded-full transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer active:scale-90',
+            'p-2.5 rounded-full transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90',
             isAudioPlaying
               ? 'text-primary bg-primary/15 shadow-[0_0_12px_var(--dashflow-primary-glow)]'
               : 'text-fg-muted hover:text-fg hover:bg-surface-hover',
@@ -134,7 +151,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
             onClick={onToggleEditMode}
             aria-label={isEditMode ? 'Завершить редактирование' : 'Редактировать сетку'}
             className={cn(
-              'p-2 rounded-full transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer active:scale-90',
+              'p-2.5 rounded-full transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90',
               isEditMode
                 ? 'bg-warning/20 text-warning border border-warning/40'
                 : 'text-fg-muted hover:text-fg hover:bg-surface-hover',
@@ -153,7 +170,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
           type="button"
           onClick={onOpenSettings}
           aria-label="Настройки"
-          className="p-2 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer active:scale-90"
+          className="p-2.5 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90"
         >
           <Settings className="w-4 h-4" />
         </button>

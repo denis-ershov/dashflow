@@ -235,12 +235,15 @@ export async function fetchFullWeatherData(params: {
       const now = new Date();
       let startIdx = 0;
 
-      // Ищем ближайший час
-      const currentTimeStr = now.toISOString().slice(0, 13);
+      // Ищем ближайший к текущему моменту час
+      const nowMs = now.getTime();
+      let minDiff = Infinity;
       for (let i = 0; i < hourly.time.length; i++) {
-        if (hourly.time[i].startsWith(currentTimeStr)) {
+        const itemTime = new Date(hourly.time[i]).getTime();
+        const diff = Math.abs(itemTime - nowMs);
+        if (diff < minDiff) {
+          minDiff = diff;
           startIdx = i;
-          break;
         }
       }
 
