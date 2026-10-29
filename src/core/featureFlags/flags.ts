@@ -4,14 +4,10 @@ import type { FeatureFlags, FeatureFlagKey, FeatureFlagDefinition } from './type
 export const FEATURE_FLAG_DEFINITIONS: FeatureFlagDefinition[] = [
   {
     key: 'ambientAudio',
-    title: 'Звуки окружения (Ambient Audio)',
-    description: 'Фоновые процедурные звуковые генераторы (дождь, костер, волны, белый шум)',
     defaultValue: true,
   },
   {
     key: 'webVitalsMonitoring',
-    title: 'Мониторинг Core Web Vitals',
-    description: 'Локальный замер показателей скорости загрузки (LCP, CLS, INP) новой вкладки',
     defaultValue: true,
   },
 ];

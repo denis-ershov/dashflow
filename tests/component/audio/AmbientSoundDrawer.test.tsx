@@ -21,7 +21,7 @@ describe('AmbientSoundDrawer Component', () => {
     const handleClose = vi.fn();
     render(<AmbientSoundDrawer isOpen={true} onClose={handleClose} />);
 
-    const rainSwitch = screen.getByRole('switch', { name: /включить дождь за окном/i });
+    const rainSwitch = screen.getByRole('switch', { name: /включить: дождь за окном/i });
     expect(rainSwitch).toBeInTheDocument();
 
     fireEvent.click(rainSwitch);

@@ -1,5 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { SandboxBridge } from '@/core/plugins/SandboxBridge';
+import { useTranslation } from '@/core/i18n';
+
+/** Значения вставляются в HTML песочницы — экранируем их */
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
+}
 
 export interface PluginHostProps {
   pluginId: string;
@@ -12,6 +18,7 @@ export const PluginHost: React.FC<PluginHostProps> = ({
   instanceId,
   templateHtml,
 }) => {
+  const { t, language } = useTranslation();
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -33,7 +40,7 @@ export const PluginHost: React.FC<PluginHostProps> = ({
 
   const defaultHtml = `
     <!DOCTYPE html>
-    <html>
+    <html lang="${language}">
       <head>
         <meta charset="utf-8">
         <style>
@@ -45,8 +52,8 @@ export const PluginHost: React.FC<PluginHostProps> = ({
       </head>
       <body>
         <div class="card">
-          <h4>Плагин: ${pluginId}</h4>
-          <p>Запущен в изолированной песочнице (Sandbox Frame, instance: ${instanceId})</p>
+          <h4>${escapeHtml(t('pluginHost.title', { id: pluginId }))}</h4>
+          <p>${escapeHtml(t('pluginHost.running', { instance: instanceId }))}</p>
         </div>
       </body>
     </html>

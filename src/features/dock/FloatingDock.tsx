@@ -13,6 +13,7 @@ import {
   Unlock,
 } from 'lucide-react';
 import { Tooltip } from '@/ui/primitives';
+import { useTranslation } from '@/core/i18n';
 
 /** Панель или режим, который сейчас открыт кнопкой дока — подсвечивается как активный */
 export type DockPanel = 'addWidget' | 'marketplace' | 'appearance' | 'audio' | 'settings';
@@ -103,6 +104,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
   activePanel = null,
   className,
 }) => {
+  const { t } = useTranslation();
   const toneFor = (panel: DockPanel): DockButtonTone =>
     activePanel === panel ? 'active' : 'default';
   const isZen = layoutMode === 'zen';
@@ -110,7 +112,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
 
   return (
     <nav
-      aria-label="Панель быстрого управления"
+      aria-label={t('dock.label')}
       className={cn(
         'fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-(--z-rail,30)',
         'glass-pill p-1 sm:p-1.5 flex items-center gap-0.5 sm:gap-1 shadow-3 select-none',
@@ -119,8 +121,8 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
       )}
     >
       <DockButton
-        label={isZen ? 'Включить виджеты' : 'Режим Zen'}
-        tooltip={isZen ? 'Включить виджеты' : 'Режим Zen / Фокус'}
+        label={isZen ? t('dock.zenOff') : t('dock.zenOn')}
+        tooltip={isZen ? t('dock.zenOff') : t('dock.zenOnHint')}
         icon={isZen ? <Sparkles className={ICON} /> : <LayoutGrid className={ICON} />}
         onClick={onToggleLayoutMode}
         tone={isZen ? 'primary' : 'default'}
@@ -130,7 +132,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
       <DockDivider />
 
       <DockButton
-        label="Добавить виджет"
+        label={t('dock.addWidget')}
         icon={<Plus className={ICON} />}
         onClick={onOpenAddWidget}
         tone={toneFor('addWidget')}
@@ -138,8 +140,8 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
 
       {onOpenMarketplace && (
         <DockButton
-          label="Каталог виджетов"
-          tooltip="Каталог виджетов и плагинов"
+          label={t('dock.catalog')}
+          tooltip={t('dock.catalogHint')}
           icon={<ShoppingBag className={ICON} />}
           onClick={onOpenMarketplace}
           tone={toneFor('marketplace')}
@@ -148,16 +150,16 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
 
       {/* Палитра команд рассчитана на клавиатуру (Ctrl+K) — на телефоне не нужна и не помещается */}
       <DockButton
-        label="Командная палитра"
-        tooltip="Командная палитра (Ctrl+K)"
+        label={t('dock.commandPalette')}
+        tooltip={t('dock.commandPaletteHint')}
         icon={<Search className={ICON} />}
         onClick={onOpenCommandPalette}
         wrapperClassName="hidden sm:flex"
       />
 
       <DockButton
-        label="Темы и обои"
-        tooltip="Темы оформления и обои"
+        label={t('dock.appearance')}
+        tooltip={t('dock.appearanceHint')}
         icon={<Palette className={ICON} />}
         onClick={onOpenAppearance}
         tone={toneFor('appearance')}
@@ -165,8 +167,8 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
 
       {onOpenAudio && (
         <DockButton
-          label="Звуки природы"
-          tooltip={isAudioPlaying ? 'Звуки природы (активны)' : 'Звуки природы'}
+          label={t('dock.audio')}
+          tooltip={isAudioPlaying ? t('dock.audioPlaying') : t('dock.audio')}
           icon={<Volume2 className={ICON} />}
           onClick={onOpenAudio}
           tone={isAudioPlaying || activePanel === 'audio' ? 'active' : 'default'}
@@ -175,7 +177,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
 
       {canEditGrid && (
         <DockButton
-          label={isEditMode ? 'Завершить редактирование' : 'Редактировать сетку'}
+          label={isEditMode ? t('dock.finishEditing') : t('dock.editGrid')}
           icon={isEditMode ? <Unlock className={ICON} /> : <Lock className={ICON} />}
           onClick={onToggleEditMode}
           tone={isEditMode ? 'warning' : 'default'}
@@ -186,7 +188,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
       <DockDivider />
 
       <DockButton
-        label="Настройки"
+        label={t('dock.settings')}
         icon={<Settings className={ICON} />}
         onClick={onOpenSettings}
         tone={toneFor('settings')}

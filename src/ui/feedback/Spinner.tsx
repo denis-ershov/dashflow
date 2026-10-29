@@ -1,17 +1,15 @@
 import React from 'react';
 import { cn } from '@/ui/lib/cn';
+import { useTranslation } from '@/core/i18n';
 
 export interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: 'sm' | 'md' | 'lg';
   label?: string;
 }
 
-export const Spinner: React.FC<SpinnerProps> = ({
-  size = 'md',
-  label = 'Загрузка...',
-  className,
-  ...props
-}) => {
+export const Spinner: React.FC<SpinnerProps> = ({ size = 'md', label, className, ...props }) => {
+  const { t } = useTranslation();
+  label ??= t('feedback.loading');
   const sizeClasses = {
     sm: 'w-4 h-4 border-2',
     md: 'w-6 h-6 border-2',

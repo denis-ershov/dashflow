@@ -4,7 +4,7 @@ import { Modal } from '@/ui/overlays';
 import { useDashboardStore, pickPersistedDashboard } from '@/stores/useDashboardStore';
 import { useThemeStore } from '@/core/theme/themeStore';
 import { useAppStore } from '@/stores/useAppStore';
-import { isSupportedLanguage } from '@/core/i18n';
+import { isSupportedLanguage, useTranslation } from '@/core/i18n';
 import { StorageAdapter, STORAGE_KEYS, migrateDashboardState } from '@/core/storage';
 import { Button } from '@/ui/primitives';
 import { Download, Upload, CheckCircle2, AlertTriangle } from 'lucide-react';
@@ -15,6 +15,7 @@ export interface ImportExportModalProps {
 }
 
 export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const { activePresetId, wallpaperUrl, scrim, customCss } = useThemeStore(
     useShallow((s) => ({
       activePresetId: s.activePresetId,
@@ -56,7 +57,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
 
       const raw: unknown = JSON.parse(importJson);
       if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
-        throw new Error('Некорректный формат JSON файла');
+        throw new Error(t('backup.invalidFormat'));
       }
       const parsed = raw as Record<string, unknown>;
 
@@ -91,42 +92,42 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
       setTimeout(() => window.location.reload(), 800);
     } catch (err: unknown) {
       setStatus('error');
-      setErrorMsg(err instanceof Error ? err.message : 'Ошибка чтения JSON');
+      setErrorMsg(err instanceof SyntaxError || !(err instanceof Error) ? t('backup.readError') : err.message);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Импорт & Экспорт Конфигурации" maxWidth="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('backup.title')} maxWidth="lg">
       <div className="space-y-6">
         {/* Экспорт */}
         <div className="p-4 rounded-md bg-canvas border border-line space-y-3">
           <h4 className="text-xs font-semibold text-secondary uppercase tracking-wider">
-            Экспорт состояния Dashboard
+            {t('backup.exportTitle')}
           </h4>
           <p className="text-xs text-fg-muted">
-            Сохраните текущее расположение виджетов, сетки и цвета в JSON-файл для переноса на другое устройство.
+            {t('backup.exportDesc')}
           </p>
           <Button size="sm" variant="primary" icon={<Download className="w-4 h-4" />} onClick={handleExport}>
-            Скачать JSON Конфигурацию
+            {t('backup.download')}
           </Button>
         </div>
 
         {/* Импорт */}
         <div className="p-4 rounded-md bg-canvas border border-line space-y-3">
           <h4 className="text-xs font-semibold text-secondary uppercase tracking-wider">
-            Импорт из JSON
+            {t('backup.importTitle')}
           </h4>
           <textarea
             value={importJson}
             onChange={(e) => setImportJson(e.target.value)}
-            placeholder="Вставьте JSON конфигурацию здесь..."
+            placeholder={t('backup.importPlaceholder')}
             className="w-full h-28 bg-surface text-xs font-mono text-fg border border-line rounded-md p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           />
 
           {status === 'success' && (
             <div className="flex items-center gap-2 text-success text-xs font-semibold">
               <CheckCircle2 className="w-4 h-4" />
-              <span>Конфигурация импортирована! Перезагрузка...</span>
+              <span>{t('backup.successReload')}</span>
             </div>
           )}
 
@@ -144,7 +145,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
             disabled={!importJson.trim()}
             onClick={handleImport}
           >
-            Применить Импорт
+            {t('backup.apply')}
           </Button>
         </div>
       </div>

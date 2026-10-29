@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '@/core/i18n';
 import {
   Activity,
   CheckCircle2,
@@ -35,6 +36,7 @@ function formatTime(timestamp: number): string {
 }
 
 export const DiagnosticsSection: React.FC = () => {
+  const { t } = useTranslation();
   const [reports, setReports] = useState<CrashReport[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterLevel, setFilterLevel] = useState<'all' | 'error' | 'warning'>('all');
@@ -106,7 +108,7 @@ export const DiagnosticsSection: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-semibold text-fg">
             <Activity className="w-4 h-4 text-primary" />
-            <span>Техническое здоровье системы</span>
+            <span>{t('diagnostics.healthTitle')}</span>
           </div>
           <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
@@ -118,12 +120,12 @@ export const DiagnosticsSection: React.FC = () => {
             {isHealthy ? (
               <>
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Система стабильна</span>
+                <span>{t('diagnostics.stable')}</span>
               </>
             ) : (
               <>
                 <AlertTriangle className="w-3.5 h-3.5" />
-                <span>Событий: {reports.length}</span>
+                <span>{t('diagnostics.events', { count: reports.length })}</span>
               </>
             )}
           </span>
@@ -132,30 +134,30 @@ export const DiagnosticsSection: React.FC = () => {
         {/* Метрики Web Vitals и Память */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
           <div className="p-2 rounded-lg bg-surface-active/60 border border-line text-center">
-            <span className="text-2xs text-fg-muted uppercase tracking-wider block">LCP Скорость</span>
+            <span className="text-2xs text-fg-muted uppercase tracking-wider block">{t('diagnostics.lcp')}</span>
             <span className="text-xs font-bold text-fg font-mono">
-              {vitals.lcp !== null ? `${vitals.lcp} мс` : '—'}
+              {vitals.lcp !== null ? t('diagnostics.ms', { value: vitals.lcp }) : '—'}
             </span>
           </div>
 
           <div className="p-2 rounded-lg bg-surface-active/60 border border-line text-center">
-            <span className="text-2xs text-fg-muted uppercase tracking-wider block">CLS Сдвиг</span>
+            <span className="text-2xs text-fg-muted uppercase tracking-wider block">{t('diagnostics.cls')}</span>
             <span className="text-xs font-bold text-fg font-mono">
               {vitals.cls !== null ? vitals.cls : '0.00'}
             </span>
           </div>
 
           <div className="p-2 rounded-lg bg-surface-active/60 border border-line text-center">
-            <span className="text-2xs text-fg-muted uppercase tracking-wider block">DOM Готовность</span>
+            <span className="text-2xs text-fg-muted uppercase tracking-wider block">{t('diagnostics.domReady')}</span>
             <span className="text-xs font-bold text-fg font-mono">
-              {vitals.domContentLoaded !== null ? `${vitals.domContentLoaded} мс` : '—'}
+              {vitals.domContentLoaded !== null ? t('diagnostics.ms', { value: vitals.domContentLoaded }) : '—'}
             </span>
           </div>
 
           <div className="p-2 rounded-lg bg-surface-active/60 border border-line text-center">
-            <span className="text-2xs text-fg-muted uppercase tracking-wider block">Память JS Heap</span>
+            <span className="text-2xs text-fg-muted uppercase tracking-wider block">{t('diagnostics.memory')}</span>
             <span className="text-xs font-bold text-fg font-mono">
-              {vitals.memory?.usedJSHeapSizeMb ? `${vitals.memory.usedJSHeapSizeMb} МБ` : '—'}
+              {vitals.memory?.usedJSHeapSizeMb ? t('diagnostics.mb', { value: vitals.memory.usedJSHeapSizeMb }) : '—'}
             </span>
           </div>
         </div>
@@ -163,7 +165,7 @@ export const DiagnosticsSection: React.FC = () => {
         {/* Статус Circuit Breakers */}
         {circuitBreakers.length > 0 && (
           <div className="pt-2 border-t border-line text-xs flex flex-wrap items-center gap-3">
-            <span className="text-fg-muted text-2xs font-medium">Сетевые предохранители:</span>
+            <span className="text-fg-muted text-2xs font-medium">{t('diagnostics.breakers')}</span>
             {circuitBreakers.map((cb) => (
               <span
                 key={cb.name}
@@ -191,7 +193,7 @@ export const DiagnosticsSection: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-sm font-semibold text-fg">
             <Terminal className="w-4 h-4 text-primary" />
-            <span>Журнал событий и сетевых сбоев</span>
+            <span>{t('diagnostics.logTitle')}</span>
             {reports.length > 0 && (
               <span className="text-xs px-2 py-0.2 rounded-full bg-surface-active border border-line font-mono text-fg-muted">
                 {reports.length}
@@ -206,7 +208,7 @@ export const DiagnosticsSection: React.FC = () => {
               icon={copiedAll ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
               onClick={handleCopyReport}
             >
-              {copiedAll ? 'Отчёт скопирован' : 'Скопировать отчёт'}
+              {copiedAll ? t('diagnostics.reportCopied') : t('diagnostics.copyReport')}
             </Button>
 
             {reports.length > 0 && (
@@ -216,7 +218,7 @@ export const DiagnosticsSection: React.FC = () => {
                 icon={<Trash2 className="w-3.5 h-3.5" />}
                 onClick={handleClearReports}
               >
-                Очистить
+                {t('diagnostics.clear')}
               </Button>
             )}
           </div>
@@ -234,7 +236,7 @@ export const DiagnosticsSection: React.FC = () => {
                   : 'bg-surface-active text-fg-muted border-line hover:text-fg'
               }`}
             >
-              Все ({reports.length})
+              {t('diagnostics.filterAll', { count: reports.length })}
             </button>
             {errorCount > 0 && (
               <button
@@ -246,7 +248,7 @@ export const DiagnosticsSection: React.FC = () => {
                     : 'bg-surface-active text-danger border-line hover:bg-danger/10'
                 }`}
               >
-                Ошибки ({errorCount})
+                {t('diagnostics.filterErrors', { count: errorCount })}
               </button>
             )}
             {warningCount > 0 && (
@@ -259,7 +261,7 @@ export const DiagnosticsSection: React.FC = () => {
                     : 'bg-surface-active text-warning border-line hover:bg-warning/10'
                 }`}
               >
-                Предупреждения ({warningCount})
+                {t('diagnostics.filterWarnings', { count: warningCount })}
               </button>
             )}
           </div>
@@ -269,9 +271,9 @@ export const DiagnosticsSection: React.FC = () => {
         {reports.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-6 text-center space-y-2 rounded-xl bg-surface-active/30 border border-line/60">
             <CheckCircle2 className="w-8 h-8 text-success/80" />
-            <p className="text-xs font-semibold text-fg">Журнал пуст</p>
+            <p className="text-xs font-semibold text-fg">{t('diagnostics.logEmptyTitle')}</p>
             <p className="text-2xs text-fg-muted max-w-sm">
-              В текущей сессии ошибок и сбоев сети не зафиксировано. Система работает в штатном режиме.
+              {t('diagnostics.logEmptyDescription')}
             </p>
           </div>
         ) : (
@@ -344,8 +346,8 @@ export const DiagnosticsSection: React.FC = () => {
                         type="button"
                         onClick={(e) => void handleCopySingleEntry(report, e)}
                         className="p-1 rounded text-fg-muted hover:text-fg hover:bg-surface border border-transparent hover:border-line transition-colors"
-                        title="Скопировать запись"
-                        aria-label="Скопировать запись"
+                        title={t('diagnostics.copyEntry')}
+                        aria-label={t('diagnostics.copyEntry')}
                       >
                         {copiedEntryId === report.id ? (
                           <Check className="w-3.5 h-3.5 text-success" />
@@ -371,7 +373,7 @@ export const DiagnosticsSection: React.FC = () => {
                       {report.meta && Object.keys(report.meta).length > 0 && (
                         <div className="space-y-1">
                           <span className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
-                            Параметры сбоя (Metadata):
+                            {t('diagnostics.metadata')}
                           </span>
                           <div className="flex flex-wrap gap-1.5">
                             {Object.entries(report.meta).map(([k, v]) => (
@@ -391,7 +393,7 @@ export const DiagnosticsSection: React.FC = () => {
                       {report.stack && (
                         <div className="space-y-1">
                           <span className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
-                            Стек вызовов (Stack Trace):
+                            {t('diagnostics.stack')}
                           </span>
                           <pre className="p-2.5 rounded-lg bg-canvas text-2xs font-mono text-fg-muted overflow-x-auto whitespace-pre-wrap break-all border border-line max-h-48 leading-relaxed">
                             {report.stack}
@@ -400,7 +402,7 @@ export const DiagnosticsSection: React.FC = () => {
                       )}
 
                       <div className="flex items-center justify-between text-2xs text-fg-dim pt-1 border-t border-line/40">
-                        <span>Версия: DashFlow v{report.version}</span>
+                        <span>{t('diagnostics.version', { version: report.version })}</span>
                         <span>ID: {report.id}</span>
                       </div>
                     </div>
@@ -416,10 +418,10 @@ export const DiagnosticsSection: React.FC = () => {
       <div className="p-4 rounded-xl bg-surface border border-line space-y-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-fg">
           <Sparkles className="w-4 h-4 text-primary" />
-          <span>Флаги функциональности и эксперименты</span>
+          <span>{t('diagnostics.flagsTitle')}</span>
         </div>
         <p className="text-xs text-fg-muted">
-          Управление экспериментальными и опциональными возможностями расширения
+          {t('diagnostics.flagsDescription')}
         </p>
 
         <div className="space-y-3 pt-1">
@@ -432,14 +434,14 @@ export const DiagnosticsSection: React.FC = () => {
               >
                 <div className="space-y-0.5 pr-2">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-semibold text-fg">{def.title}</span>
+                    <span className="text-xs font-semibold text-fg">{t(`featureFlags.${def.key}.title`)}</span>
                     {def.isExperimental && (
-                      <span className="text-2xs px-1.5 py-0.2 rounded bg-warning/15 text-warning border border-warning/30">
-                        Beta
+                      <span className="text-2xs px-1.5 py-0.5 rounded bg-warning/15 text-warning border border-warning/30">
+                        {t('diagnostics.experimental')}
                       </span>
                     )}
                   </div>
-                  <p className="text-2xs text-fg-muted leading-tight">{def.description}</p>
+                  <p className="text-2xs text-fg-muted leading-tight">{t(`featureFlags.${def.key}.description`)}</p>
                 </div>
                 <Switch
                   checked={isChecked}

@@ -45,7 +45,7 @@ export const PermissionConsentModal: React.FC<PermissionConsentModalProps> = ({
           <div className="min-w-0 flex-1">
             <h4 className="text-sm font-semibold text-fg truncate">{widgetTitle}</h4>
             <p className="text-xs text-fg-muted">
-              {author ? `Автор: ${author}` : t('permissions.subtitle')}
+              {author ? t('permissions.author', { author }) : t('permissions.subtitle')}
             </p>
           </div>
         </div>
@@ -53,7 +53,7 @@ export const PermissionConsentModal: React.FC<PermissionConsentModalProps> = ({
         {/* Список запрашиваемых разрешений */}
         <div className="space-y-2">
           <span className="text-xs font-medium text-fg-muted uppercase tracking-wider">
-            Запрашиваемые права доступа:
+            {t('permissions.requested')}
           </span>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {validPerms.map((perm) => {
@@ -75,7 +75,7 @@ export const PermissionConsentModal: React.FC<PermissionConsentModalProps> = ({
                       <span className="text-xs font-semibold text-fg">{title}</span>
                       {def.isSensitive && (
                         <span className="text-2xs font-bold px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/20">
-                          Чувствительное
+                          {t('permissions.sensitive')}
                         </span>
                       )}
                     </div>

@@ -130,10 +130,10 @@ export const GridEngine: React.FC = () => {
         className="w-full min-h-[50vh] flex flex-col items-center justify-center p-8 select-none"
       >
         <EmptyState
-          title="Ваш дашборд пока пуст"
-          description="Добавьте виджеты, чтобы настроить удобное рабочее пространство"
+          title={t('grid.emptyTitle')}
+          description={t('grid.emptyDescription')}
           action={{
-            label: 'Добавить первый виджет',
+            label: t('grid.emptyAction'),
             onClick: () => setActiveModal('addWidget'),
           }}
         />
@@ -156,13 +156,13 @@ export const GridEngine: React.FC = () => {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-warning/15 text-warning text-xs font-semibold border border-warning/30">
               <Move className="w-3.5 h-3.5" />
-              <span>Редактор сетки</span>
+              <span>{t('grid.editorTitle')}</span>
             </div>
 
             {/* Выбор колонок базовой сетки */}
             <div className="flex items-center gap-1.5 bg-surface/80 p-1 rounded-xl border border-line text-xs">
               <span className="text-fg-muted px-1.5 font-medium flex items-center gap-1">
-                <Columns className="w-3.5 h-3.5" /> Колонки:
+                <Columns className="w-3.5 h-3.5" /> {t('grid.columns')}
               </span>
               {([12, 16, 24] as BaseColumns[]).map((cols) => (
                 <button
@@ -183,7 +183,7 @@ export const GridEngine: React.FC = () => {
             {/* Выбор отступа (Gap) */}
             <div className="hidden sm:flex items-center gap-1.5 bg-surface/80 p-1 rounded-xl border border-line text-xs">
               <span className="text-fg-muted px-1.5 font-medium flex items-center gap-1">
-                <Sliders className="w-3.5 h-3.5" /> Отступ:
+                <Sliders className="w-3.5 h-3.5" /> {t('grid.gap')}
               </span>
               {[8, 16, 24].map((g) => (
                 <button
@@ -210,7 +210,7 @@ export const GridEngine: React.FC = () => {
               className="flex items-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Добавить виджет</span>
+              <span>{t('grid.addWidget')}</span>
             </Button>
 
             <Button
@@ -220,7 +220,7 @@ export const GridEngine: React.FC = () => {
               className="flex items-center gap-1.5 bg-warning text-black hover:bg-warning/90 border-0"
             >
               <Check className="w-3.5 h-3.5" />
-              <span>Завершить</span>
+              <span>{t('grid.finish')}</span>
             </Button>
           </div>
         </div>

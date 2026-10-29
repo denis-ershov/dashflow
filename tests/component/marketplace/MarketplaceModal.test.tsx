@@ -22,7 +22,7 @@ describe('MarketplaceModal Component', () => {
   it('должен рендерить список виджетов из реестра и переключать категории', () => {
     render(<MarketplaceModal />);
 
-    expect(screen.getByText('Каталог Виджетов & Плагинов DashFlow')).toBeInTheDocument();
+    expect(screen.getByText('Каталог виджетов и плагинов')).toBeInTheDocument();
     expect(screen.getByText('Часы')).toBeInTheDocument();
     expect(screen.getByText('Погода')).toBeInTheDocument();
 

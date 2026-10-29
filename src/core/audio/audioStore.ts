@@ -13,47 +13,34 @@ import {
 export type AmbientSoundKey = 'rain' | 'campfire' | 'waves' | 'forest' | 'cafe' | 'whitenoise';
 
 export interface AmbientSoundMeta {
+  /** Название и описание — ключи audio.sounds.<id>.name|description в словаре */
   id: AmbientSoundKey;
-  name: string;
-  description: string;
   icon: string;
 }
 
 export const AMBIENT_SOUNDS: AmbientSoundMeta[] = [
   {
     id: 'rain',
-    name: 'Дождь за окном',
-    description: 'Успокаивающий шум мягкого дождя',
     icon: '🌧️',
   },
   {
     id: 'campfire',
-    name: 'Костёр',
-    description: 'Теплое потрескивание углей',
     icon: '🔥',
   },
   {
     id: 'waves',
-    name: 'Морской прибой',
-    description: 'Мерный шум океанских волн',
     icon: '🌊',
   },
   {
     id: 'forest',
-    name: 'Лес и ветер',
-    description: 'Шелест листвы и свежий ветер',
     icon: '🌲',
   },
   {
     id: 'cafe',
-    name: 'Уютное кафе',
-    description: 'Приглушенный фоновый гул кофейни',
     icon: '☕',
   },
   {
     id: 'whitenoise',
-    name: 'Шум для концентрации',
-    description: 'Ровный фон для глубокого фокуса',
     icon: '🎧',
   },
 ];

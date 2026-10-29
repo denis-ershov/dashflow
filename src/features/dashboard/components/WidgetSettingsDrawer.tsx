@@ -62,8 +62,8 @@ export const WidgetSettingsDrawer: React.FC<WidgetSettingsDrawerProps> = ({
     <Drawer
       isOpen={!!instanceId}
       onClose={onClose}
-      title={`Настройки: ${widgetName}`}
-      subtitle="Индивидуальная конфигурация параметров виджета"
+      title={t('widgetSettings.title', { name: widgetName })}
+      subtitle={t('widgetSettings.subtitle')}
     >
       <div className="p-4 flex flex-col justify-between h-full">
         <div className="space-y-4">
@@ -84,15 +84,15 @@ export const WidgetSettingsDrawer: React.FC<WidgetSettingsDrawerProps> = ({
             />
           ) : (
             <EmptyState
-              title="Нет настроек"
-              description="Для данного виджета не предусмотрено дополнительных параметров"
+              title={t('widgetSettings.emptyTitle')}
+              description={t('widgetSettings.emptyDescription')}
             />
           )}
         </div>
 
         <div className="pt-4 border-t border-line flex justify-end">
           <Button variant="primary" size="sm" onClick={onClose}>
-            Готово
+            {t('widgetSettings.done')}
           </Button>
         </div>
       </div>

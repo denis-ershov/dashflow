@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { LayoutItem } from '@/core/storage';
+import { useTranslation } from '@/core/i18n';
 
 export interface UseGridKeyboardNavOptions {
   enabled: boolean;
@@ -48,6 +49,7 @@ export function useGridKeyboardNav({
   onMoveWidget,
   onResizeWidget,
 }: UseGridKeyboardNavOptions) {
+  const { t } = useTranslation();
   const [liveAnnouncement, setLiveAnnouncement] = useState<string>('');
 
   const handleKeyDown = useCallback(
@@ -58,7 +60,7 @@ export function useGridKeyboardNav({
       if (event.key === 'Escape') {
         event.preventDefault();
         onExitEditMode?.();
-        setLiveAnnouncement('Режим редактирования завершен');
+        setLiveAnnouncement(t('grid.keyboard.editingFinished'));
         return;
       }
 
@@ -90,14 +92,14 @@ export function useGridKeyboardNav({
       if (event.shiftKey) {
         // Изменение размера
         onResizeWidget?.(selectedInstanceId, deltaX, deltaY);
-        setLiveAnnouncement(`Размер виджета изменен: ${deltaX ? `по ширине (${deltaX > 0 ? '+1' : '-1'})` : ''} ${deltaY ? `по высоте (${deltaY > 0 ? '+1' : '-1'})` : ''}`);
+        setLiveAnnouncement(t('grid.keyboard.resized'));
       } else {
         // Перемещение
         onMoveWidget?.(selectedInstanceId, deltaX, deltaY);
-        setLiveAnnouncement(`Виджет перемещен: ${deltaX ? `по горизонтали (${deltaX > 0 ? '+1' : '-1'})` : ''} ${deltaY ? `по вертикали (${deltaY > 0 ? '+1' : '-1'})` : ''}`);
+        setLiveAnnouncement(t('grid.keyboard.moved'));
       }
     },
-    [enabled, selectedInstanceId, onExitEditMode, onMoveWidget, onResizeWidget],
+    [enabled, selectedInstanceId, onExitEditMode, onMoveWidget, onResizeWidget, t],
   );
 
   useEffect(() => {

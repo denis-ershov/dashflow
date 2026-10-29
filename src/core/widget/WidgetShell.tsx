@@ -4,6 +4,7 @@ import { ErrorState } from '@/ui/feedback';
 import { cn } from '@/ui/lib/cn';
 import { Card } from '@/ui/primitives/Card';
 import { crashLogger } from '@/core/observability';
+import { t, useI18nStore, useTranslation } from '@/core/i18n';
 import type { WidgetSurfaceType } from './types';
 
 interface ErrorBoundaryProps {
@@ -55,8 +56,8 @@ class WidgetErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySta
       return (
         <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-surface/50 border border-line rounded-lg">
           <ErrorState
-            title="Ошибка виджета"
-            message="Не удалось загрузить виджет"
+            title={t('widgetShell.errorTitle', undefined, useI18nStore.getState().language)}
+            message={t('widgetShell.errorMessage', undefined, useI18nStore.getState().language)}
             onRetry={this.handleRetry}
           />
         </div>
@@ -92,6 +93,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
   children,
   className,
 }) => {
+  const { t: tr } = useTranslation();
   const isChromeless = surface === 'chromeless';
   const isTiles = surface === 'tiles';
 
@@ -108,7 +110,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
               <button
                 type="button"
                 className="widget-drag-handle flex items-center justify-center w-8 h-8 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover cursor-grab transition-colors relative before:absolute before:-inset-2 before:content-['']"
-                aria-label="Перетащить виджет"
+                aria-label={tr('widgetShell.drag')}
               >
                 <GripVertical className="w-4 h-4" />
               </button>
@@ -128,7 +130,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
                 type="button"
                 onClick={onOpenSettings}
                 className="flex items-center justify-center w-8 h-8 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors cursor-pointer relative before:absolute before:-inset-2 before:content-['']"
-                aria-label="Настройки виджета"
+                aria-label={tr('widgetShell.settings')}
               >
                 <Settings className="w-4 h-4" />
               </button>
@@ -139,7 +141,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
                 type="button"
                 onClick={onRemove}
                 className="flex items-center justify-center w-8 h-8 rounded-lg text-danger hover:bg-danger/15 transition-colors cursor-pointer relative before:absolute before:-inset-2 before:content-['']"
-                aria-label="Удалить виджет"
+                aria-label={tr('widgetShell.remove')}
               >
                 <Trash2 className="w-4 h-4" />
               </button>

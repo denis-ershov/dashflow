@@ -43,7 +43,7 @@ export const SettingsModal: React.FC = () => {
       setAnimationsEnabled: s.setAnimationsEnabled,
     })),
   );
-  const { t } = useTranslation();
+  const { t, tp } = useTranslation();
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'general' | 'diagnostics'>('general');
 
@@ -69,7 +69,7 @@ export const SettingsModal: React.FC = () => {
             }`}
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span>Параметры и макет</span>
+            <span>{t('layoutSettings.tabGeneral')}</span>
           </button>
           <button
             type="button"
@@ -81,7 +81,7 @@ export const SettingsModal: React.FC = () => {
             }`}
           >
             <Activity className="w-3.5 h-3.5" />
-            <span>Диагностика и система</span>
+            <span>{t('layoutSettings.tabDiagnostics')}</span>
           </button>
         </div>
 
@@ -93,7 +93,7 @@ export const SettingsModal: React.FC = () => {
         <div className="p-4 rounded-xl bg-surface border border-line space-y-4">
           <div className="flex items-center gap-2 text-sm font-semibold text-secondary">
             <Layout className="w-4 h-4" />
-            <span>Режим макета и холста</span>
+            <span>{t('layoutSettings.modeTitle')}</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -106,8 +106,8 @@ export const SettingsModal: React.FC = () => {
                   : 'bg-surface hover:bg-surface-hover border-line text-fg-muted'
               }`}
             >
-              <span className="text-xs font-bold text-fg mb-1">Hero + Сетка</span>
-              <span className="text-2xs text-fg-muted">Часы, поиск и модульные виджеты</span>
+              <span className="text-xs font-bold text-fg mb-1">{t('layoutSettings.modes.modular')}</span>
+              <span className="text-2xs text-fg-muted">{t('layoutSettings.modes.modularHint')}</span>
             </button>
 
             <button
@@ -119,8 +119,8 @@ export const SettingsModal: React.FC = () => {
                   : 'bg-surface hover:bg-surface-hover border-line text-fg-muted'
               }`}
             >
-              <span className="text-xs font-bold text-fg mb-1">Свободный холст</span>
-              <span className="text-2xs text-fg-muted">100% экран под виджеты без Hero</span>
+              <span className="text-xs font-bold text-fg mb-1">{t('layoutSettings.modes.canvas')}</span>
+              <span className="text-2xs text-fg-muted">{t('layoutSettings.modes.canvasHint')}</span>
             </button>
 
             <button
@@ -132,8 +132,8 @@ export const SettingsModal: React.FC = () => {
                   : 'bg-surface hover:bg-surface-hover border-line text-fg-muted'
               }`}
             >
-              <span className="text-xs font-bold text-fg mb-1">Режим Zen</span>
-              <span className="text-2xs text-fg-muted">Минимализм и чистый фокус</span>
+              <span className="text-xs font-bold text-fg mb-1">{t('layoutSettings.modes.zen')}</span>
+              <span className="text-2xs text-fg-muted">{t('layoutSettings.modes.zenHint')}</span>
             </button>
           </div>
         </div>
@@ -143,12 +143,12 @@ export const SettingsModal: React.FC = () => {
           <div className="p-4 rounded-xl bg-surface border border-line space-y-4">
             <div className="flex items-center gap-2 text-sm font-semibold text-secondary">
               <Sparkles className="w-4 h-4" />
-              <span>Элементы Hero-зоны</span>
+              <span>{t('layoutSettings.heroTitle')}</span>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-fg">Показывать большие часы</span>
+                <span className="text-xs font-medium text-fg">{t('layoutSettings.showClock')}</span>
                 <Switch
                   checked={heroSettings?.showClock !== false}
                   onChange={(val) => updateHeroSettings({ showClock: val })}
@@ -156,7 +156,7 @@ export const SettingsModal: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-fg">Показывать приветствие</span>
+                <span className="text-xs font-medium text-fg">{t('layoutSettings.showGreeting')}</span>
                 <Switch
                   checked={heroSettings?.showGreeting !== false}
                   onChange={(val) => updateHeroSettings({ showGreeting: val })}
@@ -164,7 +164,7 @@ export const SettingsModal: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-fg">Показывать строку поиска</span>
+                <span className="text-xs font-medium text-fg">{t('layoutSettings.showSearch')}</span>
                 <Switch
                   checked={heroSettings?.showSearchBar !== false}
                   onChange={(val) => updateHeroSettings({ showSearchBar: val })}
@@ -172,7 +172,7 @@ export const SettingsModal: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-fg">Показывать прогресс года</span>
+                <span className="text-xs font-medium text-fg">{t('layoutSettings.showYearProgress')}</span>
                 <Switch
                   checked={heroSettings?.showYearProgress !== false}
                   onChange={(val) => updateHeroSettings({ showYearProgress: val })}
@@ -180,7 +180,7 @@ export const SettingsModal: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-fg">Показывать быстрые ссылки (SpeedDial)</span>
+                <span className="text-xs font-medium text-fg">{t('layoutSettings.showSpeedDial')}</span>
                 <Switch
                   checked={heroSettings?.showSpeedDial !== false}
                   onChange={(val) => updateHeroSettings({ showSpeedDial: val })}
@@ -189,38 +189,38 @@ export const SettingsModal: React.FC = () => {
 
               {/* Выравнивание Hero */}
               <div className="flex items-center justify-between pt-2 border-t border-line">
-                <span className="text-xs font-medium text-fg">Выравнивание контента</span>
+                <span className="text-xs font-medium text-fg">{t('layoutSettings.alignment')}</span>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant={heroSettings?.alignment === 'left' ? 'primary' : 'secondary'}
                     onClick={() => updateHeroSettings({ alignment: 'left' })}
                   >
-                    По левому краю
+                    {t('layoutSettings.alignLeft')}
                   </Button>
                   <Button
                     size="sm"
                     variant={(heroSettings?.alignment || 'center') === 'center' ? 'primary' : 'secondary'}
                     onClick={() => updateHeroSettings({ alignment: 'center' })}
                   >
-                    По центру
+                    {t('layoutSettings.alignCenter')}
                   </Button>
                 </div>
               </div>
 
               {/* Стиль часов */}
               <div className="flex items-center justify-between pt-2 border-t border-line">
-                <span className="text-xs font-medium text-fg">Стиль часов Hero</span>
+                <span className="text-xs font-medium text-fg">{t('layoutSettings.clockStyle')}</span>
                 <select
                   value={heroSettings?.clockStyle || 'digital'}
                   onChange={(e) => updateHeroSettings({ clockStyle: e.target.value as any })}
                   className="bg-surface text-xs text-fg border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer"
                 >
-                  <option value="digital">Digital (Современный)</option>
-                  <option value="minimal">Minimal (Тонкий)</option>
-                  <option value="serif">Serif (Элегантный)</option>
-                  <option value="mono">Mono (Код)</option>
-                  <option value="flip">Flip (Перекидной)</option>
+                  <option value="digital">{t('layoutSettings.clockStyles.digital')}</option>
+                  <option value="minimal">{t('layoutSettings.clockStyles.minimal')}</option>
+                  <option value="serif">{t('layoutSettings.clockStyles.serif')}</option>
+                  <option value="mono">{t('layoutSettings.clockStyles.mono')}</option>
+                  <option value="flip">{t('layoutSettings.clockStyles.flip')}</option>
                 </select>
               </div>
             </div>
@@ -235,35 +235,35 @@ export const SettingsModal: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-fg">Количество колонок</span>
+            <span className="text-xs font-medium text-fg">{t('layoutSettings.columnsTitle')}</span>
             <div className="flex gap-2">
               <Button
                 size="sm"
                 variant={baseColumns === 12 ? 'primary' : 'secondary'}
                 onClick={() => setBaseColumns(12)}
               >
-                12 Колонок
+                {tp('layoutSettings.columnsCount', 12)}
               </Button>
               <Button
                 size="sm"
                 variant={baseColumns === 16 ? 'primary' : 'secondary'}
                 onClick={() => setBaseColumns(16)}
               >
-                16 Колонок
+                {tp('layoutSettings.columnsCount', 16)}
               </Button>
               <Button
                 size="sm"
                 variant={baseColumns === 24 ? 'primary' : 'secondary'}
                 onClick={() => setBaseColumns(24)}
               >
-                24 Колонки
+                {tp('layoutSettings.columnsCount', 24)}
               </Button>
             </div>
           </div>
 
           <div className="pt-2">
             <Slider
-              label="Межэлементный зазор (Gap)"
+              label={t('layoutSettings.gap')}
               value={gap}
               min={8}
               max={32}
@@ -289,14 +289,14 @@ export const SettingsModal: React.FC = () => {
                 variant={language === 'ru' ? 'primary' : 'secondary'}
                 onClick={() => setLanguage('ru')}
               >
-                Русский
+                {t('languages.ru')}
               </Button>
               <Button
                 size="sm"
                 variant={language === 'en' ? 'primary' : 'secondary'}
                 onClick={() => setLanguage('en')}
               >
-                English
+                {t('languages.en')}
               </Button>
             </div>
           </div>
@@ -310,11 +310,11 @@ export const SettingsModal: React.FC = () => {
         {/* Секция 5: Импорт и Экспорт */}
         <div className="p-4 rounded-xl bg-surface border border-line flex items-center justify-between">
           <div className="space-y-1">
-            <p className="text-xs font-semibold text-fg">Импорт / Экспорт данных</p>
-            <p className="text-2xs text-fg-muted">Сохранение и восстановление настроек в JSON</p>
+            <p className="text-xs font-semibold text-fg">{t('layoutSettings.backupTitle')}</p>
+            <p className="text-2xs text-fg-muted">{t('layoutSettings.backupHint')}</p>
           </div>
           <Button size="sm" variant="secondary" onClick={() => setIsImportOpen(true)}>
-            Управление JSON
+            {t('layoutSettings.backupAction')}
           </Button>
         </div>
 

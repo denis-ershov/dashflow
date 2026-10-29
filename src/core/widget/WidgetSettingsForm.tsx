@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Input, Switch, Slider } from '@/ui/primitives';
-import { t, isTranslationKey } from '@/core/i18n';
+import { isTranslationKey, useTranslation, type TranslationKey } from '@/core/i18n';
 import { cn } from '@/ui/lib/cn';
 import type { WidgetSettingFieldSchema } from './types';
 
@@ -11,16 +11,12 @@ export interface WidgetSettingsFormProps<S> {
   onChange: (newValues: S) => void;
 }
 
-function resolveLabel(key?: string): string {
-  if (!key) return '';
-  return isTranslationKey(key) ? t(key) : key;
-}
 
-const SECTION_TITLES: Record<string, string> = {
-  appearance: 'Внешний вид и оформление',
-  behavior: 'Поведение и логика',
-  data: 'Данные и интеграции',
-  advanced: 'Дополнительные параметры',
+const SECTION_TITLE_KEYS: Readonly<Record<string, TranslationKey>> = {
+  appearance: 'widgetSettings.sections.appearance',
+  behavior: 'widgetSettings.sections.behavior',
+  data: 'widgetSettings.sections.data',
+  advanced: 'widgetSettings.sections.advanced',
 };
 
 /**
@@ -31,6 +27,13 @@ export function WidgetSettingsForm<S>({
   values,
   onChange,
 }: WidgetSettingsFormProps<S>): React.ReactElement {
+  const { t } = useTranslation();
+  // labelKey в манифестах — ключ словаря или уже готовый текст (сторонние плагины)
+  const resolveLabel = (key?: string): string => {
+    if (!key) return '';
+    return isTranslationKey(key) ? t(key) : key;
+  };
+
   const effectiveValues = useMemo(() => {
     const defaults: Record<string, unknown> = {};
     for (const field of schema) {
@@ -295,7 +298,8 @@ export function WidgetSettingsForm<S>({
   return (
     <div className="flex flex-col gap-6">
       {sections.map(([secKey, fields]) => {
-        const title = SECTION_TITLES[secKey] || secKey;
+        const titleKey = SECTION_TITLE_KEYS[secKey];
+        const title = titleKey ? t(titleKey) : secKey;
         return (
           <div key={secKey} className="flex flex-col gap-3 pb-4 border-b border-line/50 last:border-b-0 last:pb-0">
             {secKey !== 'default' && (

@@ -1,4 +1,4 @@
-export const ru = {
+export const base = {
   greeting: {
     morning: 'Доброе утро',
     day: 'Добрый день',
@@ -99,6 +99,9 @@ export const ru = {
     scrim: 'Затемнение фона (Scrim)',
     allowExternalCss: 'Разрешить внешние HTTPS ресурсы в CSS',
     activeTheme: 'Активная тема',
+    modalTitle: 'Внешний вид и темы',
+    tabThemes: 'Темы',
+    tabWallpaper: 'Обои',
   },
   backup: {
     title: 'Импорт & Экспорт Конфигурации',
@@ -112,6 +115,9 @@ export const ru = {
     success: 'Конфигурация успешно импортирована!',
     error: 'Ошибка импорта конфигурации',
     invalidFormat: 'Некорректный формат JSON конфигурации',
+    importPlaceholder: 'Вставьте JSON конфигурацию здесь...',
+    successReload: 'Конфигурация импортирована. Перезагрузка...',
+    readError: 'Ошибка чтения JSON',
   },
   errors: {
     generic: 'Произошла непредвиденная ошибка',
@@ -136,6 +142,9 @@ export const ru = {
     allow: 'Разрешить и добавить',
     deny: 'Отклонить',
     warning: 'Предоставляйте доступ только виджетам и плагинам из доверенных источников.',
+    author: 'Автор: {{author}}',
+    requested: 'Запрашиваемые права доступа:',
+    sensitive: 'Чувствительное',
     storage: {
       title: 'Локальное хранилище',
       desc: 'Сохранение настроек и данных виджета',

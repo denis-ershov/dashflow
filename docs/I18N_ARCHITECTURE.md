@@ -12,9 +12,13 @@
 src/core/i18n/
 ├── types.ts           # Типы языков (SupportedLanguage), параметры интерполяции, вывод ключей
 ├── locales/
-│   ├── ru.ts          # Русский словарь (канонический источник)
-│   └── en.ts          # Английский словарь (100% покрытие ключей ru)
-├── i18n.ts            # Чистые функции перевода t(), интерполяции, плюрализации и форматирования
+│   ├── ru/            # Русский словарь (канонический источник), разбит на модули
+│   │   ├── base.ts    #   общие разделы: app, common, settings, widgets, errors, permissions…
+│   │   ├── shell.ts   #   оболочка: dock, grid, widgetShell, hero, search, speedDial, feedback…
+│   │   ├── panels.ts  #   панели: layoutSettings, diagnostics, marketplace, wallpaper, audio…
+│   │   └── index.ts   #   сборка: { ...base, ...shell, ...panels } as const
+│   └── en/            # Английский словарь — те же модули с типом LocaleShape<ru-модуля>
+├── i18n.ts            # Чистые функции t(), tp() (множественное число), интерполяции и форматирования
 ├── i18nStore.ts       # Zustand-стор языка с автосохранением в хранилище
 ├── useTranslation.ts  # Реактивный React-хук useTranslation
 └── index.ts           # Единый реэкспорт
@@ -36,3 +40,28 @@ src/core/i18n/
    Единственная точка входа — `@/core/i18n`. Исторический фасад `src/services/localization/i18n.ts` удалён (2026-10-29): у него не осталось потребителей. В проекте полностью исключена рассинхронизация словарей и дублирование состояния.
 6. **Реактивная синхронизация сторов**:
    `useAppStore` подписан через `useAppStore.subscribe` на `useI18nStore.setLanguage`. Смена языка в модальном окне настроек (`SettingsModal`) или программно мгновенно переводит весь интерфейс, включая заголовки виджетов и меню, без необходимости перезагрузки страницы.
+
+---
+
+## 4. Правила использования (этап E аудита, 2026-10-29)
+
+### 4.1. Что переводится
+- Всё, что видит или слышит пользователь: текст, `placeholder`, `title`, `aria-label`, подсказки, названия звуков, тем, обоев, флагов, секций форм.
+- Данные-справочники хранят **ключ или id**, а не текст: `AMBIENT_SOUNDS` → `audio.sounds.<id>.*`, `FEATURE_FLAG_DEFINITIONS` → `featureFlags.<key>.*`, `PRESET_META` → `themeDescriptions.<id>`, поисковики → `placeholderKey`/`nameKey`.
+- Ошибки, которые показываются пользователю, хранятся **ключом** (`AddLinkModal`, `LazyWidgetRenderer`) или **кодом** (`CustomCssEditor` показывает `cssEditor.errors.<code>` из `validateCustomCss`), и переводятся при отрисовке — тогда смена языка меняет и уже показанную ошибку.
+
+### 4.2. Что не переводится
+Список с причинами — `NON_UI_FILES` в `tests/unit/i18n/noHardcodedStrings.test.ts`: логи service worker, ответы RPC песочнице, диагностика манифеста для авторов плагинов, внутренние ошибки хранилища и сети для журнала диагностики, инварианты Theme Engine, а также данные (названия реальных русскоязычных RSS-лент). Аргументы `console.*` не проверяются нигде. Названия языков (`languages.ru = 'Русский'`) одинаковы во всех словарях.
+
+### 4.3. Множественное число
+Ключ-группа с формами `one | few | many | other` (в `en` формы `few`/`many` дублируют `other`, чтобы словари совпадали по форме) и вызов `tp('layoutSettings.columnsCount', 12)` → «12 колонок» / «12 columns». Форма выбирается `Intl.PluralRules`, `{{count}}` подставляется автоматически.
+
+### 4.4. Компоненты-классы и не-React код
+Хуки там недоступны: `t(key, params, useI18nStore.getState().language)` (границы ошибок `WidgetShell`, `RootErrorBoundary`).
+
+### 4.5. Гарантии
+- `en` типизирован как `LocaleShape<typeof ru>`: пропущенный или лишний ключ — ошибка компиляции.
+- Ключи в коде — тип `TranslationKey`, шаблонные ключи (`` `catalogCategories.${cat}` ``) проверяются по объединению значений.
+- Страж `noHardcodedStrings.test.ts` разбирает исходники TypeScript Compiler API и падает на кириллице в строковых литералах, шаблонах и JSX-тексте вне словарей и списка исключений.
+- Тесты фиксируют язык `ru` в `tests/setup.ts` (jsdom сообщает `en-US`); английский интерфейс проверяет `tests/component/i18n/englishUi.test.tsx`.
+- `WidgetSettingsForm` переводит подписи через реактивный `useTranslation` — раньше она вызывала `t()` без языка и всегда оставалась на русском.

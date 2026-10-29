@@ -68,8 +68,8 @@ export const CommandPalette: React.FC = () => {
   const baseCommands = [
     {
       id: 'toggle-layout-mode',
-      title: layoutMode === 'zen' ? 'Включить режим Dashboard (виджеты)' : 'Включить режим Zen (фокус)',
-      category: 'Режим',
+      title: layoutMode === 'zen' ? t('commandPalette.enableDashboard') : t('commandPalette.enableZen'),
+      category: t('commandPalette.categories.mode'),
       icon: layoutMode === 'zen' ? <LayoutGrid className="w-4 h-4 text-primary" /> : <Sparkles className="w-4 h-4 text-accent" />,
       action: () => {
         setLayoutMode(layoutMode === 'zen' ? 'modular' : 'zen');
@@ -78,8 +78,8 @@ export const CommandPalette: React.FC = () => {
     },
     {
       id: 'open-settings',
-      title: 'Открыть Настройки',
-      category: 'Навигация',
+      title: t('commandPalette.openSettings'),
+      category: t('commandPalette.categories.navigation'),
       icon: <Settings className="w-4 h-4 text-fg-muted" />,
       action: () => {
         setActiveModal('settings');
@@ -88,8 +88,8 @@ export const CommandPalette: React.FC = () => {
     },
     {
       id: 'open-themes',
-      title: 'Открыть Темы оформления и обои',
-      category: 'Оформление',
+      title: t('commandPalette.openAppearance'),
+      category: t('commandPalette.categories.appearance'),
       icon: <Palette className="w-4 h-4 text-primary" />,
       action: () => {
         setActiveModal('appearance');
@@ -98,8 +98,8 @@ export const CommandPalette: React.FC = () => {
     },
     {
       id: 'open-marketplace',
-      title: 'Открыть Каталог плагинов',
-      category: 'Плагины',
+      title: t('commandPalette.openCatalog'),
+      category: t('commandPalette.categories.plugins'),
       icon: <ShoppingBag className="w-4 h-4 text-secondary" />,
       action: () => {
         setActiveModal('marketplace');
@@ -111,8 +111,8 @@ export const CommandPalette: React.FC = () => {
   // Команды переключения тем
   const themeCommands = PRESETS.map((p) => ({
     id: `theme-${p.id}`,
-    title: `Тема: ${p.id}`,
-    category: 'Темы',
+    title: t('commandPalette.theme', { name: p.id }),
+    category: t('commandPalette.categories.themes'),
     icon: <Palette className="w-4 h-4 text-primary" />,
     action: () => {
       setPreset(p.id);
@@ -125,8 +125,8 @@ export const CommandPalette: React.FC = () => {
     const title = w.nameKey ? t(w.nameKey) : w.name || w.id;
     return {
       id: `add-${w.id}`,
-      title: `Добавить виджет: ${title}`,
-      category: 'Виджеты',
+      title: t('commandPalette.addWidget', { name: title }),
+      category: t('commandPalette.categories.widgets'),
       icon: <Plus className="w-4 h-4 text-primary" />,
       action: () => {
         addWidget(w.id, w.size.defaultW, w.size.defaultH);
@@ -164,7 +164,7 @@ export const CommandPalette: React.FC = () => {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Командная палитра"
+      aria-label={t('commandPalette.label')}
       className="fixed inset-0 z-(--z-modal,50) flex items-start justify-center pt-20 p-4 select-none"
     >
       {/* Backdrop */}
@@ -183,7 +183,7 @@ export const CommandPalette: React.FC = () => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleInputKeyDown}
-            placeholder="Введите команду, тему, виджет или поисковый запрос..."
+            placeholder={t('commandPalette.placeholder')}
             className="w-full bg-transparent text-sm placeholder:text-fg-muted focus:outline-none min-h-9"
           />
           <kbd className="px-2 py-1 text-xs text-fg-muted bg-surface border border-line rounded-md font-mono select-none">
@@ -195,7 +195,7 @@ export const CommandPalette: React.FC = () => {
           {filteredCommands.length === 0 ? (
             <div className="p-6 text-center text-xs text-fg-muted flex flex-col items-center gap-2">
               <Globe className="w-5 h-5 text-primary" />
-              <span>Нажмите Enter, чтобы искать «{query}» в Google</span>
+              <span>{t('commandPalette.searchHint', { query })}</span>
             </div>
           ) : (
             filteredCommands.map((cmd, idx) => (

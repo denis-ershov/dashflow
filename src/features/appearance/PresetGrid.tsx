@@ -1,82 +1,65 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/ui/lib/cn';
+import { useTranslation } from '@/core/i18n';
 import { PRESETS, type PresetId, type ThemePreset } from '@/core/theme/presets';
 import { useThemeStore } from '@/core/theme/themeStore';
 import { Badge } from '@/ui/primitives/Badge';
 
-export const PRESET_META: Record<
-  PresetId,
-  { name: string; description: string; wcagGrade: 'AA' | 'AAA' }
-> = {
+export const PRESET_META: Record<PresetId, { name: string; wcagGrade: 'AA' | 'AAA' }> = {
   'neutral-dark': {
     name: 'Neutral Dark',
-    description: 'Сбалансированная тёмная тема для долгой комфортной работы',
     wcagGrade: 'AAA',
   },
   'deep-blue': {
     name: 'Deep Blue',
-    description: 'Глубокие синие оттенки с высокой чёткостью элементов',
     wcagGrade: 'AA',
   },
   'default-light': {
     name: 'Default Light',
-    description: 'Светлая чистая тема с мягким контрастом',
     wcagGrade: 'AA',
   },
   midnight: {
     name: 'Midnight Purple',
-    description: 'Ночная фиолетовая палитра с неоновыми акцентами',
     wcagGrade: 'AA',
   },
   ocean: {
     name: 'Ocean Teal',
-    description: 'Морская бирюзовая гамма для продуктивности',
     wcagGrade: 'AA',
   },
   minimal: {
     name: 'Minimal Monochrome',
-    description: 'Строгий минималистичный монохром',
     wcagGrade: 'AAA',
   },
   aurora: {
     name: 'Aurora Emerald',
-    description: 'Изумрудное северное сияние с яркими акцентами',
     wcagGrade: 'AA',
   },
   glass: {
     name: 'Glass',
-    description: 'Стеклянный полупрозрачный интерфейс с размытием фона',
     wcagGrade: 'AA',
   },
   'high-contrast': {
     name: 'High Contrast',
-    description: 'Максимальный контраст для повышенной доступности',
     wcagGrade: 'AAA',
   },
 };
 
 export const PresetGrid: React.FC = () => {
+  const { t } = useTranslation();
   const activePresetId = useThemeStore((state) => state.activePresetId);
   const setPreset = useThemeStore((state) => state.setPreset);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-fg-muted">
-          Выберите готовую тему оформления. Все темы оптимизированы и соответствуют стандарту
-          контрастности WCAG 2.1 AA/AAA.
-        </p>
+        <p className="text-xs text-fg-muted">{t('themes.intro')}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {PRESETS.map((preset: ThemePreset) => {
           const isSelected = activePresetId === preset.id;
-          const meta = PRESET_META[preset.id] ?? {
-            name: preset.id,
-            description: '',
-            wcagGrade: 'AA',
-          };
+          const meta = PRESET_META[preset.id] ?? { name: preset.id, wcagGrade: 'AA' };
 
           return (
             <button
@@ -97,7 +80,9 @@ export const PresetGrid: React.FC = () => {
                 {isSelected && <Check className="w-4 h-4 text-primary shrink-0" />}
               </div>
 
-              <p className="text-xs text-fg-muted mb-3 line-clamp-2">{meta.description}</p>
+              <p className="text-xs text-fg-muted mb-3 line-clamp-2">
+                {t(`themeDescriptions.${preset.id}`)}
+              </p>
 
               <div className="flex items-center justify-between mt-auto pt-2 border-t border-line/50">
                 <div className="flex items-center gap-1">

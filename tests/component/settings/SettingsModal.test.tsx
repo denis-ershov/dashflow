@@ -27,7 +27,7 @@ describe('SettingsModal Component', () => {
 
   it('должен изменять количество колонок при клике на выбор сетки', () => {
     render(<SettingsModal />);
-    const col16Button = screen.getByText('16 Колонок');
+    const col16Button = screen.getByText('16 колонок');
     fireEvent.click(col16Button);
     expect(useDashboardStore.getState().baseColumns).toBe(16);
   });

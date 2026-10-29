@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '@/core/i18n';
 import { Drawer } from '@/ui/overlays/Drawer';
 import { Slider, Button, Switch } from '@/ui/primitives';
 import { useAudioStore, AMBIENT_SOUNDS } from '@/core/audio';
@@ -11,6 +12,7 @@ export interface AmbientSoundDrawerProps {
 }
 
 export const AmbientSoundDrawer: React.FC<AmbientSoundDrawerProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const {
     activeTracks,
     trackVolumes,
@@ -26,19 +28,19 @@ export const AmbientSoundDrawer: React.FC<AmbientSoundDrawerProps> = ({ isOpen, 
   const isAnyPlaying = Object.values(activeTracks).some(Boolean);
 
   return (
-    <Drawer isOpen={isOpen} onClose={onClose} title="Звуки природы и концентрации">
+    <Drawer isOpen={isOpen} onClose={onClose} title={t('audio.title')}>
       <div className="flex flex-col gap-6 py-2">
         {/* Мастер-контроль */}
         <div className="glass-panel p-4 rounded-lg border border-line flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-fg-muted">
-              Общая громкость
+              {t('audio.masterVolume')}
             </span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={toggleMute}
-                aria-label={isMuted ? 'Включить звук' : 'Выключить звук'}
+                aria-label={isMuted ? t('audio.unmute') : t('audio.mute')}
                 className="p-1 rounded-lg text-fg-muted hover:text-fg hover:bg-surface transition-colors cursor-pointer"
               >
                 {isMuted ? (
@@ -55,7 +57,7 @@ export const AmbientSoundDrawer: React.FC<AmbientSoundDrawerProps> = ({ isOpen, 
                   icon={<Square className="w-4 h-4" />}
                   className="text-xs text-danger hover:bg-danger/10"
                 >
-                  Остановить всё
+                  {t('audio.stopAll')}
                 </Button>
               )}
             </div>
@@ -74,7 +76,7 @@ export const AmbientSoundDrawer: React.FC<AmbientSoundDrawerProps> = ({ isOpen, 
         {/* Список звуковых ландшафтов */}
         <div className="flex flex-col gap-3">
           <span className="text-xs font-semibold uppercase tracking-wider text-fg-muted px-1">
-            Звуковые слои
+            {t('audio.layers')}
           </span>
 
           {AMBIENT_SOUNDS.map((sound) => {
@@ -98,16 +100,20 @@ export const AmbientSoundDrawer: React.FC<AmbientSoundDrawerProps> = ({ isOpen, 
                     </span>
                     <div>
                       <div className="text-sm font-semibold text-fg tracking-tight">
-                        {sound.name}
+                        {t(`audio.sounds.${sound.id}.name`)}
                       </div>
-                      <div className="text-xs text-fg-muted mt-1">{sound.description}</div>
+                      <div className="text-xs text-fg-muted mt-1">
+                        {t(`audio.sounds.${sound.id}.description`)}
+                      </div>
                     </div>
                   </div>
 
                   <Switch
                     checked={isActive}
                     onChange={() => toggleTrack(sound.id)}
-                    aria-label={`Включить ${sound.name}`}
+                    aria-label={t('audio.enableLayer', {
+                      name: t(`audio.sounds.${sound.id}.name`),
+                    })}
                   />
                 </div>
 
@@ -119,7 +125,7 @@ export const AmbientSoundDrawer: React.FC<AmbientSoundDrawerProps> = ({ isOpen, 
                       step={1}
                       value={Math.round(currentVolume * 100)}
                       onChange={(val) => setTrackVolume(sound.id, val / 100)}
-                      label="Громкость слоя"
+                      label={t('audio.layerVolume')}
                       unit="%"
                     />
                   </div>

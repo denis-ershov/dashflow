@@ -3,6 +3,7 @@ import { Modal } from '@/ui/overlays/Modal';
 import { Input, Button } from '@/ui/primitives';
 import { toast } from '@/ui/primitives/Toast';
 import type { SpeedDialLink } from '@/core/storage';
+import { useTranslation, type TranslationKey } from '@/core/i18n';
 
 export interface AddLinkModalProps {
   isOpen: boolean;
@@ -11,9 +12,10 @@ export interface AddLinkModalProps {
 }
 
 export const AddLinkModal: React.FC<AddLinkModalProps> = ({ isOpen, onClose, onAdd }) => {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState<TranslationKey | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +23,7 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({ isOpen, onClose, onA
     const cleanUrl = url.trim();
 
     if (!cleanUrl) {
-      setError('Введите адрес ссылки');
+      setError('speedDial.errors.empty');
       return;
     }
 
@@ -34,56 +36,57 @@ export const AddLinkModal: React.FC<AddLinkModalProps> = ({ isOpen, onClose, onA
     try {
       parsedUrl = new URL(finalUrl);
       if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-        setError('Разрешены только веб-адреса с протоколом HTTP или HTTPS');
+        setError('speedDial.errors.protocol');
         return;
       }
     } catch {
-      setError('Некорректный формат веб-адреса');
+      setError('speedDial.errors.invalid');
       return;
     }
 
-    const finalTitle = cleanTitle || parsedUrl.hostname.replace(/^www\./, '') || 'Ссылка';
+    const finalTitle =
+      cleanTitle || parsedUrl.hostname.replace(/^www\./, '') || t('speedDial.defaultTitle');
 
     onAdd({
       title: finalTitle,
       url: finalUrl,
     });
 
-    toast.success(`Ссылка «${finalTitle}» успешно добавлена!`);
+    toast.success(t('speedDial.added', { title: finalTitle }));
     setTitle('');
     setUrl('');
-    setError('');
+    setError(null);
     onClose();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Добавить быструю ссылку">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('speedDial.modalTitle')}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input
-          label="Название (необязательно)"
-          placeholder="Например: GitHub или Документация"
+          label={t('speedDial.titleField')}
+          placeholder={t('speedDial.titlePlaceholder')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
 
         <Input
-          label="URL-адрес сайта"
+          label={t('speedDial.urlField')}
           placeholder="https://example.com"
           value={url}
           onChange={(e) => {
             setUrl(e.target.value);
-            if (error) setError('');
+            if (error) setError(null);
           }}
-          error={error}
+          error={error ? t(error) : undefined}
           required
         />
 
         <div className="flex items-center justify-end gap-3 mt-2">
           <Button type="button" variant="ghost" onClick={onClose}>
-            Отмена
+            {t('common.cancel')}
           </Button>
           <Button type="submit" variant="primary">
-            Добавить ссылку
+            {t('speedDial.submit')}
           </Button>
         </div>
       </form>

@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { cn } from '@/ui/lib/cn';
 import { Button } from '@/ui/primitives/Button';
 import { useFocusTrap } from './useFocusTrap';
+import { useTranslation } from '@/core/i18n';
 
 export interface DrawerProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const Drawer: React.FC<DrawerProps> = ({
   children,
   className,
 }) => {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   useFocusTrap(isOpen, containerRef, onClose);
 
@@ -62,7 +64,7 @@ export const Drawer: React.FC<DrawerProps> = ({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              aria-label="Закрыть"
+              aria-label={t('common.close')}
               className="p-1 h-auto min-h-11 min-w-11"
             >
               <X className="w-5 h-5 text-fg-muted hover:text-fg" />

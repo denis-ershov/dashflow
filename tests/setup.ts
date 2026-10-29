@@ -1,6 +1,15 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach } from 'vitest';
+import { afterEach, beforeEach } from 'vitest';
+import { useI18nStore } from '@/core/i18n';
+
+/**
+ * Тесты пишутся на каноническом языке словаря (русском). jsdom сообщает navigator.language = en-US,
+ * поэтому язык фиксируется явно; английский интерфейс проверяется отдельными тестами.
+ */
+beforeEach(() => {
+  useI18nStore.setState({ language: 'ru' });
+});
 
 /**
  * Очистка между тестами. Помимо размонтирования React-дерева убираются

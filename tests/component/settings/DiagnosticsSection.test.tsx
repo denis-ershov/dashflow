@@ -46,6 +46,6 @@ describe('DiagnosticsSection Component (Live Log Viewer)', () => {
     fireEvent.click(errorEntry);
 
     // Должен отобразиться заголовок стека
-    expect(screen.getByText('Стек вызовов (Stack Trace):')).toBeInTheDocument();
+    expect(screen.getByText('Стек вызовов:')).toBeInTheDocument();
   });
 });

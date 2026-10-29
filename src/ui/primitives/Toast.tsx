@@ -2,6 +2,7 @@ import React from 'react';
 import { create } from 'zustand';
 import { cn } from '@/ui/lib/cn';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import { useTranslation } from '@/core/i18n';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -58,6 +59,7 @@ export const toast = {
 
 export const ToastContainer: React.FC = () => {
   const { toasts, removeToast } = useToastStore();
+  const { t } = useTranslation();
 
   if (toasts.length === 0) return null;
 
@@ -71,7 +73,7 @@ export const ToastContainer: React.FC = () => {
   return (
     <div
       role="region"
-      aria-label="Уведомления"
+      aria-label={t('feedback.notifications')}
       className="fixed bottom-6 right-6 z-[var(--z-toast,80)] flex flex-col gap-3 max-w-sm w-full pointer-events-none"
     >
       {toasts.map((item) => {
@@ -93,7 +95,7 @@ export const ToastContainer: React.FC = () => {
             </div>
             <button
               onClick={() => removeToast(item.id)}
-              aria-label="Закрыть уведомление"
+              aria-label={t('feedback.closeNotification')}
               className="text-fg-muted hover:text-fg p-1 rounded-lg hover:bg-surface-hover transition-colors"
             >
               <X className="w-4 h-4" />

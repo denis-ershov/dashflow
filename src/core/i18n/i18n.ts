@@ -7,6 +7,17 @@ export const locales = { ru, en } as const;
 export type TranslationSchema = typeof ru;
 export type TranslationKey = NestedKeyOf<TranslationSchema>;
 
+/** Ключ группы форм множественного числа: объект с полями one/few/many/other */
+type PluralKeyOf<T> = {
+  [K in keyof T & string]: T[K] extends { readonly other: string }
+    ? K
+    : T[K] extends object
+      ? `${K}.${PluralKeyOf<T[K]>}`
+      : never;
+}[keyof T & string];
+
+export type PluralKey = PluralKeyOf<TranslationSchema>;
+
 /**
  * Интерполяция параметров вида {{param}} в строку шаблона
  */
@@ -56,6 +67,22 @@ export function t(
   return '—';
 }
 
+/**
+ * Перевод с учётом множественного числа: форма выбирается по Intl.PluralRules,
+ * отсутствующая форма падает на `other`. Параметр {{count}} подставляется автоматически.
+ */
+export function tp(
+  key: PluralKey,
+  count: number,
+  params?: InterpolationParams,
+  lang: SupportedLanguage = 'ru',
+): string {
+  const form = getPluralForm(count, lang);
+  const formKey = `${key}.${form}`;
+  const resolvedKey = isTranslationKey(formKey) ? formKey : `${key}.other`;
+  return t(resolvedKey as TranslationKey, { count, ...params }, lang);
+}
+
 export function isTranslationKey(key: string): key is TranslationKey {
   if (!key || typeof key !== 'string') return false;
   const parts = key.split('.');
@@ -65,7 +92,7 @@ export function isTranslationKey(key: string): key is TranslationKey {
 function resolveNested(obj: unknown, parts: string[]): unknown {
   let current: unknown = obj;
   for (const part of parts) {
-    if (current && typeof current === 'object' && part in current) {
+    if (current && typeof current === 'object' && Object.hasOwn(current, part)) {
       current = (current as Record<string, unknown>)[part];
     } else {
       return undefined;

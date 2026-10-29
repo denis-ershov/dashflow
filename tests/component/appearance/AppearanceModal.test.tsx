@@ -13,7 +13,7 @@ describe('AppearanceModal', () => {
     render(<AppearanceModal isOpen={true} onClose={() => {}} />);
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText('Внешний вид & Темы')).toBeInTheDocument();
+    expect(screen.getByText('Внешний вид и темы')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Темы' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Обои' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'CSS' })).toBeInTheDocument();

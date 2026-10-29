@@ -1,4 +1,7 @@
-export const en = {
+import type { LocaleShape } from '../../types';
+import type { base as ruBase } from '../ru/base';
+
+export const base: LocaleShape<typeof ruBase> = {
   greeting: {
     morning: 'Good morning',
     day: 'Good afternoon',
@@ -98,6 +101,9 @@ export const en = {
     themePreset: 'Select Palette',
     scrim: 'Background Scrim',
     allowExternalCss: 'Allow external HTTPS resources in CSS',
+    modalTitle: 'Appearance and themes',
+    tabThemes: 'Themes',
+    tabWallpaper: 'Wallpaper',
     activeTheme: 'Active Theme',
   },
   backup: {
@@ -111,6 +117,9 @@ export const en = {
     apply: 'Apply Import',
     success: 'Configuration imported successfully!',
     error: 'Configuration import failed',
+    importPlaceholder: 'Paste your JSON configuration here...',
+    successReload: 'Configuration imported. Reloading...',
+    readError: 'Could not read the JSON',
     invalidFormat: 'Invalid JSON configuration format',
   },
   errors: {
@@ -135,6 +144,9 @@ export const en = {
     subtitle: 'This widget is requesting access to the following browser capabilities',
     allow: 'Allow & Add',
     deny: 'Deny',
+    author: 'Author: {{author}}',
+    requested: 'Requested permissions:',
+    sensitive: 'Sensitive',
     warning: 'Only grant permissions to widgets and plugins from trusted sources.',
     storage: {
       title: 'Local Storage',
@@ -153,4 +165,4 @@ export const en = {
       desc: 'Retrieve coordinates for weather forecast',
     },
   },
-} as const;
+};

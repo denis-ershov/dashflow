@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useTranslation } from '@/core/i18n';
+import type { CssRejectionCode } from '@/core/theme/cssValidator';
 import { RotateCcw, Save, AlertTriangle, Check } from 'lucide-react';
 import { useThemeStore } from '@/core/theme/themeStore';
 import { MAX_CSS_LENGTH } from '@/core/theme/cssValidator';
@@ -6,19 +8,20 @@ import { Button } from '@/ui/primitives/Button';
 import { Switch } from '@/ui/primitives/Switch';
 
 export const CustomCssEditor: React.FC = () => {
+  const { t } = useTranslation();
   const customCss = useThemeStore((state) => state.customCss);
   const allowExternalCss = useThemeStore((state) => state.allowExternalCss);
   const setCustomCss = useThemeStore((state) => state.setCustomCss);
   const setAllowExternalCss = useThemeStore((state) => state.setAllowExternalCss);
 
   const [code, setCode] = useState(customCss);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<CssRejectionCode | null>(null);
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
     const result = setCustomCss(code);
     if (!result.ok) {
-      setError(result.message);
+      setError(result.code);
       setSaved(false);
     } else {
       setError(null);
@@ -41,10 +44,7 @@ export const CustomCssEditor: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className="space-y-1">
-        <p className="text-xs text-fg-muted">
-          Пользовательский CSS позволяет переопределять стили интерфейса DashFlow. В целях
-          безопасности директивы @import и невалидные селекторы блокируются.
-        </p>
+        <p className="text-xs text-fg-muted">{t('cssEditor.intro')}</p>
       </div>
 
       <div className="space-y-1">
@@ -54,14 +54,12 @@ export const CustomCssEditor: React.FC = () => {
             setCode(e.target.value);
             if (error) setError(null);
           }}
-          placeholder="/* Пример: .glass-panel { border-radius: 16px; } */"
+          placeholder={t('cssEditor.placeholder')}
           className="w-full h-56 bg-canvas text-fg font-mono text-xs border border-line rounded-xl p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 resize-y"
         />
 
         <div className="flex items-center justify-between text-xs text-fg-muted px-1">
-          <span>
-            Символов: {code.length} / {MAX_CSS_LENGTH}
-          </span>
+          <span>{t('cssEditor.length', { count: code.length, max: MAX_CSS_LENGTH })}</span>
         </div>
       </div>
 
@@ -71,22 +69,20 @@ export const CustomCssEditor: React.FC = () => {
           className="p-3 rounded-xl bg-danger/10 border border-danger/20 text-danger text-xs flex items-center gap-2"
         >
           <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
+          <span>{t(`cssEditor.errors.${error}`)}</span>
         </div>
       )}
 
       {/* Переключатель внешних ресурсов */}
       <div className="p-3 rounded-xl bg-surface border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="space-y-1">
-          <p className="text-xs font-semibold text-fg">Разрешить внешние ресурсы (https)</p>
-          <p className="text-xs text-fg-muted">
-            Разрешает загрузку изображений и шрифтов с внешних защищённых источников по HTTPS.
-          </p>
+          <p className="text-xs font-semibold text-fg">{t('cssEditor.allowExternal')}</p>
+          <p className="text-xs text-fg-muted">{t('cssEditor.allowExternalHint')}</p>
         </div>
         <Switch
           checked={allowExternalCss}
           onChange={handleToggleExternal}
-          aria-label="Разрешить внешние ресурсы"
+          aria-label={t('cssEditor.allowExternal')}
         />
       </div>
 
@@ -99,7 +95,7 @@ export const CustomCssEditor: React.FC = () => {
           icon={<RotateCcw className="w-4 h-4" />}
           onClick={handleReset}
         >
-          Сбросить
+          {t('cssEditor.reset')}
         </Button>
 
         <Button
@@ -109,7 +105,7 @@ export const CustomCssEditor: React.FC = () => {
           icon={saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
           onClick={handleSave}
         >
-          {saved ? 'Применено!' : 'Сохранить и применить'}
+          {saved ? t('cssEditor.saved') : t('cssEditor.save')}
         </Button>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from '@/core/i18n';
 import { Palette, Image as ImageIcon, Code2 } from 'lucide-react';
 import { cn } from '@/ui/lib/cn';
 import { Modal } from '@/ui/overlays/Modal';
@@ -14,16 +15,21 @@ export interface AppearanceModalProps {
 type TabType = 'presets' | 'wallpaper' | 'css';
 
 export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('presets');
 
   const tabs: Array<{ id: TabType; label: string; icon: React.ReactNode }> = [
-    { id: 'presets', label: 'Темы', icon: <Palette className="w-4 h-4" /> },
-    { id: 'wallpaper', label: 'Обои', icon: <ImageIcon className="w-4 h-4" /> },
+    { id: 'presets', label: t('appearance.tabThemes'), icon: <Palette className="w-4 h-4" /> },
+    {
+      id: 'wallpaper',
+      label: t('appearance.tabWallpaper'),
+      icon: <ImageIcon className="w-4 h-4" />,
+    },
     { id: 'css', label: 'CSS', icon: <Code2 className="w-4 h-4" /> },
   ];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Внешний вид & Темы" maxWidth="2xl">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('appearance.modalTitle')} maxWidth="2xl">
       <div className="space-y-6">
         {/* Вкладки */}
         <div className="flex items-center gap-1 p-1 bg-surface/50 rounded-xl border border-line">

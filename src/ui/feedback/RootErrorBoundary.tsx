@@ -3,6 +3,7 @@ import { AlertTriangle, RotateCcw, RefreshCw } from 'lucide-react';
 import { Button } from '@/ui/primitives';
 import { StorageAdapter, STORAGE_KEYS } from '@/core/storage';
 import { crashLogger } from '@/core/observability';
+import { t, useI18nStore, type TranslationKey } from '@/core/i18n';
 
 export interface RootErrorBoundaryProps {
   children: ReactNode;
@@ -29,7 +30,7 @@ export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErr
     return {
       hasError: true,
       // Безопасное логирование без конфиденциальных данных
-      errorMessage: error?.message || 'Неизвестная ошибка приложения',
+      errorMessage: error?.message,
     };
   }
 
@@ -60,6 +61,10 @@ export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErr
 
   public render(): ReactNode {
     if (this.state.hasError) {
+      // Хуки в классе недоступны; язык читается из стора в момент сбоя
+      const language = useI18nStore.getState().language;
+      const tr = (key: TranslationKey) => t(key, undefined, language);
+
       if (this.props.fallback) {
         return this.props.fallback;
       }
@@ -76,28 +81,29 @@ export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErr
             </div>
 
             <div className="space-y-2">
-              <h1 className="text-xl font-semibold tracking-tight text-fg">Что-то пошло не так</h1>
+              <h1 className="text-xl font-semibold tracking-tight text-fg">
+                {tr('feedback.crash.title')}
+              </h1>
               <p className="text-sm text-fg-muted leading-relaxed">
-                В приложении произошла непредвиденная ошибка. Вы можете перезагрузить страницу или
-                сбросить расположение виджетов до стандартного.
+                {tr('feedback.crash.description')}
               </p>
             </div>
 
-            {this.state.errorMessage && (
+            {
               <div className="w-full p-3 rounded-lg bg-surface-hover/50 border border-line text-left text-xs font-mono text-fg-muted break-all max-h-24 overflow-y-auto">
-                {this.state.errorMessage}
+                {this.state.errorMessage || tr('feedback.crash.unknown')}
               </div>
-            )}
+            }
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full mt-2">
               <Button
                 variant="primary"
                 className="flex-1 min-h-11"
                 onClick={this.handleReload}
-                aria-label="Перезагрузить страницу"
+                aria-label={tr('feedback.crash.reloadLabel')}
               >
                 <RefreshCw className="w-4 h-4 mr-2" aria-hidden="true" />
-                Перезагрузить
+                {tr('feedback.crash.reload')}
               </Button>
               <Button
                 variant="secondary"
@@ -105,10 +111,10 @@ export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErr
                 onClick={() => {
                   void this.handleResetLayout();
                 }}
-                aria-label="Сбросить макет на стандартный"
+                aria-label={tr('feedback.crash.resetLayoutLabel')}
               >
                 <RotateCcw className="w-4 h-4 mr-2" aria-hidden="true" />
-                Сбросить макет
+                {tr('feedback.crash.resetLayout')}
               </Button>
             </div>
           </div>

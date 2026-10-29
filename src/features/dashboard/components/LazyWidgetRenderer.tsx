@@ -4,6 +4,13 @@ import type { WidgetProps } from '@/core/widget/types';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { Skeleton } from '@/ui/feedback/Skeleton';
 import { ErrorState } from '@/ui/feedback/ErrorState';
+import { useTranslation, type TranslationKey } from '@/core/i18n';
+
+/** Причина сбоя хранится ключом, а не текстом: сообщение переводится при отрисовке */
+interface LoadError {
+  key: TranslationKey;
+  params?: Record<string, string>;
+}
 
 export interface LazyWidgetRendererProps {
   widgetId: string;
@@ -18,10 +25,11 @@ export const LazyWidgetRenderer: React.FC<LazyWidgetRendererProps> = ({
   settings,
   isEditMode = false,
 }) => {
+  const { t } = useTranslation();
   const updateWidgetSettings = useDashboardStore((s) => s.updateWidgetSettings);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [Component, setComponent] = useState<React.ComponentType<WidgetProps<any>> | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<LoadError | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +39,7 @@ export const LazyWidgetRenderer: React.FC<LazyWidgetRendererProps> = ({
 
     const definition = WidgetRegistry.get(widgetId);
     if (!definition) {
-      setError(`Виджет "${widgetId}" не найден в реестре`);
+      setError({ key: 'widgetShell.notFound', params: { id: widgetId } });
       setLoading(false);
       return;
     }
@@ -45,15 +53,14 @@ export const LazyWidgetRenderer: React.FC<LazyWidgetRendererProps> = ({
             setLoading(false);
           }
         })
-        .catch((err: unknown) => {
+        .catch(() => {
           if (isMounted) {
-            const message = err instanceof Error ? err.message : 'Ошибка загрузки модуля';
-            setError(message);
+            setError({ key: 'widgetShell.moduleFailed' });
             setLoading(false);
           }
         });
     } else {
-      setError('Манифест виджета не содержит функции загрузки');
+      setError({ key: 'widgetShell.noLoader' });
       setLoading(false);
     }
 
@@ -75,8 +82,8 @@ export const LazyWidgetRenderer: React.FC<LazyWidgetRendererProps> = ({
     return (
       <div className="p-3 w-full h-full flex items-center justify-center">
         <ErrorState
-          title="Сбой загрузки"
-          message={error || 'Компонент недоступен'}
+          title={t('widgetShell.loadFailedTitle')}
+          message={error ? t(error.key, error.params) : t('widgetShell.unavailable')}
         />
       </div>
     );

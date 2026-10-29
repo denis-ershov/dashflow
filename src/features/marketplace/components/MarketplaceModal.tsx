@@ -154,24 +154,24 @@ export const MarketplaceModal: React.FC = () => {
       const parsed = JSON.parse(importJson);
       const res = await installPlugin(parsed);
       if (res.success) {
-        setImportStatus({ success: true, message: 'Плагин успешно установлен и добавлен в реестр!' });
+        setImportStatus({ success: true, message: t('marketplace.installed') });
         setImportJson('');
         setActiveTab('custom');
       } else {
         setImportStatus({ success: false, message: res.errors?.join('; ') });
       }
     } catch {
-      setImportStatus({ success: false, message: 'Синтаксическая ошибка: невалидный JSON' });
+      setImportStatus({ success: false, message: t('marketplace.invalidJson') });
     }
   };
 
-  const categories: { key: WidgetCategory | 'all'; label: string }[] = [
-    { key: 'all', label: 'Все' },
-    { key: 'utilities', label: 'Утилиты' },
-    { key: 'productivity', label: 'Продуктивность' },
-    { key: 'news', label: 'Новости' },
-    { key: 'entertainment', label: 'Развлечения' },
-    { key: 'developer', label: 'Разработчику' },
+  const categories: ReadonlyArray<WidgetCategory | 'all'> = [
+    'all',
+    'utilities',
+    'productivity',
+    'news',
+    'entertainment',
+    'developer',
   ];
 
   return (
@@ -179,7 +179,7 @@ export const MarketplaceModal: React.FC = () => {
       <Modal
         isOpen={isOpen}
         onClose={() => setActiveModal(null)}
-        title="Каталог Виджетов & Плагинов DashFlow"
+        title={t('marketplace.title')}
         maxWidth="2xl"
       >
         <div className="space-y-4 select-none">
@@ -194,7 +194,7 @@ export const MarketplaceModal: React.FC = () => {
                   : 'text-fg-muted hover:text-fg'
               }`}
             >
-              Все ({combinedItems.length})
+              {t('marketplace.tabAll', { count: combinedItems.length })}
             </button>
             <button
               type="button"
@@ -205,7 +205,7 @@ export const MarketplaceModal: React.FC = () => {
                   : 'text-fg-muted hover:text-fg'
               }`}
             >
-              Встроенные ({allBuiltin.length})
+              {t('marketplace.tabBuiltin', { count: allBuiltin.length })}
             </button>
             <button
               type="button"
@@ -216,7 +216,7 @@ export const MarketplaceModal: React.FC = () => {
                   : 'text-fg-muted hover:text-fg'
               }`}
             >
-              Плагины ({plugins.length})
+              {t('marketplace.tabPlugins', { count: plugins.length })}
             </button>
             <button
               type="button"
@@ -227,7 +227,7 @@ export const MarketplaceModal: React.FC = () => {
                   : 'text-fg-muted hover:text-fg'
               }`}
             >
-              + Импорт JSON
+              {t('marketplace.tabImport')}
             </button>
           </div>
 
@@ -238,16 +238,17 @@ export const MarketplaceModal: React.FC = () => {
                 <FileJson className="w-6 h-6 text-primary shrink-0 mt-0.5" />
                 <div className="text-xs text-fg-muted leading-relaxed">
                   <span className="font-semibold text-fg block mb-1">
-                    Декларативные плагины DashFlow
+                    {t('marketplace.importTitle')}
                   </span>
-                  Вставьте JSON-манифест плагина без исполняемого кода (типы: <code className="text-primary font-mono">rss</code>, <code className="text-primary font-mono">embed</code>, <code className="text-primary font-mono">links</code>, <code className="text-primary font-mono">api</code>). Манифест будет проверен строгим валидатором перед установкой.
+                  {t('marketplace.importDescription')} <code className="text-primary font-mono">rss</code>, <code className="text-primary font-mono">embed</code>,{' '}
+                  <code className="text-primary font-mono">links</code>, <code className="text-primary font-mono">api</code>. {t('marketplace.importValidated')}
                 </div>
               </div>
 
               <textarea
                 value={importJson}
                 onChange={(e) => setImportJson(e.target.value)}
-                placeholder={`{\n  "id": "my_feed",\n  "name": "Мой RSS",\n  "version": "1.0.0",\n  "author": "User",\n  "type": "rss",\n  "description": "Пользовательская лента новостей",\n  "permissions": ["network", "storage"],\n  "size": { "defaultW": 6, "defaultH": 4 },\n  "config": {\n    "feedUrl": "https://example.com/feed.xml"\n  }\n}`}
+                placeholder={`{\n  "id": "my_feed",\n  "name": "My RSS",\n  "version": "1.0.0",\n  "author": "User",\n  "type": "rss",\n  "description": "Custom news feed",\n  "permissions": ["network", "storage"],\n  "size": { "defaultW": 6, "defaultH": 4 },\n  "config": {\n    "feedUrl": "https://example.com/feed.xml"\n  }\n}`}
                 className="w-full h-48 bg-canvas border border-line rounded-xl p-3 text-xs font-mono placeholder:text-fg-muted/60 focus:outline-none focus:ring-2 focus:ring-primary"
               />
 
@@ -272,7 +273,7 @@ export const MarketplaceModal: React.FC = () => {
                   disabled={!importJson.trim()}
                   className="min-h-11"
                 >
-                  Проверить и Установить
+                  {t('marketplace.install')}
                 </Button>
               </div>
             </div>
@@ -284,24 +285,24 @@ export const MarketplaceModal: React.FC = () => {
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Поиск по каталогу расширений..."
+                  placeholder={t('marketplace.searchPlaceholder')}
                   icon={<Search className="w-4 h-4 text-fg-muted" />}
-                  aria-label="Поиск по каталогу"
+                  aria-label={t('marketplace.searchLabel')}
                 />
 
                 <div className="flex gap-2 overflow-x-auto pb-1 select-none">
                   {categories.map((cat) => (
                     <button
-                      key={cat.key}
+                      key={cat}
                       type="button"
-                      onClick={() => setSelectedCategory(cat.key)}
+                      onClick={() => setSelectedCategory(cat)}
                       className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer shrink-0 ${
-                        selectedCategory === cat.key
+                        selectedCategory === cat
                           ? 'bg-primary text-primary-fg shadow-1'
                           : 'bg-surface text-fg-muted hover:text-fg hover:bg-surface-hover border border-line'
                       }`}
                     >
-                      {cat.label}
+                      {t(`catalogCategories.${cat}`)}
                     </button>
                   ))}
                 </div>
@@ -311,8 +312,8 @@ export const MarketplaceModal: React.FC = () => {
               {filteredItems.length === 0 ? (
                 <div className="py-8">
                   <EmptyState
-                    title="Ничего не найдено"
-                    description="Попробуйте изменить категорию или поисковый запрос"
+                    title={t('marketplace.emptyTitle')}
+                    description={t('marketplace.emptyDescription')}
                   />
                 </div>
               ) : (
@@ -340,13 +341,13 @@ export const MarketplaceModal: React.FC = () => {
                                   {item.name}
                                 </h4>
                                 <span className="text-2xs text-fg-muted block">
-                                  от {item.author} • v{item.version}
+                                  {t('marketplace.byAuthor', { author: item.author, version: item.version })}
                                 </span>
                               </div>
                             </div>
 
                             <Badge variant={item.isCustom ? 'secondary' : 'default'}>
-                              {item.isCustom ? 'Плагин' : 'Встроенный'}
+                              {item.isCustom ? t('marketplace.plugin') : t('marketplace.builtin')}
                             </Badge>
                           </div>
 
@@ -358,7 +359,12 @@ export const MarketplaceModal: React.FC = () => {
                           <div className="flex items-center gap-2 mt-2">
                             <ShieldAlert className="w-4 h-4 text-warning shrink-0" />
                             <span className="text-2xs text-fg-muted truncate">
-                              Права: {item.permissions.length > 0 ? item.permissions.join(', ') : 'Не требуются'}
+                              {t('marketplace.permissions', {
+                                list:
+                                  item.permissions.length > 0
+                                    ? item.permissions.join(', ')
+                                    : t('marketplace.noPermissions'),
+                              })}
                             </span>
                           </div>
                         </div>
@@ -375,7 +381,7 @@ export const MarketplaceModal: React.FC = () => {
                                 variant="danger"
                                 icon={<Trash2 className="w-4 h-4" />}
                                 onClick={() => uninstallPlugin(item.id)}
-                                aria-label="Удалить плагин"
+                                aria-label={t('marketplace.removePlugin')}
                               />
                             )}
 
@@ -388,7 +394,7 @@ export const MarketplaceModal: React.FC = () => {
                                   if (inst) removeWidget(inst.instanceId);
                                 }}
                               >
-                                Убрать с экрана
+                                {t('marketplace.removeFromScreen')}
                               </Button>
                             ) : (
                               <Button
@@ -397,7 +403,7 @@ export const MarketplaceModal: React.FC = () => {
                                 icon={<Plus className="w-4 h-4" />}
                                 onClick={() => handleAddClick(item)}
                               >
-                                Добавить на экран
+                                {t('marketplace.addToScreen')}
                               </Button>
                             )}
                           </div>

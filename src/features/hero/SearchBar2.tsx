@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { cn } from '@/ui/lib/cn';
+import { useTranslation } from '@/core/i18n';
 import { Search, X, ChevronDown } from 'lucide-react';
 import {
   SEARCH_ENGINE_LIST,
+  getEngineName,
   getSearchEngine,
   openSearchTarget,
   resolveSearchTarget,
@@ -30,7 +32,9 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const { t } = useTranslation();
   const activeEngine = getSearchEngine(engine);
+  const activeName = getEngineName(activeEngine, t);
 
   // Синхронизация движка при изменении настроек в SettingsModal
   useEffect(() => {
@@ -82,11 +86,11 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
           <button
             type="button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            aria-label={`Выбрать поисковую систему (текущая: ${activeEngine.name})`}
+            aria-label={t('search.chooseEngine', { name: activeName })}
             className="flex items-center gap-2 px-3 py-2 rounded-full bg-surface hover:bg-surface-hover text-fg text-xs font-medium border border-line transition-colors min-h-10 cursor-pointer relative before:absolute before:-inset-1 before:content-['']"
           >
             {activeEngine.icon}
-            <span className="hidden sm:inline">{activeEngine.name}</span>
+            <span className="hidden sm:inline">{activeName}</span>
             <ChevronDown className="w-4 h-4 text-fg-muted" />
           </button>
 
@@ -108,7 +112,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
                     )}
                   >
                     {item.icon}
-                    <span>{item.name}</span>
+                    <span>{getEngineName(item, t)}</span>
                   </button>
                 );
               })}
@@ -123,8 +127,8 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={activeEngine.placeholder}
-            aria-label="Строка поиска"
+            placeholder={t(activeEngine.placeholderKey)}
+            aria-label={t('search.input')}
             className={cn(
               'w-full bg-transparent text-sm px-2 py-2 focus:outline-none min-h-9',
               'text-fg',
@@ -135,7 +139,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
             <button
               type="button"
               onClick={() => setQuery('')}
-              aria-label="Очистить поиск"
+              aria-label={t('search.clear')}
               className="text-fg-muted hover:text-fg p-1 rounded-md hover:bg-surface-hover transition-colors relative before:absolute before:-inset-2 before:content-['']"
             >
               <X className="w-4 h-4" />
@@ -152,7 +156,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
           )}
           <button
             type="submit"
-            aria-label="Искать"
+            aria-label={t('search.submit')}
             className="p-2 rounded-full bg-primary text-primary-fg hover:bg-primary-hover shadow-1 active:scale-95 transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer relative before:absolute before:-inset-1 before:content-['']"
           >
             <Search className="w-4 h-4" />

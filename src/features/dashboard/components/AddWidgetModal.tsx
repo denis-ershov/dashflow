@@ -45,14 +45,14 @@ const WIDGET_ICONS: Record<string, React.ReactNode> = {
   rssReader: <Rss className="w-5 h-5 text-warning" />,
 };
 
-const CATEGORIES: { key: WidgetCategory | 'all'; label: string }[] = [
-  { key: 'all', label: 'Все' },
-  { key: 'hero', label: '🌟 Элементы Hero' },
-  { key: 'utilities', label: 'Утилиты' },
-  { key: 'productivity', label: 'Продуктивность' },
-  { key: 'news', label: 'Новости' },
-  { key: 'entertainment', label: 'Развлечения' },
-  { key: 'developer', label: 'Разработчику' },
+const CATEGORIES: ReadonlyArray<WidgetCategory | 'all'> = [
+  'all',
+  'hero',
+  'utilities',
+  'productivity',
+  'news',
+  'entertainment',
+  'developer',
 ];
 
 export const AddWidgetModal: React.FC = () => {
@@ -105,8 +105,8 @@ export const AddWidgetModal: React.FC = () => {
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Поиск виджетов по названию или описанию..."
-            aria-label="Поиск виджетов"
+            placeholder={t('addWidget.searchPlaceholder')}
+            aria-label={t('addWidget.searchLabel')}
             icon={<Search className="w-4 h-4 text-fg-muted" />}
           />
 
@@ -114,16 +114,16 @@ export const AddWidgetModal: React.FC = () => {
           <div className="flex items-center gap-2 overflow-x-auto pb-1 select-none">
             {CATEGORIES.map((cat) => (
               <button
-                key={cat.key}
+                key={cat}
                 type="button"
-                onClick={() => setSelectedCategory(cat.key)}
+                onClick={() => setSelectedCategory(cat)}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer shrink-0 ${
-                  selectedCategory === cat.key
+                  selectedCategory === cat
                     ? 'bg-primary text-primary-fg'
                     : 'bg-surface text-fg-muted hover:text-fg hover:bg-surface-hover border border-line'
                 }`}
               >
-                {cat.label}
+                {t(`catalogCategories.${cat}`)}
               </button>
             ))}
           </div>
@@ -133,8 +133,8 @@ export const AddWidgetModal: React.FC = () => {
         {filteredWidgets.length === 0 ? (
           <div className="py-8">
             <EmptyState
-              title="Ничего не найдено"
-              description="Попробуйте изменить поисковый запрос или категорию"
+              title={t('addWidget.emptyTitle')}
+              description={t('addWidget.emptyDescription')}
             />
           </div>
         ) : (
@@ -179,7 +179,7 @@ export const AddWidgetModal: React.FC = () => {
                       onClick={() => handleAdd(w.id, w.size.defaultW, w.size.defaultH)}
                     >
                       <Plus className="w-4 h-4 mr-1" />
-                      Добавить
+                      {t('addWidget.add')}
                     </Button>
                   </div>
                 </div>

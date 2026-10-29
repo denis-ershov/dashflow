@@ -2,6 +2,7 @@ import React from 'react';
 import { AlertCircle } from 'lucide-react';
 import { cn } from '@/ui/lib/cn';
 import { Button } from '@/ui/primitives/Button';
+import { useTranslation } from '@/core/i18n';
 
 export interface ErrorStateProps {
   title?: string;
@@ -12,12 +13,15 @@ export interface ErrorStateProps {
 }
 
 export const ErrorState: React.FC<ErrorStateProps> = ({
-  title = 'Произошла ошибка',
+  title,
   message,
   onRetry,
-  retryLabel = 'Попробовать снова',
+  retryLabel,
   className,
 }) => {
+  const { t } = useTranslation();
+  title ??= t('feedback.errorTitle');
+  retryLabel ??= t('feedback.tryAgain');
   return (
     <div
       role="alert"

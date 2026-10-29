@@ -1,6 +1,14 @@
 import { useCallback } from 'react';
 import { useI18nStore } from './i18nStore';
-import { t, formatDate, formatNumber, getPluralForm, type TranslationKey } from './i18n';
+import {
+  t,
+  tp,
+  formatDate,
+  formatNumber,
+  getPluralForm,
+  type PluralKey,
+  type TranslationKey,
+} from './i18n';
 import type { InterpolationParams, PluralCategory } from './types';
 
 /**
@@ -12,6 +20,12 @@ export function useTranslation() {
 
   const translate = useCallback(
     (key: TranslationKey, params?: InterpolationParams): string => t(key, params, language),
+    [language],
+  );
+
+  const translatePlural = useCallback(
+    (key: PluralKey, count: number, params?: InterpolationParams): string =>
+      tp(key, count, params, language),
     [language],
   );
 
@@ -36,6 +50,7 @@ export function useTranslation() {
     language,
     setLanguage,
     t: translate,
+    tp: translatePlural,
     formatDate: formatD,
     formatNumber: formatN,
     getPluralForm: plural,

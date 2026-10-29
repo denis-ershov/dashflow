@@ -1,6 +1,7 @@
 import React from 'react';
 import { Code, Globe, Sparkles, Youtube } from 'lucide-react';
 import { isSafeHttpUrl } from '@/core/network';
+import type { TranslationKey } from '@/core/i18n';
 
 export type SearchEngineId =
   | 'google'
@@ -16,10 +17,12 @@ export type SearchEngineId =
 
 export interface SearchEngine {
   id: SearchEngineId;
+  /** Название бренда; для брендов с локализованным именем задан nameKey */
   name: string;
+  nameKey?: TranslationKey;
   /** Префикс запроса; к нему добавляется encodeURIComponent(query) */
   url: string;
-  placeholder: string;
+  placeholderKey: TranslationKey;
   icon: React.ReactNode;
 }
 
@@ -31,73 +34,82 @@ export const SEARCH_ENGINES: Readonly<Record<SearchEngineId, SearchEngine>> = {
     id: 'google',
     name: 'Google',
     url: 'https://www.google.com/search?q=',
-    placeholder: 'Искать в Google или ввести URL...',
+    placeholderKey: 'search.engines.google',
     icon: <Globe className={`${ICON} text-primary`} />,
   },
   yandex: {
     id: 'yandex',
-    name: 'Яндекс',
+    name: 'Yandex',
+    nameKey: 'search.engines.yandexName',
     url: 'https://yandex.ru/search/?text=',
-    placeholder: 'Искать в Яндексе...',
+    placeholderKey: 'search.engines.yandex',
     icon: <Globe className={`${ICON} text-warning`} />,
   },
   duckduckgo: {
     id: 'duckduckgo',
     name: 'DuckDuckGo',
     url: 'https://duckduckgo.com/?q=',
-    placeholder: 'Приватный поиск в DuckDuckGo...',
+    placeholderKey: 'search.engines.duckduckgo',
     icon: <Globe className={`${ICON} text-secondary`} />,
   },
   bing: {
     id: 'bing',
     name: 'Bing',
     url: 'https://www.bing.com/search?q=',
-    placeholder: 'Искать в Microsoft Bing...',
+    placeholderKey: 'search.engines.bing',
     icon: <Globe className={`${ICON} text-primary`} />,
   },
   github: {
     id: 'github',
     name: 'GitHub',
     url: 'https://github.com/search?q=',
-    placeholder: 'Поиск репозиториев и кода...',
+    placeholderKey: 'search.engines.github',
     icon: <Code className={`${ICON} text-fg`} />,
   },
   youtube: {
     id: 'youtube',
     name: 'YouTube',
     url: 'https://www.youtube.com/results?search_query=',
-    placeholder: 'Искать видео на YouTube...',
+    placeholderKey: 'search.engines.youtube',
     icon: <Youtube className={`${ICON} text-danger`} />,
   },
   perplexity: {
     id: 'perplexity',
     name: 'Perplexity AI',
     url: 'https://www.perplexity.ai/search?q=',
-    placeholder: 'Спросить у AI ассистента...',
+    placeholderKey: 'search.engines.perplexity',
     icon: <Sparkles className={`${ICON} text-accent`} />,
   },
   chatgpt: {
     id: 'chatgpt',
     name: 'ChatGPT',
     url: 'https://chatgpt.com/?q=',
-    placeholder: 'Спросить у ChatGPT...',
+    placeholderKey: 'search.engines.chatgpt',
     icon: <Sparkles className={`${ICON} text-success`} />,
   },
   claude: {
     id: 'claude',
     name: 'Claude AI',
     url: 'https://claude.ai/new?q=',
-    placeholder: 'Спросить у Claude AI...',
+    placeholderKey: 'search.engines.claude',
     icon: <Sparkles className={`${ICON} text-warning`} />,
   },
   brave: {
     id: 'brave',
     name: 'Brave Search',
     url: 'https://search.brave.com/search?q=',
-    placeholder: 'Искать в Brave Search...',
+    placeholderKey: 'search.engines.brave',
     icon: <Globe className={`${ICON} text-danger`} />,
   },
 };
+
+/** Отображаемое имя поисковика с учётом локализованных брендов */
+export function getEngineName(
+  engine: SearchEngine,
+  translate: (key: TranslationKey) => string,
+): string {
+  return engine.nameKey ? translate(engine.nameKey) : engine.name;
+}
 
 export const SEARCH_ENGINE_LIST: readonly SearchEngine[] = Object.values(SEARCH_ENGINES);
 

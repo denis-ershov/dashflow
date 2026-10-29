@@ -3,8 +3,10 @@ import { createPortal } from 'react-dom';
 import { Search, ArrowRight, ChevronDown, X, Check } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { cn } from '@/ui/lib/cn';
+import { useTranslation } from '@/core/i18n';
 import {
   SEARCH_ENGINE_LIST as ENGINES_LIST,
+  getEngineName,
   getSearchEngine,
   openSearchTarget,
   resolveSearchTarget,
@@ -32,6 +34,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
   const openInNewTab = Boolean(settings?.openInNewTab);
   const showHotkeyBadge = settings?.showHotkeyBadge !== false;
   const customPlaceholder = settings?.placeholder?.trim();
+  const { t } = useTranslation();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -114,6 +117,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
   }, [isDropdownOpen, updateDropdownPos]);
 
   const currentEngine = getSearchEngine(activeEngine);
+  const currentName = getEngineName(currentEngine, t);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,7 +151,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
                   onClick={toggleDropdown}
                   aria-haspopup="true"
                   aria-expanded={isDropdownOpen}
-                  aria-label={`Выбрать поисковую систему (текущая: ${currentEngine.name})`}
+                  aria-label={t('search.chooseEngine', { name: currentName })}
                   className={cn(
                     'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition-colors text-xs font-semibold text-fg cursor-pointer',
                     isDropdownOpen ? 'bg-surface-hover text-primary' : 'hover:bg-surface-hover',
@@ -155,7 +159,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
                 >
                   <span className="shrink-0">{currentEngine.icon}</span>
                   <span className="hidden sm:inline-block max-w-20 truncate">
-                    {currentEngine.name}
+                    {currentName}
                   </span>
                   <ChevronDown
                     className={cn(
@@ -178,7 +182,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
                         backgroundColor: 'var(--dashflow-surface-active)',
                       }}
                       role="menu"
-                      aria-label="Поисковая система"
+                      aria-label={t('search.engineList')}
                     >
                       <div className="text-2xs font-semibold text-fg-dim px-2.5 py-1 uppercase tracking-wider select-none">
                         Поисковая система
@@ -200,7 +204,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
                               )}
                             >
                               <span className="shrink-0">{eng.icon}</span>
-                              <span className="truncate flex-1">{eng.name}</span>
+                              <span className="truncate flex-1">{getEngineName(eng, t)}</span>
                               {isSelected && (
                                 <Check className="w-3.5 h-3.5 shrink-0 opacity-90 stroke-[2.5]" />
                               )}
@@ -221,10 +225,10 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
             <input
               ref={inputRef}
               type="text"
-              aria-label="Строка поиска"
+              aria-label={t('search.input')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={customPlaceholder || currentEngine.placeholder}
+              placeholder={customPlaceholder || t(currentEngine.placeholderKey)}
               className="flex-1 bg-transparent border-none outline-none px-3 text-sm placeholder:text-fg-muted font-medium w-full min-w-0"
             />
 
@@ -240,7 +244,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
               <button
                 type="button"
                 onClick={() => setQuery('')}
-                aria-label="Очистить"
+                aria-label={t('search.clear')}
                 className="p-1 text-fg-muted hover:text-fg rounded-lg transition-colors cursor-pointer mr-1"
               >
                 <X className="w-4 h-4" />
@@ -250,7 +254,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
             {/* Кнопка отправки */}
             <button
               type="submit"
-              aria-label="Искать"
+              aria-label={t('search.submit')}
               disabled={!query.trim()}
               className="p-2 rounded-xl bg-primary text-primary-fg hover:opacity-90 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer min-w-8.5 min-h-8.5 flex items-center justify-center shadow-1 shrink-0"
             >
@@ -280,7 +284,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
               )}
             >
               {eng.icon}
-              <span>{eng.name}</span>
+              <span>{getEngineName(eng, t)}</span>
             </button>
           ))}
         </div>
@@ -293,17 +297,17 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
 
         <input
           type="text"
-          aria-label="Поиск в интернете"
+          aria-label={t('search.web')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={`Искать в ${currentEngine.name}...`}
+          placeholder={t('search.searchIn', { name: currentName })}
           className="w-full bg-surface text-sm placeholder:text-fg-muted border border-line rounded-xl pl-10 pr-10 py-2 min-h-11 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 font-medium"
         />
 
         {query.trim() && (
           <button
             type="submit"
-            aria-label="Найти"
+            aria-label={t('search.find')}
             className="absolute right-2 p-2 rounded-lg bg-primary text-primary-fg hover:opacity-90 animate-fade-in transition-all cursor-pointer min-w-8 min-h-8 flex items-center justify-center shadow-1"
           >
             <ArrowRight className="w-4 h-4" />

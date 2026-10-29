@@ -13,10 +13,9 @@ export interface FeatureFlags {
 
 export type FeatureFlagKey = keyof FeatureFlags;
 
+/** Название и описание флага — ключи featureFlags.<key>.title|description в словаре */
 export interface FeatureFlagDefinition {
   key: FeatureFlagKey;
-  title: string;
-  description: string;
   defaultValue: boolean;
   isExperimental?: boolean;
 }

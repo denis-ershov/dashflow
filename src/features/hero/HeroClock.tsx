@@ -18,7 +18,7 @@ export const HeroClock: React.FC<HeroClockProps> = ({
   showDate = true,
   className,
 }) => {
-  const { formatDate } = useTranslation();
+  const { t, formatDate } = useTranslation();
   const now = useNow(1000);
   const { hours, minutes, seconds, meridiem: ampm } = getClockParts(now, timeFormat === '12h');
   const dateFormatted = formatDate(now, { weekday: 'long', day: 'numeric', month: 'long' });
@@ -120,7 +120,7 @@ export const HeroClock: React.FC<HeroClockProps> = ({
   return (
     <div
       role="timer"
-      aria-label={`Текущее время: ${hours}:${minutes}`}
+      aria-label={t('hero.currentTime', { time: `${hours}:${minutes}` })}
       className={cn(
         'flex flex-col items-center justify-center text-center transition-all',
         className,

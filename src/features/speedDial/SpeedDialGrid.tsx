@@ -2,6 +2,7 @@ import React from 'react';
 import { cn } from '@/ui/lib/cn';
 import { Plus, ExternalLink, Trash2, Globe } from 'lucide-react';
 import type { SpeedDialLink } from '@/core/storage';
+import { useTranslation } from '@/core/i18n';
 
 export interface SpeedDialGridProps {
   links: SpeedDialLink[];
@@ -16,6 +17,7 @@ export const SpeedDialGrid: React.FC<SpeedDialGridProps> = ({
   onRemoveLink,
   className,
 }) => {
+  const { t } = useTranslation();
   const getFaviconUrl = (url: string) => {
     try {
       const parsed = new URL(url.startsWith('http') ? url : `https://${url}`);
@@ -28,7 +30,7 @@ export const SpeedDialGrid: React.FC<SpeedDialGridProps> = ({
   return (
     <div
       role="region"
-      aria-label="Быстрые ссылки"
+      aria-label={t('speedDial.label')}
       className={cn(
         'w-full max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-3 py-3 px-4',
         className,
@@ -43,7 +45,7 @@ export const SpeedDialGrid: React.FC<SpeedDialGridProps> = ({
               href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`Открыть ${link.title}`}
+              aria-label={t('speedDial.open', { title: link.title })}
               className="glass-pill flex items-center gap-2.5 pl-2 pr-4 py-1.5 active:scale-95 select-none min-h-11"
             >
               <div className="size-7 rounded-full bg-surface flex items-center justify-center overflow-hidden shrink-0 border border-line">
@@ -76,7 +78,7 @@ export const SpeedDialGrid: React.FC<SpeedDialGridProps> = ({
                 e.stopPropagation();
                 onRemoveLink(link.id);
               }}
-              aria-label={`Удалить ${link.title}`}
+              aria-label={t('speedDial.remove', { title: link.title })}
               className="absolute -top-1 -right-1 z-(--z-raised,10) w-5 h-5 rounded-full bg-danger text-primary-fg flex items-center justify-center shadow-1 hover:scale-110 active:scale-90 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
             >
               <Trash2 className="w-3 h-3" />
@@ -89,11 +91,11 @@ export const SpeedDialGrid: React.FC<SpeedDialGridProps> = ({
       <button
         type="button"
         onClick={onAddClick}
-        aria-label="Добавить быструю ссылку"
+        aria-label={t('speedDial.addLabel')}
         className="glass-pill flex items-center gap-2 px-4 py-1.5 border-dashed! text-fg-muted hover:text-primary active:scale-95 select-none min-h-11 cursor-pointer"
       >
         <Plus className="w-4 h-4" />
-        <span className="text-xs font-medium">Добавить</span>
+        <span className="text-xs font-medium">{t('speedDial.add')}</span>
       </button>
     </div>
   );

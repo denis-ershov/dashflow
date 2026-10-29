@@ -12,13 +12,13 @@ type HeroProgressMode = 'year' | 'month' | 'day';
 
 export const YearProgression: React.FC<YearProgressionProps> = ({ className }) => {
   const [viewMode, setViewMode] = useState<HeroProgressMode>('year');
-  const { formatDate } = useTranslation();
+  const { t, formatDate } = useTranslation();
   const now = useNow(60_000);
 
   const labels: Record<HeroProgressMode, string> = {
-    year: `Год ${now.getFullYear()}`,
+    year: t('hero.year', { year: now.getFullYear() }),
     month: formatDate(now, { month: 'long' }),
-    day: 'Сегодня',
+    day: t('hero.today'),
   };
   const active = { label: labels[viewMode], percent: computePeriodProgress(viewMode, now).percent };
 
@@ -32,7 +32,7 @@ export const YearProgression: React.FC<YearProgressionProps> = ({ className }) =
     <button
       type="button"
       onClick={handleNextMode}
-      aria-label={`Прогресс времени: ${active.label} завершен на ${active.percent}%`}
+      aria-label={t('hero.progressLabel', { label: active.label, percent: active.percent })}
       className={cn(
         'glass-pill flex items-center gap-3 px-4 py-2 text-xs select-none cursor-pointer group min-h-11',
         className,
