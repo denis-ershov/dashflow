@@ -9,6 +9,33 @@
 
 ## [Unreleased] - 2026-10-29
 
+### Этап D аудита: визуальный редизайн Hero, дока и виджетов
+
+#### Исправлено
+- **Обои не затемнялись.** Затемнение хранится как 0..1, а фон делил его ещё на 100: «30%» на ползунке давало 0,3%. Теперь фон берёт значения из `applyWallpaper`, и URL обоев проходит проверку (раньше вставлялся в `style` как есть).
+- **`text-lg` не работал.** Шаг выключен в шкале, но использовался в приветствии, AM/PM, часах и размерах виджета приветствия — текст получал размер по умолчанию.
+- **Погода показывала выдуманные данные.** Компактный вид подставлял влажность 60% и ветер 3 м/с, если сервис их не вернул; теперь отсутствующее не показывается.
+- **Док на телефоне.** На 375px панель прокручивалась внутри себя и прятала кнопку настроек; подсказки обрезались.
+
+#### Изменено
+- Hero: приветствие и часы поверх обоев используют светлые чернила с тенью (`.on-wallpaper`), за Hero-зоной — мягкая виньетка. Дата под часами читается на светлом небе.
+- Единая форма «пилюль»: поиск (52px), ссылки быстрого доступа, прогресс года, док — `rounded-full`, стекло `glass-pill`, высота 44px.
+- Док: компонент `DockButton` вместо 8 копий разметки, подсветка открытой панели (`activePanel`), `aria-pressed`, иконки 20px.
+- Шапка виджетов — подпись внутри карточки без полосы и фона.
+- Погода: в ячейке ниже 280px «Метеостанция» показывается компактным видом; компактный вид перекомпонован в три строки (город, температура и состояние, сводка).
+- Сетка виджетов ограничена `max-w-screen-2xl` и центрируется на широких экранах.
+
+#### Добавлено
+- `useElementSize` (`src/ui/lib`), токены `--dashflow-on-wallpaper*`, класс `.on-wallpaper`, `.wallpaper-hero-vignette`, атрибут `data-wallpaper`.
+- Страж `text-lg` в `designSystem.guard.test.ts`; тесты дока, признака обоев и адаптивной погоды.
+
+#### Изменённые файлы
+`src/core/theme/applyTheme.ts`, `src/core/widget/WidgetShell.tsx`, `src/entrypoints/newtab/App.tsx`, `src/features/appearance/WallpaperBackground.tsx`, `src/features/dock/FloatingDock.tsx`, `src/features/hero/{HeroSection,HeroClock,SmartGreeting,SearchBar2,YearProgression}.tsx`, `src/features/speedDial/SpeedDialGrid.tsx`, `src/styles/{tokens,globals}.css`, `src/ui/lib/useElementSize.ts`, `src/widgets/built-in/{WeatherWidget/WeatherWidget,ClockWidget/ClockWidget,GreetingWidget/GreetingWidget}.tsx`, тесты, `docs/{THEME_ENGINE_ARCHITECTURE,LAYOUT_ENGINE_ARCHITECTURE,AUDIT_2026-10-29}.md`.
+
+#### Миграции и совместимость
+- Данные не меняются. Визуально: у кого стоят обои, они станут темнее — ползунок затемнения наконец работает в заявленном масштабе (по умолчанию 30%).
+- Откат: `git revert`.
+
 ### Этап C аудита: единая дизайн-система
 
 #### Исправлено

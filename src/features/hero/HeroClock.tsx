@@ -42,7 +42,7 @@ export const HeroClock: React.FC<HeroClockProps> = ({
   const styleVariants = {
     digital: (
       <div className="flex flex-col items-center">
-        <div className="flex items-baseline gap-2 font-display font-semibold tracking-tight text-fg drop-shadow-md select-none text-6xl md:text-7xl lg:text-8xl">
+        <div className="flex items-baseline gap-2 font-display font-semibold tracking-tight text-fg tabular-nums select-none text-6xl md:text-7xl lg:text-8xl">
           <span>{hours}</span>
           <span className="text-primary animate-pulse">:</span>
           <span>{minutes}</span>
@@ -52,7 +52,7 @@ export const HeroClock: React.FC<HeroClockProps> = ({
             </span>
           )}
           {timeFormat === '12h' && (
-            <span className="text-lg md:text-xl text-fg-dim font-sans ml-2 uppercase font-medium">
+            <span className="text-base md:text-xl text-fg-dim font-sans ml-2 uppercase font-medium">
               {ampm}
             </span>
           )}
@@ -73,7 +73,7 @@ export const HeroClock: React.FC<HeroClockProps> = ({
     ),
     serif: (
       <div className="flex flex-col items-center">
-        <div className="flex items-baseline gap-2 font-serif font-normal tracking-normal text-fg drop-shadow-md select-none text-6xl md:text-7xl lg:text-8xl">
+        <div className="flex items-baseline gap-2 font-serif font-normal tracking-normal text-fg tabular-nums select-none text-6xl md:text-7xl lg:text-8xl">
           <span>{hours}</span>
           <span className="text-primary/70">:</span>
           <span>{minutes}</span>

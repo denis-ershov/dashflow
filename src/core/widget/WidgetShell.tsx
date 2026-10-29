@@ -115,12 +115,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
     >
       {/* Шапка виджета (для panel и в режиме редактирования для остальных) */}
       {(!isChromeless || isEditMode) && (
-        <div
-          className={cn(
-            'flex items-center justify-between px-4 py-2 select-none shrink-0',
-            !isChromeless && 'border-b border-line/50 bg-surface/30',
-          )}
-        >
+        <div className="flex items-center justify-between min-h-10 pl-4 pr-2 pt-2 select-none shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             {isEditMode && (
               <button
@@ -131,9 +126,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
                 <GripVertical className="w-4 h-4" />
               </button>
             )}
-            {title && (
-              <h3 className="text-xs font-semibold text-fg truncate tracking-wide">{title}</h3>
-            )}
+            {title && <h3 className="text-xs font-medium text-fg-muted truncate">{title}</h3>}
           </div>
 
           {/* Панель действий в режиме редактирования или по наведению */}

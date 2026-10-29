@@ -33,3 +33,40 @@ describe('FloatingDock Component', () => {
     expect(handleOpenAddWidget).toHaveBeenCalled();
   });
 });
+
+describe('FloatingDock: состояния кнопок', () => {
+  const baseProps = {
+    layoutMode: 'modular' as const,
+    onToggleLayoutMode: vi.fn(),
+    onOpenAddWidget: vi.fn(),
+    onOpenAppearance: vi.fn(),
+    onOpenSettings: vi.fn(),
+    onOpenCommandPalette: vi.fn(),
+    onToggleEditMode: vi.fn(),
+  };
+
+  it('подсвечивает кнопку открытой панели', () => {
+    render(<FloatingDock {...baseProps} activePanel="appearance" />);
+    expect(screen.getByRole('button', { name: 'Темы и обои' }).className).toContain('text-primary');
+    expect(screen.getByRole('button', { name: 'Настройки' }).className).not.toContain(
+      'text-primary',
+    );
+  });
+
+  it('переключатели сообщают состояние через aria-pressed', () => {
+    render(<FloatingDock {...baseProps} layoutMode="canvas" isEditMode />);
+    expect(screen.getByRole('button', { name: 'Завершить редактирование' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Режим Zen' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
+
+  it('без onOpenAudio кнопки звуков нет', () => {
+    render(<FloatingDock {...baseProps} />);
+    expect(screen.queryByRole('button', { name: 'Звуки природы' })).not.toBeInTheDocument();
+  });
+});

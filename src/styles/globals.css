@@ -139,6 +139,26 @@
   -webkit-backdrop-filter: blur(8px);
 }
 
+/* ── Текст поверх обоев ─────────────────────────────────────────────────── */
+
+/* Переопределяем переменные текста, а не цвет: дочерние text-fg / text-fg-muted
+   подхватывают светлые чернила сами, акцентные цвета (двоеточие часов) не трогаются. */
+:root[data-wallpaper] .on-wallpaper {
+  --dashflow-fg: var(--dashflow-on-wallpaper);
+  --dashflow-fg-muted: var(--dashflow-on-wallpaper-muted);
+  --dashflow-fg-dim: var(--dashflow-on-wallpaper-dim);
+  text-shadow: var(--dashflow-on-wallpaper-shadow);
+}
+
+.wallpaper-hero-vignette {
+  background: radial-gradient(
+    ellipse 70% 42% at 50% 18%,
+    rgb(0 0 0 / 0.38),
+    rgb(0 0 0 / 0.12) 55%,
+    transparent 80%
+  );
+}
+
 /* ── Typography Helper Classes ─────────────────────────────────────────── */
 
 .font-display {

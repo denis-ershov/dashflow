@@ -43,18 +43,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         className,
       )}
     >
-      {/* Приветствие */}
-      {showGreeting && <SmartGreeting userName={userName} />}
-
-      {/* Часы */}
-      {showClock && (
-        <HeroClock
-          style={clockStyle}
-          timeFormat={timeFormat}
-          showSeconds={showSeconds}
-          showDate={showDate}
-          className="my-2"
-        />
+      {/* Приветствие и часы лежат прямо на обоях — им нужны светлые чернила и тень */}
+      {(showGreeting || showClock) && (
+        <div className={cn('on-wallpaper flex flex-col gap-2', alignClass)}>
+          {showGreeting && <SmartGreeting userName={userName} />}
+          {showClock && (
+            <HeroClock
+              style={clockStyle}
+              timeFormat={timeFormat}
+              showSeconds={showSeconds}
+              showDate={showDate}
+            />
+          )}
+        </div>
       )}
 
       {/* Поисковая строка */}

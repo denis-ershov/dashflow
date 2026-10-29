@@ -11,13 +11,16 @@ import { MarketplaceModal } from '@/features/marketplace/components/MarketplaceM
 import { AppearanceModal, WallpaperBackground } from '@/features/appearance';
 import { HeroSection } from '@/features/hero';
 import { SpeedDialGrid, AddLinkModal } from '@/features/speedDial';
-import { FloatingDock } from '@/features/dock';
+import { FloatingDock, type DockPanel } from '@/features/dock';
 import { AmbientSoundDrawer } from '@/features/audio';
 import { useAudioStore } from '@/core/audio';
 import { useFeatureFlags } from '@/core/featureFlags';
 import { useThemeStore } from '@/core/theme/themeStore';
 import { Spinner, RootErrorBoundary } from '@/ui/feedback';
 import { ToastContainer } from '@/ui/primitives/Toast';
+
+/** Модалки, у которых есть своя кнопка в доке */
+const DOCK_PANELS: ReadonlyArray<DockPanel> = ['addWidget', 'marketplace', 'appearance', 'settings'];
 
 function DashboardContent() {
   const isInitialized = useAppStore((s) => s.isInitialized);
@@ -83,6 +86,10 @@ function DashboardContent() {
     );
   }
 
+  const activeDockPanel: DockPanel | null = isAudioDrawerOpen
+    ? 'audio'
+    : DOCK_PANELS.find((panel) => panel === activeModal) ?? null;
+
   const showHero = layoutMode === 'modular' || layoutMode === 'zen';
   const showSpeedDial = (layoutMode === 'modular' || layoutMode === 'zen') && heroSettings?.showSpeedDial !== false;
   const showGrid = layoutMode === 'modular' || layoutMode === 'canvas';
@@ -112,7 +119,7 @@ function DashboardContent() {
 
         {/* Модульная сетка виджетов (режимы Modular и Pure Canvas) */}
         {showGrid && (
-          <main className="flex-1 w-full px-3 sm:px-6 py-4">
+          <main className="flex-1 w-full max-w-screen-2xl mx-auto px-3 sm:px-6 py-4">
             <GridEngine />
           </main>
         )}
@@ -135,6 +142,7 @@ function DashboardContent() {
         isEditMode={isEditMode}
         onToggleEditMode={toggleEditMode}
         isAudioPlaying={isAudioPlaying}
+        activePanel={activeDockPanel}
       />
 
       {/* Модальные окна и оверлеи */}

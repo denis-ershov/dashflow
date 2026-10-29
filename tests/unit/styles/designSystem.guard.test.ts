@@ -48,6 +48,15 @@ describe('Стражи дизайн-системы', () => {
     expect(findAll(/\btext-\[\d+(?:\.\d+)?px\]/g)).toEqual([]);
   });
 
+  it('нет шагов, выключенных в шкале (text-lg = initial и молча даёт размер по умолчанию)', () => {
+    // Только разметка: в tokens.css этот шаг объявлен как initial и упомянут в комментарии
+    const markup = sources.filter(({ file }) => /\.tsx?$/.test(file));
+    const hits = markup.flatMap(({ file, text }) =>
+      [...text.matchAll(/\btext-lg\b/g)].map((m) => `${file}: ${m[0]}`),
+    );
+    expect(hits).toEqual([]);
+  });
+
   it('нет радиусов-псевдонимов вне шкалы темы (rounded-2xl, rounded-3xl, rounded-4xl)', () => {
     expect(findAll(/\brounded-(?:[a-z]+-)?(?:2xl|3xl|4xl)\b/g)).toEqual([]);
   });

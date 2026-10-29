@@ -43,8 +43,8 @@ export const GreetingWidget: React.FC<WidgetProps<GreetingSettings>> = ({ settin
 
   const fontSizeClass = {
     sm: 'text-sm md:text-base font-normal',
-    md: 'text-base md:text-lg font-medium',
-    lg: 'text-lg md:text-2xl font-semibold',
+    md: 'text-base md:text-xl font-medium',
+    lg: 'text-xl md:text-2xl font-semibold',
     xl: 'text-2xl md:text-3xl font-bold tracking-tight',
   }[fontSize];
 

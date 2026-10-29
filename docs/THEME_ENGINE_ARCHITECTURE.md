@@ -168,6 +168,14 @@
 
 ---
 
+## Обои и текст поверх них
+
+- `applyWallpaper(url, scrim)` — единственная точка: проверяет URL (`sanitizeWallpaperUrl`), ограничивает scrim диапазоном 0..1, выставляет `--app-bg-image`, `--app-scrim` и атрибут `data-wallpaper` на `<html>`.
+- `WallpaperBackground` только читает эти переменные: изображение, чёрный слой с `opacity: var(--app-scrim)` и виньетку `.wallpaper-hero-vignette` за Hero-зоной.
+- `.on-wallpaper` (globals.css) при `data-wallpaper` переопределяет `--dashflow-fg`, `--dashflow-fg-muted`, `--dashflow-fg-dim` на светлые чернила `--dashflow-on-wallpaper*` и добавляет тень `--dashflow-on-wallpaper-shadow`. Применяется к элементам без своей подложки (приветствие, часы, дата). Переопределяются переменные, а не `color`: дочерние `text-fg*` подхватывают их сами, акцентные цвета не меняются.
+
+---
+
 ## Настройка «Анимации интерфейса»
 
 `useAppStore.setAnimationsEnabled(false)` вызывает `applyMotionPreference` (`src/core/theme/applyTheme.ts`), который ставит `data-motion="reduced"` на `<html>`. В `tokens.css` этот атрибут включает тот же режим, что и системный `prefers-reduced-motion`: длительности 1ms для всех переходов и анимаций. Значение хранится в ключе `app_animations` и применяется при `initialize()`.

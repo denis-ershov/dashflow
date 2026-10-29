@@ -153,7 +153,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
       <form
         onSubmit={handleSubmit}
         className={cn(
-          'glass-panel flex items-center gap-2 px-3 py-2 rounded-lg border shadow-2 transition-all duration-normal',
+          'glass-panel flex items-center gap-2 p-1.5 pl-2 min-h-13 rounded-full border shadow-2 transition-all duration-normal',
           'border-line hover:border-line-hover',
           'focus-within:border-primary focus-within:shadow-[0_0_24px_var(--dashflow-primary-glow)]',
         )}
@@ -164,7 +164,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
             type="button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             aria-label={`Выбрать поисковую систему (текущая: ${activeEngine.name})`}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface hover:bg-surface-hover text-fg text-xs font-medium border border-line transition-colors min-h-9 cursor-pointer relative before:absolute before:-inset-1 before:content-['']"
+            className="flex items-center gap-2 px-3 py-2 rounded-full bg-surface hover:bg-surface-hover text-fg text-xs font-medium border border-line transition-colors min-h-10 cursor-pointer relative before:absolute before:-inset-1 before:content-['']"
           >
             {activeEngine.icon}
             <span className="hidden sm:inline">{activeEngine.name}</span>
@@ -234,7 +234,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
           <button
             type="submit"
             aria-label="Искать"
-            className="p-2 rounded-xl bg-primary text-primary-fg hover:bg-primary-hover shadow-1 active:scale-95 transition-all min-w-9 min-h-9 flex items-center justify-center cursor-pointer relative before:absolute before:-inset-1 before:content-['']"
+            className="p-2 rounded-full bg-primary text-primary-fg hover:bg-primary-hover shadow-1 active:scale-95 transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer relative before:absolute before:-inset-1 before:content-['']"
           >
             <Search className="w-4 h-4" />
           </button>

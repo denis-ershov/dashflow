@@ -106,8 +106,11 @@ export function applyCustomCss(css: unknown, options?: ValidateCssOptions): CssV
  */
 export function applyWallpaper(url: string | null | undefined, scrim?: number): void {
   const { bgImage, scrim: finalScrim } = buildWallpaperStyle(url, scrim);
-  document.documentElement.style.setProperty('--app-bg-image', bgImage);
-  document.documentElement.style.setProperty('--app-scrim', String(finalScrim));
+  const root = document.documentElement;
+  root.style.setProperty('--app-bg-image', bgImage);
+  root.style.setProperty('--app-scrim', String(finalScrim));
+  // Признак для стилей «текст поверх обоев» (globals.css, .on-wallpaper)
+  root.toggleAttribute('data-wallpaper', bgImage !== 'none');
 }
 
 /**
@@ -158,5 +161,6 @@ export function clearTheme(): void {
 
   document.documentElement.style.removeProperty('--app-bg-image');
   document.documentElement.style.removeProperty('--app-scrim');
+  document.documentElement.removeAttribute('data-wallpaper');
   document.documentElement.removeAttribute('data-theme');
 }

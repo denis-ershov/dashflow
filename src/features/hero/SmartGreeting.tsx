@@ -38,7 +38,7 @@ export const SmartGreeting: React.FC<SmartGreetingProps> = ({ userName, classNam
       role="heading"
       aria-level={2}
       className={cn(
-        'text-lg md:text-xl font-medium text-fg-muted tracking-tight select-none flex items-center justify-center gap-2',
+        'text-base md:text-xl font-medium text-fg-muted tracking-tight select-none flex items-center justify-center gap-2',
         className,
       )}
     >

@@ -63,6 +63,17 @@
   --dashflow-tint-subtle-line: color-mix(in srgb, var(--dashflow-fg) 6%, transparent);
 }
 
+/**
+ * Текст поверх обоев. Обои всегда затемнены (scrim + виньетка), поэтому чернила светлые
+ * при любом пресете, включая светлые темы. Применяются только к элементам без своей подложки.
+ */
+:root {
+  --dashflow-on-wallpaper: #f8fafc;
+  --dashflow-on-wallpaper-muted: rgb(248 250 252 / 0.86);
+  --dashflow-on-wallpaper-dim: rgb(248 250 252 / 0.72);
+  --dashflow-on-wallpaper-shadow: 0 1px 2px rgb(0 0 0 / 0.55), 0 2px 18px rgb(0 0 0 / 0.4);
+}
+
 /* ── Слой 2. Палитра темы «Neutral Dark» ───────────────────────────────── */
 
 :root {

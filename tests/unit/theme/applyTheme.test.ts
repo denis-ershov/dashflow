@@ -178,3 +178,21 @@ describe('clearTheme', () => {
     expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
   });
 });
+
+describe('applyWallpaper: признак обоев для стилей текста', () => {
+  beforeEach(() => {
+    clearTheme();
+  });
+
+  it('ставит data-wallpaper, только когда обои заданы и прошли проверку', () => {
+    applyWallpaper('https://images.unsplash.com/photo-1', 0.3);
+    expect(document.documentElement.hasAttribute('data-wallpaper')).toBe(true);
+
+    applyWallpaper('javascript:alert(1)', 0.3);
+    expect(document.documentElement.hasAttribute('data-wallpaper')).toBe(false);
+
+    applyWallpaper('https://images.unsplash.com/photo-1', 0.3);
+    clearTheme();
+    expect(document.documentElement.hasAttribute('data-wallpaper')).toBe(false);
+  });
+});

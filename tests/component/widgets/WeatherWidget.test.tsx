@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WeatherWidget } from '@/widgets/built-in/WeatherWidget/WeatherWidget';
@@ -162,5 +162,72 @@ describe('WeatherWidget Component & Manifest', () => {
     });
 
     expect(screen.getByText(/Офлайн/i)).toBeInTheDocument();
+  });
+});
+
+describe('WeatherWidget: раскладка по доступной высоте', () => {
+  const mockApiResponse = {
+    current: {
+      temperature_2m: 21.4,
+      weather_code: 1,
+      apparent_temperature: 20.1,
+      relative_humidity_2m: 52,
+      wind_speed_10m: 4.1,
+      surface_pressure: 1014,
+      is_day: 1,
+    },
+    daily: {
+      time: ['2026-08-28'],
+      temperature_2m_max: [24.1],
+      temperature_2m_min: [15.2],
+      weather_code: [1],
+      sunrise: ['2026-08-28T05:30'],
+      sunset: ['2026-08-28T19:30'],
+      uv_index_max: [5],
+    },
+    hourly: {
+      time: [],
+      temperature_2m: [],
+      weather_code: [],
+      precipitation_probability: [],
+      is_day: [],
+    },
+  };
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('в низкой ячейке вместо «Метеостанции» показывает компактный вид без вкладок', async () => {
+    // Наблюдатель сразу сообщает высоту 150 px — меньше порога режима «Метеостанция»
+    class ShortResizeObserver {
+      constructor(private readonly callback: ResizeObserverCallback) {}
+      observe(target: Element) {
+        this.callback(
+          [{ target, contentRect: { width: 400, height: 150 } } as unknown as ResizeObserverEntry],
+          this,
+        );
+      }
+      disconnect() {}
+      unobserve() {}
+    }
+    vi.stubGlobal('ResizeObserver', ShortResizeObserver);
+    vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockApiResponse),
+    } as Response);
+
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+    render(
+      <QueryClientProvider client={client}>
+        <WeatherWidget instanceId="weather-short" settings={{ city: 'Москва' }} />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('+21°')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Обзор')).not.toBeInTheDocument();
+    expect(screen.getByText('52%')).toBeInTheDocument();
   });
 });

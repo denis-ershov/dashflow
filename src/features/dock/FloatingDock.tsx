@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import { Tooltip } from '@/ui/primitives';
 
+/** Панель или режим, который сейчас открыт кнопкой дока — подсвечивается как активный */
+export type DockPanel = 'addWidget' | 'marketplace' | 'appearance' | 'audio' | 'settings';
+
 export interface FloatingDockProps {
   layoutMode: 'zen' | 'modular' | 'canvas';
   onToggleLayoutMode: () => void;
@@ -27,8 +30,63 @@ export interface FloatingDockProps {
   isEditMode?: boolean;
   onToggleEditMode?: () => void;
   isAudioPlaying?: boolean;
+  activePanel?: DockPanel | null;
   className?: string;
 }
+
+type DockButtonTone = 'default' | 'active' | 'primary' | 'warning';
+
+interface DockButtonProps {
+  label: string;
+  tooltip?: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  tone?: DockButtonTone;
+  /** Для кнопок-переключателей: aria-pressed */
+  pressed?: boolean;
+  /** Классы обёртки, например чтобы скрыть кнопку на узких экранах */
+  wrapperClassName?: string;
+}
+
+const TONE_CLASSES: Record<DockButtonTone, string> = {
+  default: 'text-fg-muted hover:text-fg hover:bg-surface-hover',
+  active: 'text-primary bg-primary/15',
+  primary: 'bg-primary text-primary-fg shadow-1 hover:bg-primary-hover',
+  warning: 'bg-warning/20 text-warning ring-1 ring-inset ring-warning/40',
+};
+
+const DockButton: React.FC<DockButtonProps> = ({
+  label,
+  tooltip = label,
+  icon,
+  onClick,
+  tone = 'default',
+  pressed,
+  wrapperClassName,
+}) => (
+  <div className={cn('flex', wrapperClassName)}>
+    <Tooltip content={tooltip}>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={label}
+        aria-pressed={pressed}
+        className={cn(
+          'size-11 rounded-full flex items-center justify-center cursor-pointer transition-colors duration-fast active:scale-95',
+          TONE_CLASSES[tone],
+        )}
+      >
+        {icon}
+      </button>
+    </Tooltip>
+  </div>
+);
+
+const DockDivider: React.FC = () => (
+  <div aria-hidden="true" className="hidden sm:block w-px h-5 bg-line mx-1" />
+);
+
+const ICON = 'size-5';
 
 export const FloatingDock: React.FC<FloatingDockProps> = ({
   layoutMode,
@@ -42,142 +100,97 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
   isEditMode = false,
   onToggleEditMode,
   isAudioPlaying = false,
+  activePanel = null,
   className,
 }) => {
+  const toneFor = (panel: DockPanel): DockButtonTone =>
+    activePanel === panel ? 'active' : 'default';
+  const isZen = layoutMode === 'zen';
+  const canEditGrid = onToggleEditMode && (layoutMode === 'modular' || layoutMode === 'canvas');
+
   return (
     <nav
       aria-label="Панель быстрого управления"
       className={cn(
         'fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-(--z-rail,30)',
-        'glass-pill px-2.5 sm:px-3 py-1.5 sm:py-2 flex items-center gap-1 sm:gap-2 shadow-3 border border-line',
-        'max-w-[calc(100vw-1.5rem)] duration-normal select-none overflow-x-auto no-scrollbar backdrop-blur-xl',
+        'glass-pill p-1 sm:p-1.5 flex items-center gap-0.5 sm:gap-1 shadow-3 select-none',
+        'max-w-[calc(100vw-1.5rem)]',
         className,
       )}
     >
-      {/* Переключение Zen / Dashboard */}
-      <Tooltip content={layoutMode === 'zen' ? 'Включить виджеты' : 'Режим Zen / Фокус'}>
-        <button
-          type="button"
-          onClick={onToggleLayoutMode}
-          aria-label={layoutMode === 'zen' ? 'Включить виджеты' : 'Режим Zen'}
-          className={cn(
-            'p-2.5 rounded-full transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer',
-            layoutMode === 'zen'
-              ? 'bg-primary text-primary-fg shadow-1 hover:bg-primary-hover'
-              : 'text-fg-muted hover:text-fg hover:bg-surface-hover',
-          )}
-        >
-          {layoutMode === 'zen' ? (
-            <Sparkles className="w-4 h-4" />
-          ) : (
-            <LayoutGrid className="w-4 h-4" />
-          )}
-        </button>
-      </Tooltip>
+      <DockButton
+        label={isZen ? 'Включить виджеты' : 'Режим Zen'}
+        tooltip={isZen ? 'Включить виджеты' : 'Режим Zen / Фокус'}
+        icon={isZen ? <Sparkles className={ICON} /> : <LayoutGrid className={ICON} />}
+        onClick={onToggleLayoutMode}
+        tone={isZen ? 'primary' : 'default'}
+        pressed={isZen}
+      />
 
-      <div className="w-px h-5 bg-line my-auto mx-1" />
+      <DockDivider />
 
-      {/* Добавить виджет */}
-      <Tooltip content="Добавить виджет">
-        <button
-          type="button"
-          onClick={onOpenAddWidget}
-          aria-label="Добавить виджет"
-          className="p-2.5 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
-      </Tooltip>
+      <DockButton
+        label="Добавить виджет"
+        icon={<Plus className={ICON} />}
+        onClick={onOpenAddWidget}
+        tone={toneFor('addWidget')}
+      />
 
-      {/* Каталог виджетов и плагинов (Маркетплейс) */}
       {onOpenMarketplace && (
-        <Tooltip content="Каталог виджетов и плагинов">
-          <button
-            type="button"
-            onClick={onOpenMarketplace}
-            aria-label="Каталог виджетов"
-            className="p-2.5 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90"
-          >
-            <ShoppingBag className="w-4 h-4" />
-          </button>
-        </Tooltip>
+        <DockButton
+          label="Каталог виджетов"
+          tooltip="Каталог виджетов и плагинов"
+          icon={<ShoppingBag className={ICON} />}
+          onClick={onOpenMarketplace}
+          tone={toneFor('marketplace')}
+        />
       )}
 
-      {/* Командная строка Ctrl+K */}
-      <Tooltip content="Командная палитра (Ctrl+K)">
-        <button
-          type="button"
-          onClick={onOpenCommandPalette}
-          aria-label="Командная палитра"
-          className="p-2.5 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90"
-        >
-          <Search className="w-4 h-4" />
-        </button>
-      </Tooltip>
+      {/* Палитра команд рассчитана на клавиатуру (Ctrl+K) — на телефоне не нужна и не помещается */}
+      <DockButton
+        label="Командная палитра"
+        tooltip="Командная палитра (Ctrl+K)"
+        icon={<Search className={ICON} />}
+        onClick={onOpenCommandPalette}
+        wrapperClassName="hidden sm:flex"
+      />
 
-      {/* Темы и Обои */}
-      <Tooltip content="Темы оформления и обои">
-        <button
-          type="button"
-          onClick={onOpenAppearance}
-          aria-label="Темы и обои"
-          className="p-2.5 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90"
-        >
-          <Palette className="w-4 h-4" />
-        </button>
-      </Tooltip>
+      <DockButton
+        label="Темы и обои"
+        tooltip="Темы оформления и обои"
+        icon={<Palette className={ICON} />}
+        onClick={onOpenAppearance}
+        tone={toneFor('appearance')}
+      />
 
-      {/* Звуки природы */}
       {onOpenAudio && (
-        <Tooltip content={isAudioPlaying ? 'Звуки природы (активны)' : 'Звуки природы'}>
-          <button
-            type="button"
-            onClick={onOpenAudio}
-            aria-label="Звуки природы"
-            className={cn(
-              'p-2.5 rounded-full transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90',
-              isAudioPlaying
-                ? 'text-primary bg-primary/15 shadow-[0_0_12px_var(--dashflow-primary-glow)]'
-                : 'text-fg-muted hover:text-fg hover:bg-surface-hover',
-            )}
-          >
-            <Volume2 className="w-4 h-4" />
-          </button>
-        </Tooltip>
+        <DockButton
+          label="Звуки природы"
+          tooltip={isAudioPlaying ? 'Звуки природы (активны)' : 'Звуки природы'}
+          icon={<Volume2 className={ICON} />}
+          onClick={onOpenAudio}
+          tone={isAudioPlaying || activePanel === 'audio' ? 'active' : 'default'}
+        />
       )}
 
-      {/* Режим редактирования сетки */}
-      {onToggleEditMode && (layoutMode === 'modular' || layoutMode === 'canvas') && (
-        <Tooltip content={isEditMode ? 'Завершить редактирование' : 'Редактировать сетку'}>
-          <button
-            type="button"
-            onClick={onToggleEditMode}
-            aria-label={isEditMode ? 'Завершить редактирование' : 'Редактировать сетку'}
-            className={cn(
-              'p-2.5 rounded-full transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90',
-              isEditMode
-                ? 'bg-warning/20 text-warning border border-warning/40'
-                : 'text-fg-muted hover:text-fg hover:bg-surface-hover',
-            )}
-          >
-            {isEditMode ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-          </button>
-        </Tooltip>
+      {canEditGrid && (
+        <DockButton
+          label={isEditMode ? 'Завершить редактирование' : 'Редактировать сетку'}
+          icon={isEditMode ? <Unlock className={ICON} /> : <Lock className={ICON} />}
+          onClick={onToggleEditMode}
+          tone={isEditMode ? 'warning' : 'default'}
+          pressed={isEditMode}
+        />
       )}
 
-      <div className="w-px h-5 bg-line my-auto mx-1" />
+      <DockDivider />
 
-      {/* Настройки */}
-      <Tooltip content="Настройки">
-        <button
-          type="button"
-          onClick={onOpenSettings}
-          aria-label="Настройки"
-          className="p-2.5 rounded-full text-fg-muted hover:text-fg hover:bg-surface-hover transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90"
-        >
-          <Settings className="w-4 h-4" />
-        </button>
-      </Tooltip>
+      <DockButton
+        label="Настройки"
+        icon={<Settings className={ICON} />}
+        onClick={onOpenSettings}
+        tone={toneFor('settings')}
+      />
     </nav>
   );
 };

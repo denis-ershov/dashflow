@@ -112,7 +112,7 @@ export const ClockWidget: React.FC<WidgetProps<ClockSettings>> = ({ settings }) 
             </div>
             {showSeconds && (
               <>
-                <span className="text-lg sm:text-2xl text-fg-dim">:</span>
+                <span className="text-base sm:text-2xl text-fg-dim">:</span>
                 <div className="relative overflow-hidden glass-subtle px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl text-center min-w-9.5 sm:min-w-12 border border-line/50">
                   <div className="absolute inset-x-0 top-1/2 h-px bg-line/50 pointer-events-none" />
                   <span className="text-xl sm:text-3xl font-mono text-fg-muted">{seconds}</span>
@@ -193,7 +193,7 @@ export const ClockWidget: React.FC<WidgetProps<ClockSettings>> = ({ settings }) 
               {minutes}
             </span>
             {showSeconds && (
-              <span className="text-lg sm:text-2xl font-display font-medium text-fg-dim ml-2">
+              <span className="text-base sm:text-2xl font-display font-medium text-fg-dim ml-2">
                 {seconds}
               </span>
             )}

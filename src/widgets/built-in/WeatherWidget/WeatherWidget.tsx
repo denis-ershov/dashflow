@@ -28,6 +28,7 @@ import {
 import type { WidgetProps } from '@/core/widget';
 import { Skeleton } from '@/ui/feedback';
 import { cn } from '@/ui/lib/cn';
+import { useElementSize } from '@/ui/lib/useElementSize';
 import type {
   DailyForecastItem,
   HourlyForecastItem,
@@ -45,11 +46,37 @@ import {
   getWindDirectionText,
 } from './weatherService';
 
-export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings }) => {
+/**
+ * Ниже этой высоты режим «Метеостанция» не помещается без внутренней прокрутки:
+ * вкладки, крупная температура и блок контента занимают ~280 px.
+ */
+const DASHBOARD_MIN_HEIGHT = 280;
+
+/**
+ * Виджет сам выбирает раскладку по доступной высоте: «Метеостанция» в маленькой ячейке
+ * показывается компактным видом, чтобы главное (температура, состояние, метрики)
+ * было видно сразу, а не после прокрутки внутри карточки.
+ */
+export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = (props) => {
+  const [ref, { height }] = useElementSize<HTMLDivElement>();
+  const tooShortForDashboard = height > 0 && height < DASHBOARD_MIN_HEIGHT;
+
+  return (
+    <div ref={ref} className="h-full">
+      <WeatherWidgetView {...props} forceCompact={tooShortForDashboard} />
+    </div>
+  );
+};
+
+const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact: boolean }> = ({
+  settings,
+  forceCompact,
+}) => {
   const city = settings?.city || 'Москва';
   const autoLocation = settings?.autoLocation;
   const coords = settings?.coords;
-  const viewMode = settings?.viewMode || 'dashboard';
+  const selectedView = settings?.viewMode || 'dashboard';
+  const viewMode = selectedView === 'dashboard' && forceCompact ? 'compact' : selectedView;
   const tempUnit = settings?.tempUnit || 'celsius';
   const windSpeedUnit = settings?.windSpeedUnit || 'ms';
   const pressureUnit = settings?.pressureUnit || 'mmhg';
@@ -193,14 +220,14 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
   // 1. Компактный режим (Compact View)
   if (viewMode === 'compact') {
     return (
-      <div className={cn('relative flex flex-col justify-between h-full p-3 select-none overflow-hidden bg-linear-to-b', weatherGlow)}>
-        {/* Шапка: Город + Обновление */}
-        <div className="flex items-center justify-between text-xs text-fg-muted">
+      <div className="relative flex flex-col justify-center gap-1.5 h-full px-3 py-2 select-none overflow-hidden">
+        {/* Город и обновление */}
+        <div className="flex items-center justify-between gap-2 text-xs text-fg-muted">
           <div className="flex items-center gap-1.5 min-w-0">
-            {data.isAutoLocation && <MapPin className="w-3 h-3 text-primary shrink-0" />}
-            <span className="font-semibold text-fg truncate">{data.city}</span>
+            {data.isAutoLocation && <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />}
+            <span className="font-medium text-fg truncate">{data.city}</span>
             {data.isOffline && (
-              <span className="text-2xs text-amber-400 bg-amber-500/15 px-1 rounded">Офлайн</span>
+              <span className="text-2xs text-warning bg-warning/15 px-1.5 rounded-full">Офлайн</span>
             )}
           </div>
           <button
@@ -208,50 +235,44 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
             onClick={() => refetch()}
             disabled={isFetching}
             aria-label="Обновить погоду"
-            className="p-1 text-fg-muted hover:text-fg rounded-lg transition-colors cursor-pointer"
+            className="relative p-1 text-fg-muted hover:text-fg rounded-full transition-colors cursor-pointer before:absolute before:-inset-2 before:content-['']"
           >
-            <RefreshCw className={cn('w-3 h-3', isFetching && 'animate-spin text-primary')} />
+            <RefreshCw className={cn('w-3.5 h-3.5', isFetching && 'animate-spin text-primary')} />
           </button>
         </div>
 
-        {/* Hero температура и иконка */}
-        <div className="flex items-center justify-between py-1">
-          <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-fg font-display">
-                {formatTemperature(data.temperature, tempUnit)}
-              </span>
-              {showFeelsLike && data.metrics?.feelsLike !== undefined && (
-                <span className="text-2xs text-fg-muted">
-                  ощущ. {formatTemperature(data.metrics.feelsLike, tempUnit)}
-                </span>
-              )}
+        {/* Температура и состояние — главное, видно без прокрутки */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-4xl font-display font-semibold tracking-tight tabular-nums text-fg leading-none">
+              {formatTemperature(data.temperature, tempUnit)}
             </div>
-            <p className="text-xs text-fg-dim truncate max-w-37.5 mt-0.5">
+            <p className="text-13 text-fg-muted truncate mt-1">
               {getWeatherDescription(data.weathercode, data.metrics?.isDay)}
             </p>
           </div>
-          <div className="flex flex-col items-end">
-            {getWeatherIcon(data.weathercode, data.metrics?.isDay, 'w-9 h-9')}
-            <span className="text-2xs text-fg-muted mt-1 font-mono">
-              {data.minTemp}° / {data.maxTemp}°
-            </span>
-          </div>
+          <div className="shrink-0">{getWeatherIcon(data.weathercode, data.metrics?.isDay, 'w-10 h-10')}</div>
         </div>
 
-        {/* Нижние параметры */}
-        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-line/60 text-xs">
-          {showHumidity && (
-            <div className="flex items-center gap-1.5 text-fg-muted">
-              <Droplets className="w-3.5 h-3.5 text-primary shrink-0" />
-              <span>{data.metrics?.humidity ?? 60}%</span>
-            </div>
+        {/* Сводка одной строкой: показываем только то, что реально пришло от сервиса */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-fg-muted tabular-nums">
+          <span>
+            {formatTemperature(data.minTemp, tempUnit)} / {formatTemperature(data.maxTemp, tempUnit)}
+          </span>
+          {showFeelsLike && data.metrics?.feelsLike !== undefined && (
+            <span>ощущ. {formatTemperature(data.metrics.feelsLike, tempUnit)}</span>
           )}
-          {showWind && (
-            <div className="flex items-center gap-1.5 text-fg-muted">
-              <Wind className="w-3.5 h-3.5 text-secondary shrink-0" />
-              <span>{formatWindSpeed(data.metrics?.windSpeed ?? 3, windSpeedUnit)}</span>
-            </div>
+          {showHumidity && data.metrics?.humidity !== undefined && (
+            <span className="flex items-center gap-1">
+              <Droplets className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden="true" />
+              {data.metrics.humidity}%
+            </span>
+          )}
+          {showWind && data.metrics?.windSpeed !== undefined && (
+            <span className="flex items-center gap-1">
+              <Wind className="w-3.5 h-3.5 text-secondary shrink-0" aria-hidden="true" />
+              {formatWindSpeed(data.metrics.windSpeed, windSpeedUnit)}
+            </span>
           )}
         </div>
       </div>
