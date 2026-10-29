@@ -160,7 +160,7 @@
 - **Размер шрифта** — только шкала: `text-2xs` (11px) … `text-display-lg`. Произвольные `text-[Npx]` запрещены.
 - **Радиусы** — `rounded-xs…xl` и `rounded-full`; значения задаёт пресет темы (sharp/soft/round). `rounded-2xl/3xl/4xl` отключены (`initial`).
 - **Цвета интерфейса** — только семантические токены (`surface*`, `fg*`, `line*`, `primary*`, `secondary`, `accent`, `success`, `warning`, `danger`, `info`). `white`/`black` допустимы как контрастные чернила на насыщенной заливке.
-- **Иллюстративные цвета данных** (погода, качество воздуха, заглушки закладок, полосы прогресса, иконки поисковиков) могут использовать палитру Tailwind; разрешённые файлы перечислены в `tests/unit/styles/designSystem.guard.test.ts`.
+- **Иллюстративные цвета данных** (погода, качество воздуха, заглушки закладок, полосы прогресса) могут использовать палитру Tailwind; разрешённые файлы перечислены в `tests/unit/styles/designSystem.guard.test.ts`.
 - **Производные переменные** (`--dashflow-glass-bg-hover`, `--dashflow-glass-bg-subtle`, `--dashflow-glass-border-hover`, `--dashflow-tint-subtle*`) вычисляются в `tokens.css` через `color-mix` из переменных темы и сами подстраиваются под любой пресет.
 - **Шрифты** — интерфейс на системном стеке; `font-display` — Outfit, встроенный в сборку (`@fontsource-variable/outfit`), без кириллицы; `font-serif`, `font-mono` — системные стеки. Внешние CDN шрифтов запрещены, CSP их не пропускает.
 

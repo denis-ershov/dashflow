@@ -1,4 +1,10 @@
 export const ru = {
+  greeting: {
+    morning: 'Доброе утро',
+    day: 'Добрый день',
+    evening: 'Добрый вечер',
+    night: 'Доброй ночи',
+  },
   app: {
     title: 'DashFlow',
     subtitle: 'Персональное рабочее пространство',

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import type { WidgetProps } from '@/core/widget';
 import { useTranslation } from '@/core/i18n';
 import { cn } from '@/ui/lib/cn';
+import { DAY_PART_ICONS, getClockParts, getDayPart, toTimeZone, useNow } from '@/core/datetime';
 import type { ClockSettings } from './types';
 
 export const ClockWidget: React.FC<WidgetProps<ClockSettings>> = ({ settings }) => {
@@ -16,55 +17,11 @@ export const ClockWidget: React.FC<WidgetProps<ClockSettings>> = ({ settings }) 
   const glowEffect = settings?.glowEffect ?? true;
   const dateFormat = settings?.dateFormat ?? 'full';
 
-  const { language } = useTranslation();
-  const [time, setTime] = useState<Date>(() => new Date());
-  const [greeting, setGreeting] = useState<{ text: string; icon: string }>({
-    text: 'Добрый день',
-    icon: '☀️',
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const getTimeInZone = (date: Date, tz: string): Date => {
-    if (!tz || tz === 'local') return date;
-    try {
-      return new Date(
-        date.toLocaleString('en-US', {
-          timeZone: tz,
-        }),
-      );
-    } catch {
-      return date;
-    }
-  };
-
-  const activeTime = getTimeInZone(time, timezone);
-
-  useEffect(() => {
-    if (showGreeting) {
-      const hour = activeTime.getHours();
-      if (hour >= 5 && hour < 12) {
-        setGreeting({ text: 'Доброе утро', icon: '🌅' });
-      } else if (hour >= 12 && hour < 18) {
-        setGreeting({ text: 'Добрый день', icon: '☀️' });
-      } else if (hour >= 18 && hour < 23) {
-        setGreeting({ text: 'Добрый вечер', icon: '🌆' });
-      } else {
-        setGreeting({ text: 'Доброй ночи', icon: '🌙' });
-      }
-    }
-  }, [showGreeting, activeTime]);
-
-  const hoursRaw = activeTime.getHours();
-  const hours = !is24Hour
-    ? (hoursRaw % 12 || 12).toString().padStart(2, '0')
-    : hoursRaw.toString().padStart(2, '0');
-  const minutes = activeTime.getMinutes().toString().padStart(2, '0');
-  const seconds = activeTime.getSeconds().toString().padStart(2, '0');
-  const ampm = !is24Hour ? (hoursRaw >= 12 ? 'PM' : 'AM') : '';
+  const { t, language } = useTranslation();
+  const activeTime = toTimeZone(useNow(1000), timezone);
+  const { hours, minutes, seconds, meridiem: ampm } = getClockParts(activeTime, !is24Hour);
+  const dayPart = getDayPart(activeTime.getHours());
+  const greeting = { text: t(`greeting.${dayPart}`), icon: DAY_PART_ICONS[dayPart] };
 
   const formatDate = () => {
     const locale = language === 'ru' ? 'ru-RU' : 'en-US';

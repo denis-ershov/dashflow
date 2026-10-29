@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { cn } from '@/ui/lib/cn';
+import { useTranslation } from '@/core/i18n';
+import { DAY_PART_ICONS, getDayPart, useNow } from '@/core/datetime';
 
 export interface SmartGreetingProps {
   userName?: string;
@@ -7,30 +9,8 @@ export interface SmartGreetingProps {
 }
 
 export const SmartGreeting: React.FC<SmartGreetingProps> = ({ userName, className }) => {
-  const [greeting, setGreeting] = useState<{ text: string; icon: string }>({
-    text: 'Добрый день',
-    icon: '✨',
-  });
-
-  useEffect(() => {
-    const updateGreeting = () => {
-      const hour = new Date().getHours();
-      if (hour >= 5 && hour < 12) {
-        setGreeting({ text: 'Доброе утро', icon: '🌅' });
-      } else if (hour >= 12 && hour < 18) {
-        setGreeting({ text: 'Добрый день', icon: '☀️' });
-      } else if (hour >= 18 && hour < 23) {
-        setGreeting({ text: 'Добрый вечер', icon: '🌆' });
-      } else {
-        setGreeting({ text: 'Доброй ночи', icon: '🌙' });
-      }
-    };
-
-    updateGreeting();
-    const timer = setInterval(updateGreeting, 60000);
-    return () => clearInterval(timer);
-  }, []);
-
+  const { t } = useTranslation();
+  const dayPart = getDayPart(useNow(60_000).getHours());
   const displayName = userName?.trim() ? `, ${userName.trim()}` : '';
 
   return (
@@ -43,11 +23,11 @@ export const SmartGreeting: React.FC<SmartGreetingProps> = ({ userName, classNam
       )}
     >
       <span>
-        {greeting.text}
+        {t(`greeting.${dayPart}`)}
         {displayName}
       </span>
       <span className="text-xl" role="img" aria-hidden="true">
-        {greeting.icon}
+        {DAY_PART_ICONS[dayPart]}
       </span>
     </div>
   );

@@ -2,6 +2,7 @@ import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Settings, Trash2, GripVertical } from 'lucide-react';
 import { ErrorState } from '@/ui/feedback';
 import { cn } from '@/ui/lib/cn';
+import { Card } from '@/ui/primitives/Card';
 import { crashLogger } from '@/core/observability';
 import type { WidgetSurfaceType } from './types';
 
@@ -94,25 +95,11 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
   const isChromeless = surface === 'chromeless';
   const isTiles = surface === 'tiles';
 
-  return (
-    <div
-      data-instance-id={instanceId}
-      data-surface={surface}
-      className={cn(
-        'relative group w-full h-full flex flex-col transition-all duration-normal',
-        isChromeless ? 'overflow-visible' : 'overflow-hidden',
-        // Стили поверхности Glassmorphism
-        isChromeless && 'bg-transparent border-transparent',
-        !isChromeless &&
-          !isTiles &&
-          'glass-card border border-line rounded-lg shadow-2 hover:shadow-3',
-        isTiles && 'glass-subtle border border-line/80 rounded-lg p-2 shadow-1',
-        // Рамка в режиме редактирования
-        isEditMode && 'ring-2 ring-primary/60 border-primary/80',
-        isChromeless && isEditMode && 'glass-panel border-dashed border-line rounded-lg',
-        className,
-      )}
-    >
+  const layoutClasses = 'relative group w-full h-full flex flex-col transition-all duration-normal';
+  const editRing = isEditMode && 'ring-2 ring-primary/60 border-primary/80';
+
+  const content = (
+    <>
       {/* Шапка виджета (для panel и в режиме редактирования для остальных) */}
       {(!isChromeless || isEditMode) && (
         <div className="flex items-center justify-between min-h-10 pl-4 pr-2 pt-2 select-none shrink-0">
@@ -172,6 +159,44 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
           {children}
         </WidgetErrorBoundary>
       </div>
-    </div>
+    </>
+  );
+
+  // Без рамки виджет лежит прямо на фоне: карточка появляется только в режиме правки
+  if (isChromeless) {
+    return (
+      <div
+        data-instance-id={instanceId}
+        data-surface={surface}
+        className={cn(
+          layoutClasses,
+          'overflow-visible bg-transparent border-transparent',
+          isEditMode && 'glass-panel border-dashed border-line rounded-lg',
+          editRing,
+          className,
+        )}
+      >
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Card
+      data-instance-id={instanceId}
+      data-surface={surface}
+      variant={isTiles ? 'subtle' : 'glass'}
+      padding="none"
+      className={cn(
+        layoutClasses,
+        isTiles
+          ? 'border border-line/80 p-2 shadow-1'
+          : 'border border-line shadow-2 hover:shadow-3',
+        editRing,
+        className,
+      )}
+    >
+      {content}
+    </Card>
   );
 };

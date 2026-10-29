@@ -1,92 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Globe, Youtube, Github, ArrowRight, Sparkles, Code, ChevronDown, X, Check } from 'lucide-react';
+import { Search, ArrowRight, ChevronDown, X, Check } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { cn } from '@/ui/lib/cn';
-import type { SearchEngineId, SearchSettings } from './types';
-
-interface SearchEngineConfig {
-  id: SearchEngineId;
-  name: string;
-  url: string;
-  placeholder: string;
-  icon: React.ReactNode;
-}
-
-const ENGINES: Record<SearchEngineId, SearchEngineConfig> = {
-  google: {
-    id: 'google',
-    name: 'Google',
-    url: 'https://www.google.com/search?q=',
-    placeholder: 'Искать в Google или ввести URL...',
-    icon: <Globe className="w-4 h-4 text-primary" />,
-  },
-  yandex: {
-    id: 'yandex',
-    name: 'Яндекс',
-    url: 'https://yandex.ru/search/?text=',
-    placeholder: 'Искать в Яндексе...',
-    icon: <Globe className="w-4 h-4 text-warning" />,
-  },
-  duckduckgo: {
-    id: 'duckduckgo',
-    name: 'DuckDuckGo',
-    url: 'https://duckduckgo.com/?q=',
-    placeholder: 'Приватный поиск в DuckDuckGo...',
-    icon: <Globe className="w-4 h-4 text-secondary" />,
-  },
-  bing: {
-    id: 'bing',
-    name: 'Bing',
-    url: 'https://www.bing.com/search?q=',
-    placeholder: 'Искать в Microsoft Bing...',
-    icon: <Globe className="w-4 h-4 text-primary" />,
-  },
-  github: {
-    id: 'github',
-    name: 'GitHub',
-    url: 'https://github.com/search?q=',
-    placeholder: 'Поиск репозиториев и кода...',
-    icon: <Code className="w-4 h-4 text-fg" />,
-  },
-  youtube: {
-    id: 'youtube',
-    name: 'YouTube',
-    url: 'https://www.youtube.com/results?search_query=',
-    placeholder: 'Искать видео на YouTube...',
-    icon: <Youtube className="w-4 h-4 text-danger" />,
-  },
-  perplexity: {
-    id: 'perplexity',
-    name: 'Perplexity AI',
-    url: 'https://www.perplexity.ai/search?q=',
-    placeholder: 'Спросить у AI ассистента...',
-    icon: <Sparkles className="w-4 h-4 text-accent" />,
-  },
-  chatgpt: {
-    id: 'chatgpt',
-    name: 'ChatGPT',
-    url: 'https://chatgpt.com/?q=',
-    placeholder: 'Спросить у ChatGPT...',
-    icon: <Sparkles className="w-4 h-4 text-emerald-400" />,
-  },
-  claude: {
-    id: 'claude',
-    name: 'Claude AI',
-    url: 'https://claude.ai/new?q=',
-    placeholder: 'Спросить у Claude AI...',
-    icon: <Sparkles className="w-4 h-4 text-amber-400" />,
-  },
-  brave: {
-    id: 'brave',
-    name: 'Brave Search',
-    url: 'https://search.brave.com/search?q=',
-    placeholder: 'Искать в Brave Search...',
-    icon: <Globe className="w-4 h-4 text-orange-400" />,
-  },
-};
-
-const ENGINES_LIST = Object.values(ENGINES);
+import {
+  SEARCH_ENGINE_LIST as ENGINES_LIST,
+  getSearchEngine,
+  openSearchTarget,
+  resolveSearchTarget,
+  useSlashHotkey,
+  type SearchEngineId,
+} from '@/core/search';
+import type { SearchSettings } from './types';
 
 export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
   settings,
@@ -118,20 +43,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
     }
   }, [settings?.autoFocus]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.key === '/' &&
-        document.activeElement?.tagName !== 'INPUT' &&
-        document.activeElement?.tagName !== 'TEXTAREA'
-      ) {
-        e.preventDefault();
-        inputRef.current?.focus();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  useSlashHotkey(inputRef);
 
   useEffect(() => {
     if (settings?.engine) {
@@ -201,34 +113,12 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
     };
   }, [isDropdownOpen, updateDropdownPos]);
 
-  const currentEngine = ENGINES[activeEngine] || ENGINES.google;
+  const currentEngine = getSearchEngine(activeEngine);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = query.trim();
-    if (!trimmed) return;
-
-    // Прямой переход если введен URL
-    if (
-      trimmed.startsWith('http://') ||
-      trimmed.startsWith('https://') ||
-      /^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}(\/.*)?$/i.test(trimmed)
-    ) {
-      const url = trimmed.startsWith('http') ? trimmed : `https://${trimmed}`;
-      if (openInNewTab) {
-        window.open(url, '_blank');
-      } else {
-        window.location.href = url;
-      }
-      return;
-    }
-
-    const targetUrl = `${currentEngine.url}${encodeURIComponent(trimmed)}`;
-    if (openInNewTab) {
-      window.open(targetUrl, '_blank');
-    } else {
-      window.location.href = targetUrl;
-    }
+    const target = resolveSearchTarget(query, currentEngine);
+    if (target) openSearchTarget(target, openInNewTab);
   };
 
   const handleSelectEngine = (engId: SearchEngineId) => {

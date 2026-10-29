@@ -5,6 +5,7 @@ import { SmartGreeting } from './SmartGreeting';
 import { SearchBar2, type SearchEngineKey } from './SearchBar2';
 import { YearProgression } from './YearProgression';
 import type { HeroSettings } from '@/core/storage';
+import { getSearchEngine } from '@/core/search';
 
 export interface HeroSectionProps {
   settings?: HeroSettings;
@@ -27,7 +28,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const showYearProgress = settings?.showYearProgress ?? true;
   const showSearchBar = settings?.showSearchBar ?? true;
   const alignment = settings?.alignment ?? 'center';
-  const defaultEngine = (settings?.defaultSearchEngine as SearchEngineKey) ?? 'google';
+  const defaultEngine = getSearchEngine(settings?.defaultSearchEngine).id;
 
   const alignClass = {
     center: 'items-center text-center',

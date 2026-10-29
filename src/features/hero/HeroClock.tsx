@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { cn } from '@/ui/lib/cn';
+import { useTranslation } from '@/core/i18n';
+import { getClockParts, useNow } from '@/core/datetime';
 
 export interface HeroClockProps {
   style?: 'digital' | 'minimal' | 'serif' | 'flip' | 'mono';
@@ -16,28 +18,10 @@ export const HeroClock: React.FC<HeroClockProps> = ({
   showDate = true,
   className,
 }) => {
-  const [now, setNow] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const hoursRaw = now.getHours();
-  const hours =
-    timeFormat === '12h'
-      ? (hoursRaw % 12 || 12).toString().padStart(2, '0')
-      : hoursRaw.toString().padStart(2, '0');
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const seconds = now.getSeconds().toString().padStart(2, '0');
-  const ampm = timeFormat === '12h' ? (hoursRaw >= 12 ? 'PM' : 'AM') : '';
-
-  // Форматирование даты на русском языке (Правило 1)
-  const dateFormatted = new Intl.DateTimeFormat('ru-RU', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  }).format(now);
+  const { formatDate } = useTranslation();
+  const now = useNow(1000);
+  const { hours, minutes, seconds, meridiem: ampm } = getClockParts(now, timeFormat === '12h');
+  const dateFormatted = formatDate(now, { weekday: 'long', day: 'numeric', month: 'long' });
 
   const styleVariants = {
     digital: (

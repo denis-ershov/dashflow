@@ -1,66 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/ui/lib/cn';
 import { Calendar } from 'lucide-react';
+import { useTranslation } from '@/core/i18n';
+import { computePeriodProgress, useNow } from '@/core/datetime';
 
 export interface YearProgressionProps {
   className?: string;
 }
 
+type HeroProgressMode = 'year' | 'month' | 'day';
+
 export const YearProgression: React.FC<YearProgressionProps> = ({ className }) => {
-  const [viewMode, setViewMode] = useState<'year' | 'month' | 'day'>('year');
-  const [progress, setProgress] = useState({
-    year: { percent: 0, label: 'Год' },
-    month: { percent: 0, label: 'Месяц' },
-    day: { percent: 0, label: 'День' },
-  });
+  const [viewMode, setViewMode] = useState<HeroProgressMode>('year');
+  const { formatDate } = useTranslation();
+  const now = useNow(60_000);
 
-  useEffect(() => {
-    const calculateProgress = () => {
-      const now = new Date();
-
-      // День
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-      const dayPercent = Math.min(
-        100,
-        Math.max(0, ((now.getTime() - startOfDay) / 86400000) * 100),
-      );
-
-      // Месяц
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-      const totalMonthMs = daysInMonth * 86400000;
-      const monthPercent = Math.min(
-        100,
-        Math.max(0, ((now.getTime() - startOfMonth) / totalMonthMs) * 100),
-      );
-
-      // Год
-      const startOfYear = new Date(now.getFullYear(), 0, 1).getTime();
-      const isLeap =
-        (now.getFullYear() % 4 === 0 && now.getFullYear() % 100 !== 0) ||
-        now.getFullYear() % 400 === 0;
-      const totalYearMs = (isLeap ? 366 : 365) * 86400000;
-      const yearPercent = Math.min(
-        100,
-        Math.max(0, ((now.getTime() - startOfYear) / totalYearMs) * 100),
-      );
-
-      setProgress({
-        year: { percent: Math.round(yearPercent * 10) / 10, label: `Год ${now.getFullYear()}` },
-        month: {
-          percent: Math.round(monthPercent * 10) / 10,
-          label: new Intl.DateTimeFormat('ru-RU', { month: 'long' }).format(now),
-        },
-        day: { percent: Math.round(dayPercent * 10) / 10, label: 'Сегодня' },
-      });
-    };
-
-    calculateProgress();
-    const interval = setInterval(calculateProgress, 60000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const active = progress[viewMode];
+  const labels: Record<HeroProgressMode, string> = {
+    year: `Год ${now.getFullYear()}`,
+    month: formatDate(now, { month: 'long' }),
+    day: 'Сегодня',
+  };
+  const active = { label: labels[viewMode], percent: computePeriodProgress(viewMode, now).percent };
 
   const handleNextMode = () => {
     if (viewMode === 'year') setViewMode('month');

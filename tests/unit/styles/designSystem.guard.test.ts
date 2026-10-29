@@ -32,7 +32,7 @@ function findAll(pattern: RegExp): string[] {
 
 /**
  * Иллюстративные цвета данных: погодные иконки, шкала качества воздуха,
- * градиенты-заглушки закладок, полосы прогресса, иконки поисковиков.
+ * градиенты-заглушки закладок, полосы прогресса.
  * Это не элементы интерфейса, их смысл — в самом оттенке, поэтому токены темы к ним не применяются.
  */
 const ILLUSTRATION_PALETTE_FILES = new Set([
@@ -40,7 +40,6 @@ const ILLUSTRATION_PALETTE_FILES = new Set([
   'src/widgets/built-in/WeatherWidget/weatherService.ts',
   'src/widgets/built-in/BookmarksWidget/bookmarkStyles.ts',
   'src/widgets/built-in/YearProgressWidget/YearProgressWidget.tsx',
-  'src/widgets/built-in/SearchWidget/SearchWidget.tsx',
 ]);
 
 describe('Стражи дизайн-системы', () => {

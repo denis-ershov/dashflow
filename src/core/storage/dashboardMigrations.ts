@@ -1,3 +1,4 @@
+import type { SearchEngineId } from '@/core/search';
 import type { WidgetInstance } from '@/core/widget/types';
 
 export type Breakpoint = 'xl' | 'lg' | 'md' | 'sm' | 'xs';
@@ -64,8 +65,7 @@ export interface HeroSettings {
   showSearchBar: boolean;
   showSpeedDial?: boolean;
   alignment?: 'left' | 'center' | 'right';
-  defaultSearchEngine:
-    'google' | 'yandex' | 'duckduckgo' | 'bing' | 'github' | 'youtube' | 'perplexity';
+  defaultSearchEngine: SearchEngineId;
 }
 
 export interface SpeedDialLink {

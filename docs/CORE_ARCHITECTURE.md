@@ -71,6 +71,17 @@
 - `PermissionManager`: управление выданными согласиями (`storage`, `network`, `bookmarks`, `geolocation`).
 - Интеграция с `PermissionConsentModal`.
 
+### 2.7. Время и календарь (`src/core/datetime/`)
+- Общая логика для Hero и виджетов часов, приветствия и прогресса (ADR-016).
+- `useNow(intervalMs)` — тикающее текущее время; `getClockParts`, `toTimeZone`.
+- `getDayPart` + `DAY_PART_ICONS` — часть суток для приветствия (тексты — ключи `greeting.*` в i18n).
+- `computePeriodProgress` / `getPeriodBounds` — прогресс года, квартала, месяца, недели (с понедельника) и дня по календарным границам, устойчиво к переходу на летнее/зимнее время.
+
+### 2.8. Поиск (`src/core/search/`)
+- Единый реестр поисковиков `SEARCH_ENGINES` (10 шт.) для поиска в Hero, виджета «Поиск» и типа `HeroSettings.defaultSearchEngine`.
+- `resolveSearchTarget` — адрес открывается напрямую (только http/https), остальное — в выбранный поисковик; `openSearchTarget` открывает новую вкладку с `noopener,noreferrer`.
+- `useSlashHotkey` — фокус в поле поиска по «/», если пользователь не печатает в другом поле.
+
 ---
 
 ## 3. Архитектурные Решения (ADR Index)
@@ -83,6 +94,7 @@
 - [ADR-010: Type-Safe i18n Strategy](file:///e:/DEV/Project/dashflow/docs/adr/ADR-010-i18n-strategy.md)
 - [ADR-011: Widget Shell Resilience & Error Boundaries](file:///e:/DEV/Project/dashflow/docs/adr/ADR-011-widget-shell-resilience.md)
 - [ADR-012: Widget Code Splitting & Dynamic Imports](file:///e:/DEV/Project/dashflow/docs/adr/ADR-012-widget-code-splitting.md)
+- [ADR-016: Общая логика Hero и виджетов](file:///e:/DEV/Project/dashflow/docs/adr/ADR-016-shared-hero-widget-logic.md)
 - [ADR-013: Responsive Grid Layout (NavRail заменён FloatingDock)](file:///e:/DEV/Project/dashflow/docs/adr/ADR-013-responsive-grid-and-nav-rail.md)
 - [ADR-014: Declarative Plugins & Sandbox Bridge](file:///e:/DEV/Project/dashflow/docs/adr/ADR-014-declarative-plugins-and-sandbox-bridge.md)
 - [ADR-015: Permissions Consent Flow](file:///e:/DEV/Project/dashflow/docs/adr/ADR-015-permissions-consent-flow.md)

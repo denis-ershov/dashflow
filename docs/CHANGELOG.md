@@ -9,6 +9,31 @@
 
 ## [Unreleased] - 2026-10-29
 
+### Этап D, пункт 6: общая логика Hero и виджетов (ADR-016)
+
+#### Исправлено
+- **Поиск вёл себя по-разному в Hero и в виджете.** Две разные регулярки распознавания адреса: в Hero числа и версии вроде `3.14` или `v1.2` открывались как сайт `https://3.14`, в виджете уходили в поиск. Теперь одна функция `resolveSearchTarget`: адрес — только домен с буквенной зоной или явный http(s), всё остальное — в поисковик.
+- **Новая вкладка без `noopener`.** Виджет «Поиск» открывал результаты через `window.open(url, '_blank')`, открытая страница получала доступ к `window.opener`.
+- **Прогресс периодов.** Сутки считались как 86 400 000 мс — в дни перехода на летнее/зимнее время проценты дня, недели и т. д. сдвигались; неделя в воскресенье показывала «осталось 0 дн.» при 6/7 прошедшей. Теперь границы календарные, неделя с понедельника.
+- **Приветствие только по-русски.** Тексты «Доброе утро…» были захардкожены в трёх местах; теперь ключи `greeting.*` в обеих локалях.
+- Дата под часами в Hero всегда форматировалась как `ru-RU`, теперь — по языку интерфейса.
+
+#### Изменено
+- Hero и виджеты используют общие модули `src/core/datetime` (время, часть суток, части часов, часовой пояс, прогресс периодов) и `src/core/search` (реестр поисковиков, разбор запроса, «/»). Разметка у каждой пары своя.
+- В поиске Hero доступны те же 10 поисковиков, что и в виджете (добавлены ChatGPT, Claude AI, Brave Search); `HeroSettings.defaultSearchEngine` типизирован через `SearchEngineId`.
+- Иконки ChatGPT, Claude и Brave используют токены `success`/`warning`/`danger` вместо цветов палитры.
+- `WidgetShell` рисует карточку через примитив `Card` (варианты `glass` и `subtle`).
+
+#### Добавлено
+- `src/core/datetime/*`, `src/core/search/*`, ключи i18n `greeting.*`, ADR-016, тесты `tests/unit/core/{datetime,search}.test.ts`.
+
+#### Изменённые файлы
+`src/core/datetime/*`, `src/core/search/*`, `src/core/storage/dashboardMigrations.ts`, `src/core/i18n/locales/{ru,en}.ts`, `src/core/widget/WidgetShell.tsx`, `src/features/hero/{HeroClock,HeroSection,SearchBar2,SmartGreeting,YearProgression}.tsx`, `src/widgets/built-in/{ClockWidget/ClockWidget,GreetingWidget/GreetingWidget,YearProgressWidget/YearProgressWidget,SearchWidget/SearchWidget}.tsx`, `src/widgets/built-in/SearchWidget/types.ts`, тесты, `docs/{CORE_ARCHITECTURE,THEME_ENGINE_ARCHITECTURE,AUDIT_2026-10-29}.md`, `docs/adr/ADR-016-shared-hero-widget-logic.md`.
+
+#### Миграции и совместимость
+- Формат данных не меняется: сохранённые `defaultSearchEngine` и `engine` остаются валидными; неизвестное значение даёт Google (`getSearchEngine`).
+- Откат: `git revert`.
+
 ### Этап D аудита: визуальный редизайн Hero, дока и виджетов
 
 #### Исправлено

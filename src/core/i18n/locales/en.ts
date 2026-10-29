@@ -1,4 +1,10 @@
 export const en = {
+  greeting: {
+    morning: 'Good morning',
+    day: 'Good afternoon',
+    evening: 'Good evening',
+    night: 'Good night',
+  },
   app: {
     title: 'DashFlow',
     subtitle: 'Personal Start Page',

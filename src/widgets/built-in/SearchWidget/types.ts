@@ -1,16 +1,8 @@
-export type SearchEngine =
-  | 'google'
-  | 'yandex'
-  | 'duckduckgo'
-  | 'bing'
-  | 'github'
-  | 'youtube'
-  | 'perplexity'
-  | 'chatgpt'
-  | 'claude'
-  | 'brave';
+import type { SearchEngineId } from '@/core/search';
 
-export type SearchEngineId = SearchEngine;
+/** Набор поисковиков общий с поиском в Hero — см. src/core/search */
+export type SearchEngine = SearchEngineId;
+export type { SearchEngineId };
 
 export interface SearchSettings {
   engine?: SearchEngine;

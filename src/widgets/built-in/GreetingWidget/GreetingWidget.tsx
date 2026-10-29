@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import type { WidgetProps } from '@/core/widget';
 import { cn } from '@/ui/lib/cn';
+import { useTranslation } from '@/core/i18n';
+import { DAY_PART_ICONS, getDayPart, useNow } from '@/core/datetime';
 import type { GreetingSettings } from './types';
 
 export const GreetingWidget: React.FC<WidgetProps<GreetingSettings>> = ({ settings }) => {
@@ -12,29 +14,9 @@ export const GreetingWidget: React.FC<WidgetProps<GreetingSettings>> = ({ settin
   const motivationalStatus = settings?.motivationalStatus?.trim();
   const glowEffect = settings?.glowEffect !== false;
 
-  const [greeting, setGreeting] = useState<{ text: string; icon: string }>({
-    text: 'Добрый день',
-    icon: '✨',
-  });
-
-  useEffect(() => {
-    const updateGreeting = () => {
-      const hour = new Date().getHours();
-      if (hour >= 5 && hour < 12) {
-        setGreeting({ text: 'Доброе утро', icon: '🌅' });
-      } else if (hour >= 12 && hour < 18) {
-        setGreeting({ text: 'Добрый день', icon: '☀️' });
-      } else if (hour >= 18 && hour < 23) {
-        setGreeting({ text: 'Добрый вечер', icon: '🌆' });
-      } else {
-        setGreeting({ text: 'Доброй ночи', icon: '🌙' });
-      }
-    };
-
-    updateGreeting();
-    const timer = setInterval(updateGreeting, 60000);
-    return () => clearInterval(timer);
-  }, []);
+  const { t } = useTranslation();
+  const dayPart = getDayPart(useNow(60_000).getHours());
+  const greeting = { text: t(`greeting.${dayPart}`), icon: DAY_PART_ICONS[dayPart] };
 
   const displayName = userName?.trim() ? `, ${userName.trim()}` : '';
   const mainText = customGreeting
