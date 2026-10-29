@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { ResponsiveGridLayout, useContainerWidth, verticalCompactor } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
 import { Columns, Move, Plus, Check, Sliders } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { WidgetRegistry } from '@/core/widget/registry';
 import { WidgetShell } from '@/core/widget/WidgetShell';
@@ -33,9 +34,9 @@ const getResponsiveCols = (baseCols: number) => {
 export const GridEngine: React.FC = () => {
   const { t } = useTranslation();
   const {
-    columns,
+    baseColumns,
     gap,
-    widgets,
+    instances,
     layouts,
     isEditMode,
     setEditMode,
@@ -45,18 +46,33 @@ export const GridEngine: React.FC = () => {
     removeWidget,
     activeModal,
     setActiveModal,
-  } = useDashboardStore();
+  } = useDashboardStore(
+    useShallow((s) => ({
+      baseColumns: s.baseColumns,
+      gap: s.gap,
+      instances: s.instances,
+      layouts: s.layouts,
+      isEditMode: s.isEditMode,
+      setEditMode: s.setEditMode,
+      setBaseColumns: s.setBaseColumns,
+      setGap: s.setGap,
+      updateLayout: s.updateLayout,
+      removeWidget: s.removeWidget,
+      activeModal: s.activeModal,
+      setActiveModal: s.setActiveModal,
+    })),
+  );
 
   const [activeSettingsInstanceId, setActiveSettingsInstanceId] = useState<string | null>(null);
   const [currentBreakpoint, setCurrentBreakpoint] = useState<Breakpoint>('xl');
   const [focusedInstanceId, setFocusedInstanceId] = useState<string | null>(null);
   const { width, containerRef, mounted } = useContainerWidth();
 
-  const responsiveCols = getResponsiveCols(columns);
+  const responsiveCols = getResponsiveCols(baseColumns);
 
   const { rowHeight } = useGridMetrics({
     containerRef: containerRef as React.RefObject<HTMLElement>,
-    cols: columns,
+    cols: baseColumns,
     margin: gap,
   });
 
@@ -65,7 +81,7 @@ export const GridEngine: React.FC = () => {
       const items = layouts[currentBreakpoint];
       const target = items.find((item) => item.i === instanceId);
       if (!target) return;
-      const widgetId = widgets.find((w) => w.instanceId === instanceId)?.widgetId;
+      const widgetId = instances.find((w) => w.instanceId === instanceId)?.widgetId;
       const size = widgetId ? WidgetRegistry.get(widgetId)?.size : undefined;
       const next = applyKeyboardDelta(
         target,
@@ -81,7 +97,7 @@ export const GridEngine: React.FC = () => {
         items.map((item) => (item.i === instanceId ? next : item)),
       );
     },
-    [layouts, currentBreakpoint, widgets, responsiveCols, updateLayout],
+    [layouts, currentBreakpoint, instances, responsiveCols, updateLayout],
   );
 
   const { liveAnnouncement } = useGridKeyboardNav({
@@ -107,7 +123,7 @@ export const GridEngine: React.FC = () => {
     }
   };
 
-  if (widgets.length === 0) {
+  if (instances.length === 0) {
     return (
       <div
         data-testid="grid-engine-container"
@@ -154,7 +170,7 @@ export const GridEngine: React.FC = () => {
                   type="button"
                   onClick={() => setBaseColumns(cols)}
                   className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
-                    columns === cols
+                    baseColumns === cols
                       ? 'bg-primary text-primary-fg shadow-1'
                       : 'text-fg-muted hover:text-fg hover:bg-surface-hover'
                   }`}
@@ -232,7 +248,7 @@ export const GridEngine: React.FC = () => {
         onBreakpointChange={(bp) => setCurrentBreakpoint(bp as Breakpoint)}
         onLayoutChange={handleLayoutChange}
       >
-        {widgets.map((item) => {
+        {instances.map((item) => {
           const definition = WidgetRegistry.get(item.widgetId);
           const widgetTitle = definition?.nameKey ? t(definition.nameKey) : definition?.name || item.widgetId;
 

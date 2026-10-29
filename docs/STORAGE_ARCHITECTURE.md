@@ -51,6 +51,13 @@ src/core/storage/
 - Состояние v2 разделяет `instances` (идентификаторы и настройки) и `layouts` (адаптивные раскладки для 5 брейкпоинтов: `xl`, `lg`, `md`, `sm`, `xs`).
 - Функция `deriveResponsiveLayouts(baseLayout, baseCols)` автоматически рассчитывает плотную адаптивную сетку для мобильных и планшетных устройств, гарантируя отсутствие горизонтального скролла (Правила 8–10).
 
+### 5.1. Что сохраняет `useDashboardStore`
+
+- Сохраняются только данные: `version`, `baseColumns`, `gap`, `layoutMode`, `heroSettings`, `speedDialLinks`, `instances`, `layouts` (список `PERSISTED_KEYS`, функция `pickPersistedDashboard`).
+- Состояние UI (`activeModal`, `isEditMode`, `isCommandPaletteOpen`) живёт только в памяти: после перезагрузки вкладка открывается без модалок и вне режима правки.
+- `persist.partialize` отбрасывает UI-поля при записи, `persist.merge` — при чтении. Второе нужно для сохранений, сделанных до 2026-10-29: они содержат `activeModal`, `isEditMode` и производный массив `widgets`. Версия persist (2) не менялась: формат данных тот же, лишние поля просто перестают читаться и исчезают при следующей записи.
+- Производные legacy-поля `widgets` и `columns` удалены из стора. Старые сохранения и файлы экспорта с `widgets` по-прежнему читаются через `migrateDashboardState` (ветка v1).
+
 ---
 
 ## 6. Изоляция данных мульти-инстансов виджетов (Multi-instance Isolation)

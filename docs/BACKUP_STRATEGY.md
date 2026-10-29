@@ -143,43 +143,36 @@ DashFlow — это **клиентское браузерное расширен
 Settings → Data Management → Export Settings
 \\\
 
-**Формат экспорта:**
+**Формат экспорта** (`ImportExportModal`, версия файла `2.1`):
 \\\json
 {
-  "version": "3.7.0",
-  "exportedAt": "2026-09-30T12:34:56.789Z",
-  "settings": {
-    "theme": "dark",
-    "language": "ru",
-    "displayMode": "modular",
-    ...
+  "version": "2.1",
+  "exportedAt": "2026-10-29T12:34:56.789Z",
+  "theme": { "activePresetId": "...", "wallpaperUrl": null, "scrim": 0.4, "customCss": "" },
+  "dashboard": {
+    "version": 2,
+    "baseColumns": 12,
+    "gap": 16,
+    "layoutMode": "modular",
+    "heroSettings": { ... },
+    "speedDialLinks": [ ... ],
+    "instances": [ { "instanceId": "clock-1", "widgetId": "clock", "settings": { ... } } ],
+    "layouts": { "xl": [ ... ], "lg": [ ... ], "md": [ ... ], "sm": [ ... ], "xs": [ ... ] }
   },
-  "widgets": [
-    {
-      "id": "clock-1",
-      "type": "clock",
-      "position": { "x": 0, "y": 0 },
-      "size": { "w": 2, "h": 1 },
-      "config": { ... }
-    },
-    ...
-  ],
-  "userContent": {
-    "todos": [...],
-    "notes": [...],
-    "quickLinks": [...],
-    "rssFeeds": [...]
-  }
+  "settings": { "language": "ru" }
 }
 \\\
 
-**Имя файла:** `dashflow-backup-2026-09-30.json`
+**Имя файла:** `dashflow-config-<timestamp>.json`
 
 **Процесс экспорта:**
-1. Пользователь нажимает "Export Settings"
-2. DashFlow читает все данные из `chrome.storage.local`
-3. Сериализует в JSON
-4. Скачивает файл через `chrome.downloads` API
+1. Пользователь нажимает «Скачать JSON Конфигурацию» в настройках
+2. DashFlow берёт сохраняемую часть стора дашборда (`pickPersistedDashboard`), тему и язык
+3. Сериализует в JSON и скачивает через `Blob` + `<a download>`
+
+**Импорт:** принимает файлы `2.0`/`2.1` и старые файлы с плоским массивом `widgets` (через `migrateDashboardState`). Язык применяется, только если он поддерживается (`isSupportedLanguage`); тема проходит `migrateThemeState` и валидацию CSS.
+
+**Ограничение:** содержимое виджетов, которое хранится в отдельных ключах `dashflow_{widget}_{instanceId}` (заметки, задачи, быстрые ссылки), в файл экспорта **не входит**.
 
 **Важно:**
 - ✅ Экспорт не содержит секретов или токенов (их нет)

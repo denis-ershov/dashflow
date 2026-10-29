@@ -24,7 +24,6 @@ describe('Integration: Full User Workflow & Core Resilience', () => {
     useDashboardStore.setState({
       instances: [],
       layouts: { xl: [], lg: [], md: [], sm: [], xs: [] },
-      widgets: [],
       isEditMode: false,
       activeModal: null,
     });
@@ -36,19 +35,19 @@ describe('Integration: Full User Workflow & Core Resilience', () => {
   });
 
   it('должен проходить полный жизненный цикл управления виджетами на дашборде', () => {
-    const initialCount = useDashboardStore.getState().widgets.length;
+    const initialCount = useDashboardStore.getState().instances.length;
 
     // 1. Добавление виджета часов
     useDashboardStore.getState().addWidget('clock');
-    expect(useDashboardStore.getState().widgets).toHaveLength(initialCount + 1);
+    expect(useDashboardStore.getState().instances).toHaveLength(initialCount + 1);
     const clockInstance =
-      useDashboardStore.getState().widgets[useDashboardStore.getState().widgets.length - 1];
+      useDashboardStore.getState().instances[useDashboardStore.getState().instances.length - 1];
     expect(clockInstance.widgetId).toBe('clock');
     expect(clockInstance.instanceId).toBeDefined();
 
     // 2. Добавление виджета заметок
     useDashboardStore.getState().addWidget('notes');
-    expect(useDashboardStore.getState().widgets).toHaveLength(initialCount + 2);
+    expect(useDashboardStore.getState().instances).toHaveLength(initialCount + 2);
 
     // 3. Обновление настроек виджета
     useDashboardStore
@@ -56,7 +55,7 @@ describe('Integration: Full User Workflow & Core Resilience', () => {
       .updateWidgetSettings(clockInstance.instanceId, { is24Hour: false, showSeconds: true });
     const updated = useDashboardStore
       .getState()
-      .widgets.find((w) => w.instanceId === clockInstance.instanceId);
+      .instances.find((w) => w.instanceId === clockInstance.instanceId);
     expect(updated?.settings).toEqual({ is24Hour: false, showSeconds: true });
 
     // 4. Переключение режима редактирования
@@ -66,7 +65,7 @@ describe('Integration: Full User Workflow & Core Resilience', () => {
 
     // 5. Удаление виджета
     useDashboardStore.getState().removeWidget(clockInstance.instanceId);
-    expect(useDashboardStore.getState().widgets).toHaveLength(initialCount + 1);
+    expect(useDashboardStore.getState().instances).toHaveLength(initialCount + 1);
   });
 
   it('должен проходить полный сценарий смены тем, пресетов и валидации CSS', () => {

@@ -19,17 +19,6 @@ describe('App Root Layout', () => {
           settings: {},
         },
       ],
-      widgets: [
-        {
-          instanceId: 'clock-1',
-          widgetId: 'clock',
-          x: 0,
-          y: 0,
-          w: 4,
-          h: 2,
-          settings: {},
-        },
-      ],
       layouts: {
         xl: [{ i: 'clock-1', x: 0, y: 0, w: 4, h: 2 }],
         lg: [{ i: 'clock-1', x: 0, y: 0, w: 4, h: 2 }],

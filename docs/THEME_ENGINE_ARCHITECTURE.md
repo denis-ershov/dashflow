@@ -152,3 +152,9 @@
    - `WallpaperPicker`: выбор фото-обоев и управление затемнением scrim.
    - `CustomCssEditor`: редактор пользовательского CSS с проверкой безопасности и счетчиком символов.
    - `AppearanceModal`: единое окно настройки тем с вкладками.
+
+---
+
+## Настройка «Анимации интерфейса»
+
+`useAppStore.setAnimationsEnabled(false)` вызывает `applyMotionPreference` (`src/core/theme/applyTheme.ts`), который ставит `data-motion="reduced"` на `<html>`. В `tokens.css` этот атрибут включает тот же режим, что и системный `prefers-reduced-motion`: длительности 1ms для всех переходов и анимаций. Значение хранится в ключе `app_animations` и применяется при `initialize()`.

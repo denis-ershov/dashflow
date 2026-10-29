@@ -7,7 +7,7 @@ import { useAppStore } from '@/stores/useAppStore';
 
 describe('SettingsModal Component', () => {
   beforeEach(() => {
-    useDashboardStore.setState({ activeModal: 'settings', columns: 12, gap: 16 });
+    useDashboardStore.setState({ activeModal: 'settings', baseColumns: 12, gap: 16 });
     useAppStore.setState({ language: 'ru', animationsEnabled: true });
   });
 
@@ -29,6 +29,6 @@ describe('SettingsModal Component', () => {
     render(<SettingsModal />);
     const col16Button = screen.getByText('16 Колонок');
     fireEvent.click(col16Button);
-    expect(useDashboardStore.getState().columns).toBe(16);
+    expect(useDashboardStore.getState().baseColumns).toBe(16);
   });
 });

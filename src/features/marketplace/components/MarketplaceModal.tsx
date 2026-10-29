@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Modal } from '@/ui/overlays';
+import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { usePluginStore } from '@/core/plugins/pluginStore';
 import { WidgetRegistry } from '@/core/widget/registry';
@@ -23,7 +24,15 @@ import {
 
 export const MarketplaceModal: React.FC = () => {
   const { t } = useTranslation();
-  const { activeModal, setActiveModal, widgets, addWidget, removeWidget } = useDashboardStore();
+  const { activeModal, setActiveModal, instances, addWidget, removeWidget } = useDashboardStore(
+    useShallow((s) => ({
+      activeModal: s.activeModal,
+      setActiveModal: s.setActiveModal,
+      instances: s.instances,
+      addWidget: s.addWidget,
+      removeWidget: s.removeWidget,
+    })),
+  );
   const { plugins, installPlugin, uninstallPlugin } = usePluginStore();
 
   const [activeTab, setActiveTab] = useState<'all' | 'builtin' | 'custom' | 'import'>('all');
@@ -105,7 +114,7 @@ export const MarketplaceModal: React.FC = () => {
   }, [combinedItems, activeTab, selectedCategory, searchQuery]);
 
   const isInstalled = (widgetId: string) => {
-    return widgets.some((w) => w.widgetId === widgetId);
+    return instances.some((w) => w.widgetId === widgetId);
   };
 
   const handleAddClick = async (item: (typeof combinedItems)[0]) => {
@@ -375,7 +384,7 @@ export const MarketplaceModal: React.FC = () => {
                                 size="sm"
                                 variant="secondary"
                                 onClick={() => {
-                                  const inst = widgets.find((w) => w.widgetId === item.id);
+                                  const inst = instances.find((w) => w.widgetId === item.id);
                                   if (inst) removeWidget(inst.instanceId);
                                 }}
                               >

@@ -110,6 +110,19 @@ export function applyWallpaper(url: string | null | undefined, scrim?: number): 
   document.documentElement.style.setProperty('--app-scrim', String(finalScrim));
 }
 
+/**
+ * Настройка «Анимации интерфейса». Выключенные анимации включают тот же режим,
+ * что и системный prefers-reduced-motion (см. tokens.css).
+ */
+export function applyMotionPreference(enabled: boolean): void {
+  if (typeof document === 'undefined') return;
+  if (enabled) {
+    document.documentElement.removeAttribute('data-motion');
+  } else {
+    document.documentElement.setAttribute('data-motion', 'reduced');
+  }
+}
+
 export interface FullAppearanceParams {
   theme?: ThemeTokens;
   customCss?: string;

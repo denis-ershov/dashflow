@@ -33,7 +33,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
   instanceId,
   settings,
 }) => {
-  const { updateWidgetSettings } = useDashboardStore();
+  const updateWidgetSettings = useDashboardStore((s) => s.updateWidgetSettings);
 
   // Инициализация лент с поддержкой обратной совместимости
   const initialFeeds: RssFeedConfig[] = useMemo(() => {

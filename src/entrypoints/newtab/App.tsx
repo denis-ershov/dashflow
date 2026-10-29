@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '@/stores/useAppStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useTranslation } from '@/core/i18n';
 import { GridEngine } from '@/features/dashboard/components/GridEngine';
@@ -19,7 +20,8 @@ import { Spinner, RootErrorBoundary } from '@/ui/feedback';
 import { ToastContainer } from '@/ui/primitives/Toast';
 
 function DashboardContent() {
-  const { isInitialized, initialize: initApp } = useAppStore();
+  const isInitialized = useAppStore((s) => s.isInitialized);
+  const initApp = useAppStore((s) => s.initialize);
   const {
     activeModal,
     setActiveModal,
@@ -33,7 +35,22 @@ function DashboardContent() {
     isEditMode,
     toggleEditMode,
     setCommandPaletteOpen,
-  } = useDashboardStore();
+  } = useDashboardStore(
+    useShallow((s) => ({
+      activeModal: s.activeModal,
+      setActiveModal: s.setActiveModal,
+      layoutMode: s.layoutMode,
+      setLayoutMode: s.setLayoutMode,
+      heroSettings: s.heroSettings,
+      updateHeroSettings: s.updateHeroSettings,
+      speedDialLinks: s.speedDialLinks,
+      addSpeedDialLink: s.addSpeedDialLink,
+      removeSpeedDialLink: s.removeSpeedDialLink,
+      isEditMode: s.isEditMode,
+      toggleEditMode: s.toggleEditMode,
+      setCommandPaletteOpen: s.setCommandPaletteOpen,
+    })),
+  );
   const initializeTheme = useThemeStore((state) => state.initialize);
   const isAudioPlaying = useAudioStore((state) => Object.values(state.activeTracks).some(Boolean));
   const stopAllAudio = useAudioStore((state) => state.stopAll);

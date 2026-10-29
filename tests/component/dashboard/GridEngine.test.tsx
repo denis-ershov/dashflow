@@ -44,25 +44,12 @@ describe('GridEngine Component', () => {
     };
 
     useDashboardStore.setState({
-      columns: 12,
       baseColumns: 12,
       gap: 16,
       isEditMode: false,
       activeModal: null,
       instances,
       layouts,
-      widgets: [
-        {
-          instanceId: 'clock-1',
-          widgetId: 'clock',
-          x: 0,
-          y: 0,
-          w: 4,
-          h: 2,
-          settings: { is24Hour: true },
-        },
-        { instanceId: 'quotes-1', widgetId: 'quotes', x: 4, y: 0, w: 6, h: 2, settings: {} },
-      ],
     });
     vi.restoreAllMocks();
   });
@@ -84,7 +71,6 @@ describe('GridEngine Component', () => {
   it('должен отображать EmptyState при отсутствии виджетов на дашборде', () => {
     useDashboardStore.setState({
       instances: [],
-      widgets: [],
       layouts: { xl: [], lg: [], md: [], sm: [], xs: [] },
     });
 
@@ -108,6 +94,5 @@ describe('GridEngine Component', () => {
 
     fireEvent.click(removeButtons[0]);
     expect(useDashboardStore.getState().instances.length).toBe(1);
-    expect(useDashboardStore.getState().widgets.length).toBe(1);
   });
 });

@@ -18,6 +18,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { Modal } from '@/ui/overlays/Modal';
+import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useTranslation } from '@/core/i18n';
 import { WidgetRegistry } from '@/core/widget/registry';
@@ -56,7 +57,13 @@ const CATEGORIES: { key: WidgetCategory | 'all'; label: string }[] = [
 
 export const AddWidgetModal: React.FC = () => {
   const { t } = useTranslation();
-  const { activeModal, setActiveModal, addWidget } = useDashboardStore();
+  const { activeModal, setActiveModal, addWidget } = useDashboardStore(
+    useShallow((s) => ({
+      activeModal: s.activeModal,
+      setActiveModal: s.setActiveModal,
+      addWidget: s.addWidget,
+    })),
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<WidgetCategory | 'all'>('all');
 

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { Modal } from '@/ui/overlays';
-import { useDashboardStore } from '@/stores/useDashboardStore';
+import { useDashboardStore, pickPersistedDashboard } from '@/stores/useDashboardStore';
 import { useThemeStore } from '@/core/theme/themeStore';
 import { useAppStore } from '@/stores/useAppStore';
+import { isSupportedLanguage } from '@/core/i18n';
 import { StorageAdapter, STORAGE_KEYS, migrateDashboardState } from '@/core/storage';
 import { Button } from '@/ui/primitives';
 import { Download, Upload, CheckCircle2, AlertTriangle } from 'lucide-react';
@@ -13,8 +15,14 @@ export interface ImportExportModalProps {
 }
 
 export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, onClose }) => {
-  const { widgets, columns, gap } = useDashboardStore();
-  const { activePresetId, wallpaperUrl, scrim, customCss } = useThemeStore();
+  const { activePresetId, wallpaperUrl, scrim, customCss } = useThemeStore(
+    useShallow((s) => ({
+      activePresetId: s.activePresetId,
+      wallpaperUrl: s.wallpaperUrl,
+      scrim: s.scrim,
+      customCss: s.customCss,
+    })),
+  );
   const language = useAppStore((state) => state.language);
 
   const [importJson, setImportJson] = useState('');
@@ -22,23 +30,11 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleExport = () => {
-    const dashState = useDashboardStore.getState();
     const data = {
-      version: '2.0',
+      version: '2.1',
       exportedAt: new Date().toISOString(),
       theme: { activePresetId, wallpaperUrl, scrim, customCss },
-      dashboard: {
-        version: 2,
-        instances: dashState.instances,
-        layouts: dashState.layouts,
-        baseColumns: dashState.baseColumns,
-        gap: dashState.gap,
-        layoutMode: dashState.layoutMode,
-        heroSettings: dashState.heroSettings,
-        speedDialLinks: dashState.speedDialLinks,
-      },
-      layout: { columns, gap },
-      widgets,
+      dashboard: pickPersistedDashboard(useDashboardStore.getState()),
       settings: { language },
     };
 
@@ -58,10 +54,11 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
       setStatus('idle');
       setErrorMsg('');
 
-      const parsed = JSON.parse(importJson) as Record<string, unknown>;
-      if (typeof parsed !== 'object' || parsed === null) {
+      const raw: unknown = JSON.parse(importJson);
+      if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
         throw new Error('Некорректный формат JSON файла');
       }
+      const parsed = raw as Record<string, unknown>;
 
       const rawDashboard = parsed.dashboard || parsed;
       const hasDashboardData = Boolean(
@@ -73,16 +70,10 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
       );
 
       if (hasDashboardData) {
-        const migrated = migrateDashboardState(rawDashboard);
-        // Сохраняем в формате zustand persist
-        await StorageAdapter.set(STORAGE_KEYS.DASHBOARD, {
-          state: migrated,
-          version: 2,
-        });
-        useDashboardStore.setState({
-          ...migrated,
-          columns: migrated.baseColumns,
-        });
+        const migrated = pickPersistedDashboard(migrateDashboardState(rawDashboard));
+        // Пишем напрямую в формате zustand persist: перезагрузка ниже не должна обогнать асинхронный persist
+        await StorageAdapter.set(STORAGE_KEYS.DASHBOARD, { state: migrated, version: 2 });
+        useDashboardStore.setState(migrated);
       }
 
       if (parsed.theme) {
@@ -91,8 +82,8 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
 
       if (parsed.settings && typeof parsed.settings === 'object') {
         const settings = parsed.settings as Record<string, unknown>;
-        if (typeof settings.language === 'string') {
-          await useAppStore.getState().setLanguage(settings.language as 'ru' | 'en');
+        if (isSupportedLanguage(settings.language)) {
+          await useAppStore.getState().setLanguage(settings.language);
         }
       }
 

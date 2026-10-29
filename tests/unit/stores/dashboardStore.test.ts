@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useDashboardStore } from '@/stores/useDashboardStore';
+import { useDashboardStore, pickPersistedDashboard } from '@/stores/useDashboardStore';
 
 describe('useDashboardStore (v2)', () => {
   beforeEach(() => {
@@ -93,5 +93,56 @@ describe('useDashboardStore (v2)', () => {
 
     store.toggleEditMode();
     expect(useDashboardStore.getState().isEditMode).toBe(true);
+  });
+});
+
+describe('useDashboardStore: что переживает перезагрузку', () => {
+  const options = () => useDashboardStore.persist.getOptions();
+
+  beforeEach(() => {
+    useDashboardStore.getState().resetDashboard();
+  });
+
+  it('сохраняет только данные дашборда, без состояния UI', () => {
+    const store = useDashboardStore.getState();
+    store.setActiveModal('settings');
+    store.setEditMode(true);
+    store.setCommandPaletteOpen(true);
+
+    const persisted = options().partialize!(useDashboardStore.getState()) as Record<
+      string,
+      unknown
+    >;
+
+    expect(Object.keys(persisted).sort()).toEqual(
+      [
+        'baseColumns',
+        'gap',
+        'heroSettings',
+        'instances',
+        'layoutMode',
+        'layouts',
+        'speedDialLinks',
+        'version',
+      ].sort(),
+    );
+  });
+
+  it('при чтении старого сохранения игнорирует activeModal, isEditMode и legacy widgets', () => {
+    const current = useDashboardStore.getState();
+    const legacyPersisted = {
+      ...pickPersistedDashboard(current),
+      gap: 24,
+      activeModal: 'settings',
+      isEditMode: true,
+      widgets: [{ instanceId: 'x', widgetId: 'clock', x: 0, y: 0, w: 1, h: 1 }],
+    };
+
+    const merged = options().merge!(legacyPersisted, current) as unknown as Record<string, unknown>;
+
+    expect(merged.gap).toBe(24);
+    expect(merged.activeModal).toBeNull();
+    expect(merged.isEditMode).toBe(false);
+    expect(merged).not.toHaveProperty('widgets');
   });
 });

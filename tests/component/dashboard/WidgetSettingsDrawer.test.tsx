@@ -16,17 +16,6 @@ describe('WidgetSettingsDrawer Component', () => {
           settings: { is24Hour: true, showSeconds: false },
         },
       ],
-      widgets: [
-        {
-          instanceId: 'clock-1',
-          widgetId: 'clock',
-          x: 0,
-          y: 0,
-          w: 4,
-          h: 2,
-          settings: { is24Hour: true, showSeconds: false },
-        },
-      ],
     });
     vi.restoreAllMocks();
   });

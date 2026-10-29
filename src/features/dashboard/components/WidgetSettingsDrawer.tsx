@@ -18,7 +18,8 @@ export const WidgetSettingsDrawer: React.FC<WidgetSettingsDrawerProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
-  const { instances, updateWidgetSettings } = useDashboardStore();
+  const instances = useDashboardStore((s) => s.instances);
+  const updateWidgetSettings = useDashboardStore((s) => s.updateWidgetSettings);
 
   const instance = instances.find((w) => w.instanceId === instanceId);
   const definition = instance ? WidgetRegistry.get(instance.widgetId) : null;

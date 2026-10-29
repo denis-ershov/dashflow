@@ -18,7 +18,7 @@ export const LazyWidgetRenderer: React.FC<LazyWidgetRendererProps> = ({
   settings,
   isEditMode = false,
 }) => {
-  const { updateWidgetSettings } = useDashboardStore();
+  const updateWidgetSettings = useDashboardStore((s) => s.updateWidgetSettings);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [Component, setComponent] = useState<React.ComponentType<WidgetProps<any>> | null>(null);
   const [error, setError] = useState<string | null>(null);

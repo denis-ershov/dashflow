@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Modal } from '@/ui/overlays';
+import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useAppStore } from '@/stores/useAppStore';
 import { useTranslation } from '@/core/i18n';
@@ -12,16 +13,36 @@ export const SettingsModal: React.FC = () => {
   const {
     activeModal,
     setActiveModal,
-    columns,
-    setColumns,
+    baseColumns,
+    setBaseColumns,
     gap,
     setGap,
     layoutMode,
     setLayoutMode,
     heroSettings,
     updateHeroSettings,
-  } = useDashboardStore();
-  const { language, setLanguage, animationsEnabled, setAnimationsEnabled } = useAppStore();
+  } = useDashboardStore(
+    useShallow((s) => ({
+      activeModal: s.activeModal,
+      setActiveModal: s.setActiveModal,
+      baseColumns: s.baseColumns,
+      setBaseColumns: s.setBaseColumns,
+      gap: s.gap,
+      setGap: s.setGap,
+      layoutMode: s.layoutMode,
+      setLayoutMode: s.setLayoutMode,
+      heroSettings: s.heroSettings,
+      updateHeroSettings: s.updateHeroSettings,
+    })),
+  );
+  const { language, setLanguage, animationsEnabled, setAnimationsEnabled } = useAppStore(
+    useShallow((s) => ({
+      language: s.language,
+      setLanguage: s.setLanguage,
+      animationsEnabled: s.animationsEnabled,
+      setAnimationsEnabled: s.setAnimationsEnabled,
+    })),
+  );
   const { t } = useTranslation();
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'general' | 'diagnostics'>('general');
@@ -218,22 +239,22 @@ export const SettingsModal: React.FC = () => {
             <div className="flex gap-2">
               <Button
                 size="sm"
-                variant={columns === 12 ? 'primary' : 'secondary'}
-                onClick={() => setColumns(12)}
+                variant={baseColumns === 12 ? 'primary' : 'secondary'}
+                onClick={() => setBaseColumns(12)}
               >
                 12 Колонок
               </Button>
               <Button
                 size="sm"
-                variant={columns === 16 ? 'primary' : 'secondary'}
-                onClick={() => setColumns(16)}
+                variant={baseColumns === 16 ? 'primary' : 'secondary'}
+                onClick={() => setBaseColumns(16)}
               >
                 16 Колонок
               </Button>
               <Button
                 size="sm"
-                variant={columns === 24 ? 'primary' : 'secondary'}
-                onClick={() => setColumns(24)}
+                variant={baseColumns === 24 ? 'primary' : 'secondary'}
+                onClick={() => setBaseColumns(24)}
               >
                 24 Колонки
               </Button>

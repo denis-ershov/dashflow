@@ -97,6 +97,10 @@ export function formatNumber(
   return new Intl.NumberFormat(lang === 'ru' ? 'ru-RU' : 'en-US', options).format(num);
 }
 
+export function isSupportedLanguage(value: unknown): value is SupportedLanguage {
+  return typeof value === 'string' && Object.hasOwn(locales, value);
+}
+
 /**
  * Определение языка системы / браузера
  */

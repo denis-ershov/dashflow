@@ -14,7 +14,6 @@ describe('MarketplaceModal Component', () => {
     usePluginStore.setState({ plugins: [] });
     useDashboardStore.setState({
       activeModal: 'marketplace',
-      widgets: [],
       instances: [],
     });
     vi.restoreAllMocks();

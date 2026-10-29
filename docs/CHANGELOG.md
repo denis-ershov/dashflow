@@ -9,6 +9,30 @@
 
 ## [Unreleased] - 2026-10-29
 
+### Этап B аудита: корректность стора дашборда
+
+#### Исправлено
+- **Состояние UI переживало перезагрузку.** Стор сохранял `activeModal`, `isEditMode`, `isCommandPaletteOpen`: открытая модалка или режим правки возвращались после перезагрузки вкладки. Теперь сохраняются только данные (`partialize`), а при чтении старых сохранений UI-поля отбрасываются (`merge`).
+- **Переключатель «Анимации» ничего не делал.** Теперь он ставит `data-motion="reduced"` на `<html>` и включает тот же режим, что `prefers-reduced-motion`.
+- **Импорт принимал любой язык.** Строка из файла приводилась к `'ru' | 'en'` без проверки; теперь неизвестный язык игнорируется (`isSupportedLanguage`). JSON-массив больше не принимается за конфигурацию.
+- **Лишние перерисовки.** Компоненты подписывались на весь стор (`useDashboardStore()`): любое изменение, включая каждый шаг перетаскивания в сетке, перерисовывало `App`, все модалки и каждый `LazyWidgetRenderer`. Все потребители переведены на селекторы (`useShallow` или одиночное поле).
+
+#### Удалено
+- Legacy-поля стора `widgets`, `columns`, действие `setColumns`, перегрузка `updateLayout(items[])`, неиспользуемое `reorderWidgets`, тип `LegacyWidgetItem` и пересчёт `computeLegacyWidgets` на каждом изменении.
+- Из файла экспорта — дублирующие `layout` и `widgets` (версия файла `2.0` → `2.1`).
+
+#### Добавлено
+- `pickPersistedDashboard`, `PersistedDashboardState`, тип `LayoutMode` (`src/stores/useDashboardStore.ts`).
+- `isSupportedLanguage` (`src/core/i18n/i18n.ts`), `applyMotionPreference` (`src/core/theme/applyTheme.ts`).
+
+#### Изменённые файлы
+`src/stores/{useDashboardStore,useAppStore}.ts`, `src/core/i18n/i18n.ts`, `src/core/theme/applyTheme.ts`, `src/styles/tokens.css`, `src/entrypoints/newtab/App.tsx`, `src/features/dashboard/components/{GridEngine,AddWidgetModal,CommandPalette,LazyWidgetRenderer,WidgetSettingsDrawer}.tsx`, `src/features/marketplace/components/MarketplaceModal.tsx`, `src/features/settings/components/{SettingsModal,ImportExportModal}.tsx`, `src/widgets/built-in/RssWidget/RssWidget.tsx`, тесты, `docs/{STORAGE_ARCHITECTURE,BACKUP_STRATEGY,THEME_ENGINE_ARCHITECTURE,AUDIT_2026-10-29}.md`.
+
+#### Миграции и совместимость
+- Версия persist не менялась (2). Старые сохранения читаются: лишние поля игнорируются и исчезают при следующей записи. Данные пользователя не теряются — удаляются только производные (`widgets`, `columns`) и UI-поля.
+- Старые файлы экспорта (`2.0` и с массивом `widgets`) импортируются как раньше.
+- Откат: `git revert`. Старый код прочитает новое сохранение: `widgets`/`columns` пересчитываются из `instances`/`layouts` при первом изменении (до него `columns` возьмётся из начального состояния — 12).
+
 ### Этап A аудита: удаление мёртвого кода и подключение «висящих» модулей
 
 План и обоснование — [`docs/AUDIT_2026-10-29.md`](AUDIT_2026-10-29.md).

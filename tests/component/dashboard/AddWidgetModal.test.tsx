@@ -13,7 +13,6 @@ describe('AddWidgetModal Component', () => {
     useDashboardStore.setState({
       activeModal: 'addWidget',
       instances: [],
-      widgets: [],
     });
     vi.restoreAllMocks();
   });

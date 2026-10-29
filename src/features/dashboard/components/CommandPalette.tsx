@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useTranslation } from '@/core/i18n';
 import { WidgetRegistry } from '@/core/widget/registry';
@@ -25,8 +26,17 @@ export const CommandPalette: React.FC = () => {
     addWidget,
     layoutMode,
     setLayoutMode,
-  } = useDashboardStore();
-  const { setPreset } = useThemeStore();
+  } = useDashboardStore(
+    useShallow((s) => ({
+      isCommandPaletteOpen: s.isCommandPaletteOpen,
+      setCommandPaletteOpen: s.setCommandPaletteOpen,
+      setActiveModal: s.setActiveModal,
+      addWidget: s.addWidget,
+      layoutMode: s.layoutMode,
+      setLayoutMode: s.setLayoutMode,
+    })),
+  );
+  const setPreset = useThemeStore((s) => s.setPreset);
 
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);

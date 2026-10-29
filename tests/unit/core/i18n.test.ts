@@ -8,6 +8,7 @@ import {
   detectBrowserLanguage,
   interpolate,
   getPluralForm,
+  isSupportedLanguage,
 } from '@/core/i18n/i18n';
 
 describe('i18n Core Engine', () => {
@@ -147,5 +148,15 @@ describe('i18n Core Engine', () => {
       expect(detectBrowserLanguage()).toBe('en');
       Object.defineProperty(navigator, 'language', { value: origLang, configurable: true });
     });
+  });
+});
+
+describe('isSupportedLanguage', () => {
+  it('пропускает только языки, для которых есть словарь', () => {
+    expect(isSupportedLanguage('ru')).toBe(true);
+    expect(isSupportedLanguage('en')).toBe(true);
+    expect(isSupportedLanguage('de')).toBe(false);
+    expect(isSupportedLanguage('toString')).toBe(false);
+    expect(isSupportedLanguage(undefined)).toBe(false);
   });
 });

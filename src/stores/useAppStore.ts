@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { StorageAdapter } from '@/core/storage';
 import { type SupportedLanguage, useI18nStore, detectBrowserLanguage } from '@/core/i18n';
+import { applyMotionPreference } from '@/core/theme/applyTheme';
 
 
 interface AppState {
@@ -33,6 +34,7 @@ export const useAppStore = create<AppState>()(
         state.animationsEnabled = savedAnim;
         state.isInitialized = true;
       });
+      applyMotionPreference(savedAnim);
 
       // Синхронизация с центральным хранилищем i18n
       if (useI18nStore.getState().language !== savedLang) {
@@ -52,6 +54,7 @@ export const useAppStore = create<AppState>()(
       set((state) => {
         state.animationsEnabled = enabled;
       });
+      applyMotionPreference(enabled);
       await StorageAdapter.set('app_animations', enabled);
     },
   })),
