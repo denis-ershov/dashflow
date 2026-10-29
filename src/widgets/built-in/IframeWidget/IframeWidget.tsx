@@ -33,7 +33,7 @@ export const IframeWidget: React.FC<WidgetProps<IframeSettings>> = ({ settings }
         <h4 className="text-xs font-semibold text-fg mb-1">
           Недопустимый или небезопасный URL
         </h4>
-        <p className="text-[11px] text-fg-muted max-w-xs">
+        <p className="text-2xs text-fg-muted max-w-xs">
           Разрешены только безопасные веб-адреса с протоколом HTTPS или HTTP
         </p>
       </div>
@@ -47,7 +47,7 @@ export const IframeWidget: React.FC<WidgetProps<IframeSettings>> = ({ settings }
   return (
     <div className="w-full h-full relative flex flex-col overflow-hidden bg-surface select-none">
       {showToolbar && (
-        <div className="flex items-center justify-between px-3 py-1.5 bg-surface-elevated/80 border-b border-line text-xs font-medium text-fg z-10 shrink-0">
+        <div className="flex items-center justify-between px-3 py-1.5 bg-surface-active/80 border-b border-line text-xs font-medium text-fg z-10 shrink-0">
           <div className="flex items-center gap-1.5 min-w-0 flex-1 mr-2">
             <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
             <span className="truncate text-xs font-semibold">

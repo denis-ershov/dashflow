@@ -131,29 +131,29 @@ export const DiagnosticsSection: React.FC = () => {
 
         {/* Метрики Web Vitals и Память */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-          <div className="p-2 rounded-lg bg-surface-elevated/60 border border-line text-center">
-            <span className="text-[10px] text-fg-muted uppercase tracking-wider block">LCP Скорость</span>
+          <div className="p-2 rounded-lg bg-surface-active/60 border border-line text-center">
+            <span className="text-2xs text-fg-muted uppercase tracking-wider block">LCP Скорость</span>
             <span className="text-xs font-bold text-fg font-mono">
               {vitals.lcp !== null ? `${vitals.lcp} мс` : '—'}
             </span>
           </div>
 
-          <div className="p-2 rounded-lg bg-surface-elevated/60 border border-line text-center">
-            <span className="text-[10px] text-fg-muted uppercase tracking-wider block">CLS Сдвиг</span>
+          <div className="p-2 rounded-lg bg-surface-active/60 border border-line text-center">
+            <span className="text-2xs text-fg-muted uppercase tracking-wider block">CLS Сдвиг</span>
             <span className="text-xs font-bold text-fg font-mono">
               {vitals.cls !== null ? vitals.cls : '0.00'}
             </span>
           </div>
 
-          <div className="p-2 rounded-lg bg-surface-elevated/60 border border-line text-center">
-            <span className="text-[10px] text-fg-muted uppercase tracking-wider block">DOM Готовность</span>
+          <div className="p-2 rounded-lg bg-surface-active/60 border border-line text-center">
+            <span className="text-2xs text-fg-muted uppercase tracking-wider block">DOM Готовность</span>
             <span className="text-xs font-bold text-fg font-mono">
               {vitals.domContentLoaded !== null ? `${vitals.domContentLoaded} мс` : '—'}
             </span>
           </div>
 
-          <div className="p-2 rounded-lg bg-surface-elevated/60 border border-line text-center">
-            <span className="text-[10px] text-fg-muted uppercase tracking-wider block">Память JS Heap</span>
+          <div className="p-2 rounded-lg bg-surface-active/60 border border-line text-center">
+            <span className="text-2xs text-fg-muted uppercase tracking-wider block">Память JS Heap</span>
             <span className="text-xs font-bold text-fg font-mono">
               {vitals.memory?.usedJSHeapSizeMb ? `${vitals.memory.usedJSHeapSizeMb} МБ` : '—'}
             </span>
@@ -163,23 +163,23 @@ export const DiagnosticsSection: React.FC = () => {
         {/* Статус Circuit Breakers */}
         {circuitBreakers.length > 0 && (
           <div className="pt-2 border-t border-line text-xs flex flex-wrap items-center gap-3">
-            <span className="text-fg-muted text-[11px] font-medium">Сетевые предохранители:</span>
+            <span className="text-fg-muted text-2xs font-medium">Сетевые предохранители:</span>
             {circuitBreakers.map((cb) => (
               <span
                 key={cb.name}
-                className="inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded bg-surface-elevated text-fg border border-line"
+                className="inline-flex items-center gap-1.5 text-2xs px-2 py-0.5 rounded bg-surface-active text-fg border border-line"
               >
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${
                     cb.getState() === 'CLOSED'
                       ? 'bg-success'
                       : cb.getState() === 'HALF_OPEN'
-                        ? 'bg-amber-400 animate-pulse'
+                        ? 'bg-warning animate-pulse'
                         : 'bg-danger animate-pulse'
                   }`}
                 />
                 <span className="font-mono">{cb.name}</span>
-                <span className="text-[10px] text-fg-muted">({cb.getState()})</span>
+                <span className="text-2xs text-fg-muted">({cb.getState()})</span>
               </span>
             ))}
           </div>
@@ -193,7 +193,7 @@ export const DiagnosticsSection: React.FC = () => {
             <Terminal className="w-4 h-4 text-primary" />
             <span>Журнал событий и сетевых сбоев</span>
             {reports.length > 0 && (
-              <span className="text-xs px-2 py-0.2 rounded-full bg-surface-elevated border border-line font-mono text-fg-muted">
+              <span className="text-xs px-2 py-0.2 rounded-full bg-surface-active border border-line font-mono text-fg-muted">
                 {reports.length}
               </span>
             )}
@@ -231,7 +231,7 @@ export const DiagnosticsSection: React.FC = () => {
               className={`px-2.5 py-1 rounded-lg border transition-colors cursor-pointer text-xs ${
                 filterLevel === 'all'
                   ? 'bg-primary text-primary-fg border-primary font-semibold'
-                  : 'bg-surface-elevated text-fg-muted border-line hover:text-fg'
+                  : 'bg-surface-active text-fg-muted border-line hover:text-fg'
               }`}
             >
               Все ({reports.length})
@@ -243,7 +243,7 @@ export const DiagnosticsSection: React.FC = () => {
                 className={`px-2.5 py-1 rounded-lg border transition-colors cursor-pointer text-xs ${
                   filterLevel === 'error'
                     ? 'bg-danger text-white border-danger font-semibold'
-                    : 'bg-surface-elevated text-danger border-line hover:bg-danger/10'
+                    : 'bg-surface-active text-danger border-line hover:bg-danger/10'
                 }`}
               >
                 Ошибки ({errorCount})
@@ -255,8 +255,8 @@ export const DiagnosticsSection: React.FC = () => {
                 onClick={() => setFilterLevel('warning')}
                 className={`px-2.5 py-1 rounded-lg border transition-colors cursor-pointer text-xs ${
                   filterLevel === 'warning'
-                    ? 'bg-amber-500 text-black border-amber-500 font-semibold'
-                    : 'bg-surface-elevated text-amber-400 border-line hover:bg-amber-500/10'
+                    ? 'bg-warning text-black border-warning font-semibold'
+                    : 'bg-surface-active text-warning border-line hover:bg-warning/10'
                 }`}
               >
                 Предупреждения ({warningCount})
@@ -267,10 +267,10 @@ export const DiagnosticsSection: React.FC = () => {
 
         {/* Список логов */}
         {reports.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-6 text-center space-y-2 rounded-xl bg-surface-elevated/30 border border-line/60">
+          <div className="flex flex-col items-center justify-center p-6 text-center space-y-2 rounded-xl bg-surface-active/30 border border-line/60">
             <CheckCircle2 className="w-8 h-8 text-success/80" />
             <p className="text-xs font-semibold text-fg">Журнал пуст</p>
-            <p className="text-[11px] text-fg-muted max-w-sm">
+            <p className="text-2xs text-fg-muted max-w-sm">
               В текущей сессии ошибок и сбоев сети не зафиксировано. Система работает в штатном режиме.
             </p>
           </div>
@@ -285,8 +285,8 @@ export const DiagnosticsSection: React.FC = () => {
                   key={report.id}
                   className={`rounded-xl border transition-all text-xs overflow-hidden ${
                     isExpanded
-                      ? 'bg-surface-elevated border-primary/40 shadow-1'
-                      : 'bg-surface-elevated/50 border-line/70 hover:border-line'
+                      ? 'bg-surface-active border-primary/40 shadow-1'
+                      : 'bg-surface-active/50 border-line/70 hover:border-line'
                   }`}
                 >
                   {/* Заголовок строки лога */}
@@ -307,33 +307,33 @@ export const DiagnosticsSection: React.FC = () => {
                         {isError ? (
                           <AlertCircle className="w-4 h-4 text-danger" />
                         ) : (
-                          <AlertTriangle className="w-4 h-4 text-amber-400" />
+                          <AlertTriangle className="w-4 h-4 text-warning" />
                         )}
                       </div>
 
                       <div className="min-w-0 flex-1 space-y-1">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span
-                            className={`px-1.5 py-0.2 rounded text-[10px] font-bold uppercase tracking-wider border ${
+                            className={`px-1.5 py-0.2 rounded text-2xs font-bold uppercase tracking-wider border ${
                               isError
                                 ? 'bg-danger/15 text-danger border-danger/30'
-                                : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                                : 'bg-warning/15 text-warning border-warning/30'
                             }`}
                           >
                             {report.level}
                           </span>
 
-                          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-surface border border-line text-fg-muted">
+                          <span className="px-1.5 py-0.2 rounded text-2xs font-mono bg-surface border border-line text-fg-muted">
                             {report.context}
                           </span>
 
-                          <span className="inline-flex items-center gap-1 text-[11px] text-fg-dim font-mono">
+                          <span className="inline-flex items-center gap-1 text-2xs text-fg-dim font-mono">
                             <Clock className="w-3 h-3" />
                             {formatTime(report.timestamp)}
                           </span>
                         </div>
 
-                        <p className="font-medium text-fg wrap-break-word text-[12px] leading-snug">
+                        <p className="font-medium text-fg wrap-break-word text-xs leading-snug">
                           {report.message}
                         </p>
                       </div>
@@ -370,14 +370,14 @@ export const DiagnosticsSection: React.FC = () => {
                       {/* Мета-параметры */}
                       {report.meta && Object.keys(report.meta).length > 0 && (
                         <div className="space-y-1">
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-fg-muted">
+                          <span className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
                             Параметры сбоя (Metadata):
                           </span>
                           <div className="flex flex-wrap gap-1.5">
                             {Object.entries(report.meta).map(([k, v]) => (
                               <span
                                 key={k}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface border border-line text-[11px] font-mono text-fg-muted"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface border border-line text-2xs font-mono text-fg-muted"
                               >
                                 <span className="text-fg-dim">{k}:</span>
                                 <span className="text-fg font-semibold">{String(v)}</span>
@@ -390,16 +390,16 @@ export const DiagnosticsSection: React.FC = () => {
                       {/* Стек-трейс */}
                       {report.stack && (
                         <div className="space-y-1">
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-fg-muted">
+                          <span className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
                             Стек вызовов (Stack Trace):
                           </span>
-                          <pre className="p-2.5 rounded-lg bg-canvas text-[11px] font-mono text-fg-muted overflow-x-auto whitespace-pre-wrap break-all border border-line max-h-48 leading-relaxed">
+                          <pre className="p-2.5 rounded-lg bg-canvas text-2xs font-mono text-fg-muted overflow-x-auto whitespace-pre-wrap break-all border border-line max-h-48 leading-relaxed">
                             {report.stack}
                           </pre>
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between text-[10px] text-fg-dim pt-1 border-t border-line/40">
+                      <div className="flex items-center justify-between text-2xs text-fg-dim pt-1 border-t border-line/40">
                         <span>Версия: DashFlow v{report.version}</span>
                         <span>ID: {report.id}</span>
                       </div>
@@ -428,18 +428,18 @@ export const DiagnosticsSection: React.FC = () => {
             return (
               <div
                 key={def.key}
-                className="flex items-center justify-between p-2 rounded-lg bg-surface-elevated/40 border border-line/60"
+                className="flex items-center justify-between p-2 rounded-lg bg-surface-active/40 border border-line/60"
               >
                 <div className="space-y-0.5 pr-2">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-semibold text-fg">{def.title}</span>
                     {def.isExperimental && (
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                      <span className="text-2xs px-1.5 py-0.2 rounded bg-warning/15 text-warning border border-warning/30">
                         Beta
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-fg-muted leading-tight">{def.description}</p>
+                  <p className="text-2xs text-fg-muted leading-tight">{def.description}</p>
                 </div>
                 <Switch
                   checked={isChecked}

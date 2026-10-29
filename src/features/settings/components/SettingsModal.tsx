@@ -107,7 +107,7 @@ export const SettingsModal: React.FC = () => {
               }`}
             >
               <span className="text-xs font-bold text-fg mb-1">Hero + Сетка</span>
-              <span className="text-[10px] text-fg-muted">Часы, поиск и модульные виджеты</span>
+              <span className="text-2xs text-fg-muted">Часы, поиск и модульные виджеты</span>
             </button>
 
             <button
@@ -120,7 +120,7 @@ export const SettingsModal: React.FC = () => {
               }`}
             >
               <span className="text-xs font-bold text-fg mb-1">Свободный холст</span>
-              <span className="text-[10px] text-fg-muted">100% экран под виджеты без Hero</span>
+              <span className="text-2xs text-fg-muted">100% экран под виджеты без Hero</span>
             </button>
 
             <button
@@ -133,7 +133,7 @@ export const SettingsModal: React.FC = () => {
               }`}
             >
               <span className="text-xs font-bold text-fg mb-1">Режим Zen</span>
-              <span className="text-[10px] text-fg-muted">Минимализм и чистый фокус</span>
+              <span className="text-2xs text-fg-muted">Минимализм и чистый фокус</span>
             </button>
           </div>
         </div>
@@ -311,7 +311,7 @@ export const SettingsModal: React.FC = () => {
         <div className="p-4 rounded-xl bg-surface border border-line flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-xs font-semibold text-fg">Импорт / Экспорт данных</p>
-            <p className="text-[10px] text-fg-muted">Сохранение и восстановление настроек в JSON</p>
+            <p className="text-2xs text-fg-muted">Сохранение и восстановление настроек в JSON</p>
           </div>
           <Button size="sm" variant="secondary" onClick={() => setIsImportOpen(true)}>
             Управление JSON

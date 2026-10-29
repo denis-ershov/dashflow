@@ -81,7 +81,7 @@ export const ToastContainer: React.FC = () => {
             key={item.id}
             role="status"
             className={cn(
-              'pointer-events-auto flex items-start gap-3 p-4 rounded-2xl glass-panel shadow-2 border border-line duration-normal',
+              'pointer-events-auto flex items-start gap-3 p-4 rounded-lg glass-panel shadow-2 border border-line duration-normal',
             )}
           >
             {icons[type]}

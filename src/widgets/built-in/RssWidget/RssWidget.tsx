@@ -478,13 +478,13 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
                             <ExternalLink className="w-3.5 h-3.5 text-fg-muted opacity-0 group-hover/item:opacity-100 shrink-0 transition-opacity" />
                           </div>
                           {showDescription && item.description && (
-                            <p className="text-[11px] text-fg-muted line-clamp-1">
+                            <p className="text-2xs text-fg-muted line-clamp-1">
                               {item.description}
                             </p>
                           )}
                         </div>
 
-                        <div className="flex items-center justify-between mt-1 text-[10px] text-fg-muted">
+                        <div className="flex items-center justify-between mt-1 text-2xs text-fg-muted">
                           {showSource && (
                             <span className={badgeClass}>
                               {item.feedColor && (
@@ -523,7 +523,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0 text-[10px] text-fg-muted">
+                      <div className="flex items-center gap-2 shrink-0 text-2xs text-fg-muted">
                         {showSource && (
                           <span className="hidden sm:inline-block px-1.5 py-0.5 rounded-md bg-surface-hover/80 border border-line/40 font-medium truncate max-w-25">
                             {item.feedName}
@@ -551,12 +551,12 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
                       </div>
 
                       {showDescription && item.description && (
-                        <p className="text-[11px] text-fg-muted line-clamp-2 leading-relaxed">
+                        <p className="text-2xs text-fg-muted line-clamp-2 leading-relaxed">
                           {item.description}
                         </p>
                       )}
 
-                      <div className="flex items-center justify-between pt-1 border-t border-line/40 text-[10px] text-fg-muted">
+                      <div className="flex items-center justify-between pt-1 border-t border-line/40 text-2xs text-fg-muted">
                         {showSource && (
                           <span className={badgeClass}>
                             {item.feedColor && (

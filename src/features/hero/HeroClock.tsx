@@ -90,13 +90,13 @@ export const HeroClock: React.FC<HeroClockProps> = ({
     ),
     flip: (
       <div className="flex items-center gap-3 select-none">
-        <div className="glass-panel px-4 py-3 rounded-2xl shadow-2 text-center min-w-17.5 md:min-w-22.5">
+        <div className="glass-panel px-4 py-3 rounded-lg shadow-2 text-center min-w-17.5 md:min-w-22.5">
           <span className="text-4xl md:text-6xl font-display font-bold text-fg tracking-tight">
             {hours}
           </span>
         </div>
         <span className="text-3xl md:text-5xl font-bold text-primary animate-pulse">:</span>
-        <div className="glass-panel px-4 py-3 rounded-2xl shadow-2 text-center min-w-17.5 md:min-w-22.5">
+        <div className="glass-panel px-4 py-3 rounded-lg shadow-2 text-center min-w-17.5 md:min-w-22.5">
           <span className="text-4xl md:text-6xl font-display font-bold text-fg tracking-tight">
             {minutes}
           </span>

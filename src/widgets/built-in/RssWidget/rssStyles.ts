@@ -25,7 +25,7 @@ export function getRssCardClasses({
   let radiusClass = 'rounded-xl';
   if (borderRadius === 'none') radiusClass = 'rounded-none';
   if (borderRadius === 'sm') radiusClass = 'rounded-lg';
-  if (borderRadius === 'lg') radiusClass = 'rounded-2xl';
+  if (borderRadius === 'lg') radiusClass = 'rounded-lg';
 
   const cardClass = cn(
     'group/item relative flex flex-col p-3 transition-all duration-200 ease-out border cursor-pointer select-none',
@@ -35,7 +35,7 @@ export function getRssCardClasses({
   );
 
   const badgeClass = cn(
-    'inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-medium rounded-full bg-surface-hover/80 border border-line/50 text-fg-muted truncate max-w-[140px]',
+    'inline-flex items-center gap-1.5 px-2 py-0.5 text-2xs font-medium rounded-full bg-surface-hover/80 border border-line/50 text-fg-muted truncate max-w-[140px]',
   );
 
   return { cardClass, badgeClass };

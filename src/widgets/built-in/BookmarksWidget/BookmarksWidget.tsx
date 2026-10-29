@@ -616,7 +616,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               {/* Меню быстрых пресетов формы закладок */}
               {isStyleMenuOpen && (
                 <div className="absolute right-0 top-full mt-1 w-48 bg-surface border border-line shadow-3 rounded-xl p-1.5 z-50 backdrop-blur-xl space-y-1 text-xs">
-                  <div className="px-2 py-1 text-[10px] font-bold text-fg-muted uppercase tracking-wider">
+                  <div className="px-2 py-1 text-2xs font-bold text-fg-muted uppercase tracking-wider">
                     Вид закладок
                   </div>
 
@@ -1012,7 +1012,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                       <span className="text-xs font-semibold text-fg truncate block group-hover/tile:text-primary transition-colors duration-200">
                         {item.title}
                       </span>
-                      <span className="text-[10px] text-fg-muted truncate block">
+                      <span className="text-2xs text-fg-muted truncate block">
                         {structureMode === 'flatten' && item.folderName
                           ? item.folderName
                           : item.children
@@ -1114,7 +1114,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                       <span className="text-xs font-semibold text-fg truncate block group-hover/tile:text-primary transition-colors duration-200">
                         {tab.title}
                       </span>
-                      <span className="text-[10px] text-fg-muted truncate block">{tab.url}</span>
+                      <span className="text-2xs text-fg-muted truncate block">{tab.url}</span>
                     </div>
                   </div>
                 </div>
@@ -1199,7 +1199,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                       <span className="text-xs font-semibold text-fg truncate block group-hover/tile:text-primary transition-colors duration-200">
                         {item.title}
                       </span>
-                      <span className="text-[10px] text-fg-muted truncate block">{item.url}</span>
+                      <span className="text-2xs text-fg-muted truncate block">{item.url}</span>
                     </div>
                   </div>
 

@@ -29,7 +29,7 @@ export const AmbientSoundDrawer: React.FC<AmbientSoundDrawerProps> = ({ isOpen, 
     <Drawer isOpen={isOpen} onClose={onClose} title="Звуки природы и концентрации">
       <div className="flex flex-col gap-6 py-2">
         {/* Мастер-контроль */}
-        <div className="glass-panel p-4 rounded-2xl border border-line flex flex-col gap-3">
+        <div className="glass-panel p-4 rounded-lg border border-line flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-fg-muted">
               Общая громкость
@@ -85,7 +85,7 @@ export const AmbientSoundDrawer: React.FC<AmbientSoundDrawerProps> = ({ isOpen, 
               <div
                 key={sound.id}
                 className={cn(
-                  'glass-panel p-4 rounded-2xl border transition-all flex flex-col gap-3',
+                  'glass-panel p-4 rounded-lg border transition-all flex flex-col gap-3',
                   isActive
                     ? 'border-primary/40 shadow-[0_0_16px_var(--dashflow-primary-glow)] bg-primary/5'
                     : 'border-line hover:border-line-hover',

@@ -174,7 +174,7 @@ export const CommandPalette: React.FC = () => {
       />
 
       {/* Palette Container */}
-      <div className="relative w-full max-w-xl glass-panel border border-line rounded-2xl shadow-3 overflow-hidden z-(--z-modal,50) duration-fast">
+      <div className="relative w-full max-w-xl glass-panel border border-line rounded-lg shadow-3 overflow-hidden z-(--z-modal,50) duration-fast">
         <div className="flex items-center px-4 py-3 border-b border-line bg-surface">
           <Search className="w-5 h-5 text-fg-muted mr-3 shrink-0" />
           <input

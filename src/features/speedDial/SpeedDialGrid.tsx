@@ -44,7 +44,7 @@ export const SpeedDialGrid: React.FC<SpeedDialGridProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Открыть ${link.title}`}
-              className="glass-panel flex items-center gap-3 px-4 py-2 rounded-2xl border border-line hover:border-line-hover hover:scale-105 active:scale-95 shadow-1 hover:shadow-2 transition-all duration-fast select-none min-h-11"
+              className="glass-panel flex items-center gap-3 px-4 py-2 rounded-lg border border-line hover:border-line-hover hover:scale-105 active:scale-95 shadow-1 hover:shadow-2 transition-all duration-fast select-none min-h-11"
             >
               <div className="w-6 h-6 rounded-lg bg-surface flex items-center justify-center overflow-hidden shrink-0 border border-line">
                 {favicon ? (
@@ -90,7 +90,7 @@ export const SpeedDialGrid: React.FC<SpeedDialGridProps> = ({
         type="button"
         onClick={onAddClick}
         aria-label="Добавить быструю ссылку"
-        className="glass-panel flex items-center gap-2 px-3 py-2 rounded-2xl border border-dashed border-line hover:border-primary text-fg-muted hover:text-primary hover:bg-surface-hover hover:scale-105 active:scale-95 transition-all duration-fast select-none min-h-11 cursor-pointer"
+        className="glass-panel flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-line hover:border-primary text-fg-muted hover:text-primary hover:bg-surface-hover hover:scale-105 active:scale-95 transition-all duration-fast select-none min-h-11 cursor-pointer"
       >
         <Plus className="w-4 h-4" />
         <span className="text-xs font-medium">Добавить</span>

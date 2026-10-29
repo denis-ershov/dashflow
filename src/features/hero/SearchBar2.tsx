@@ -153,7 +153,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
       <form
         onSubmit={handleSubmit}
         className={cn(
-          'glass-panel flex items-center gap-2 px-3 py-2 rounded-2xl border shadow-2 transition-all duration-normal',
+          'glass-panel flex items-center gap-2 px-3 py-2 rounded-lg border shadow-2 transition-all duration-normal',
           'border-line hover:border-line-hover',
           'focus-within:border-primary focus-within:shadow-[0_0_24px_var(--dashflow-primary-glow)]',
         )}

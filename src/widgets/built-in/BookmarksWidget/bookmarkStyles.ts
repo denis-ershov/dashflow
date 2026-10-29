@@ -69,7 +69,7 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
     none: 'rounded-none',
     sm: 'rounded-lg',
     md: 'rounded-xl',
-    lg: 'rounded-2xl',
+    lg: 'rounded-lg',
     full: 'rounded-full',
   }[radius];
 
@@ -97,40 +97,40 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
           container: 'w-16 p-1 flex flex-col items-center text-center',
           icon: 'w-10 h-10 rounded-xl mb-1 shadow-sm',
           img: 'w-5 h-5',
-          title: 'text-[10px] font-medium leading-tight max-w-[64px]',
+          title: 'text-2xs font-medium leading-tight max-w-[64px]',
           url: 'hidden',
         },
         compact: {
           container: 'w-[76px] p-1.5 flex flex-col items-center text-center',
-          icon: 'w-12 h-12 rounded-2xl mb-1.5 shadow-1',
+          icon: 'w-12 h-12 rounded-lg mb-1.5 shadow-1',
           img: 'w-6 h-6',
-          title: 'text-[11px] font-medium leading-tight max-w-[72px]',
+          title: 'text-2xs font-medium leading-tight max-w-[72px]',
           url: 'hidden',
         },
         medium: {
           container: 'w-24 p-2 flex flex-col items-center text-center',
-          icon: 'w-14 h-14 rounded-2xl mb-1.5 shadow-1',
+          icon: 'w-14 h-14 rounded-lg mb-1.5 shadow-1',
           img: 'w-7 h-7',
           title: 'text-xs font-medium leading-snug max-w-[88px]',
           url: 'hidden',
         },
         large: {
           container: 'w-28 p-2.5 flex flex-col items-center text-center',
-          icon: 'w-16 h-16 rounded-3xl mb-2 shadow-2',
+          icon: 'w-16 h-16 rounded-xl mb-2 shadow-2',
           img: 'w-8 h-8',
           title: 'text-xs font-semibold leading-snug max-w-[104px]',
           url: 'hidden',
         },
         xl: {
           container: 'w-36 p-3 flex flex-col items-center text-center',
-          icon: 'w-20 h-20 rounded-3xl mb-2 shadow-2',
+          icon: 'w-20 h-20 rounded-xl mb-2 shadow-2',
           img: 'w-10 h-10',
           title: 'text-sm font-semibold leading-normal max-w-[128px]',
           url: 'hidden',
         },
       }[size] ?? {
         container: 'w-24 p-2 flex flex-col items-center text-center',
-        icon: 'w-14 h-14 rounded-2xl mb-1.5 shadow-1',
+        icon: 'w-14 h-14 rounded-lg mb-1.5 shadow-1',
         img: 'w-7 h-7',
         title: 'text-xs font-medium leading-snug max-w-[88px]',
         url: 'hidden',
@@ -150,21 +150,21 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
           container: 'w-14 p-1 flex flex-col items-center text-center',
           icon: 'w-10 h-10 rounded-full mb-1 shadow-sm',
           img: 'w-5 h-5',
-          title: 'text-[9px] font-medium leading-tight max-w-[56px]',
+          title: 'text-2xs font-medium leading-tight max-w-[56px]',
           url: 'hidden',
         },
         compact: {
           container: 'w-[72px] p-1.5 flex flex-col items-center text-center',
           icon: 'w-12 h-12 rounded-full mb-1.5 shadow-1',
           img: 'w-6 h-6',
-          title: 'text-[10px] font-medium leading-tight max-w-[68px]',
+          title: 'text-2xs font-medium leading-tight max-w-[68px]',
           url: 'hidden',
         },
         medium: {
           container: 'w-20 p-1.5 flex flex-col items-center text-center',
           icon: 'w-14 h-14 rounded-full mb-1.5 shadow-1',
           img: 'w-7 h-7',
-          title: 'text-[11px] font-medium leading-snug max-w-[76px]',
+          title: 'text-2xs font-medium leading-snug max-w-[76px]',
           url: 'hidden',
         },
         large: {
@@ -185,7 +185,7 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
         container: 'w-20 p-1.5 flex flex-col items-center text-center',
         icon: 'w-14 h-14 rounded-full mb-1.5 shadow-1',
         img: 'w-7 h-7',
-        title: 'text-[11px] font-medium leading-snug max-w-[76px]',
+        title: 'text-2xs font-medium leading-snug max-w-[76px]',
         url: 'hidden',
       };
       shapeClass = circleSizeMap.container;
@@ -203,33 +203,33 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
           container: 'w-[64px] h-[84px] p-2 flex flex-col items-center justify-between text-center',
           icon: 'w-7 h-7 my-auto rounded-lg',
           img: 'w-4 h-4',
-          title: 'text-[9px] font-semibold truncate max-w-full',
+          title: 'text-2xs font-semibold truncate max-w-full',
           url: 'hidden',
         },
         compact: {
           container: 'w-[80px] h-[104px] p-2.5 flex flex-col items-center justify-between text-center',
           icon: 'w-9 h-9 my-auto rounded-xl',
           img: 'w-5 h-5',
-          title: 'text-[10px] font-semibold truncate max-w-full',
-          url: 'text-[8px] text-fg-muted truncate max-w-full',
+          title: 'text-2xs font-semibold truncate max-w-full',
+          url: 'text-2xs text-fg-muted truncate max-w-full',
         },
         medium: {
           container: 'w-24 h-32 p-3 flex flex-col items-center justify-between text-center',
           icon: 'w-11 h-11 my-auto rounded-xl',
           img: 'w-6 h-6',
           title: 'text-xs font-semibold truncate max-w-full',
-          url: 'text-[10px] text-fg-muted truncate max-w-full',
+          url: 'text-2xs text-fg-muted truncate max-w-full',
         },
         large: {
           container: 'w-[120px] h-40 p-3.5 flex flex-col items-center justify-between text-center',
-          icon: 'w-14 h-14 my-auto rounded-2xl',
+          icon: 'w-14 h-14 my-auto rounded-lg',
           img: 'w-8 h-8',
           title: 'text-sm font-semibold truncate max-w-full',
-          url: 'text-[11px] text-fg-muted truncate max-w-full',
+          url: 'text-2xs text-fg-muted truncate max-w-full',
         },
         xl: {
           container: 'w-[148px] h-[192px] p-4 flex flex-col items-center justify-between text-center',
-          icon: 'w-18 h-18 my-auto rounded-2xl',
+          icon: 'w-18 h-18 my-auto rounded-lg',
           img: 'w-10 h-10',
           title: 'text-base font-bold truncate max-w-full',
           url: 'text-xs text-fg-muted truncate max-w-full',
@@ -239,7 +239,7 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
         icon: 'w-11 h-11 my-auto rounded-xl',
         img: 'w-6 h-6',
         title: 'text-xs font-semibold truncate max-w-full',
-        url: 'text-[10px] text-fg-muted truncate max-w-full',
+        url: 'text-2xs text-fg-muted truncate max-w-full',
       };
       shapeClass = vertSizeMap.container;
       iconContainerClass = vertSizeMap.icon;
@@ -254,20 +254,20 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
         shapeClass = 'flex items-center gap-1.5 px-2 py-1 rounded-full min-h-[28px]';
         iconContainerClass = 'w-4 h-4 rounded-full';
         iconImgClass = 'w-3 h-3';
-        titleClass = 'text-[10px] font-medium truncate';
+        titleClass = 'text-2xs font-medium truncate';
         urlClass = 'hidden';
       } else if (size === 'compact') {
         shapeClass = 'flex items-center gap-2 px-2.5 py-1.5 rounded-full min-h-[34px]';
         iconContainerClass = 'w-5 h-5 rounded-full';
         iconImgClass = 'w-3.5 h-3.5';
-        titleClass = 'text-[11px] font-medium truncate';
+        titleClass = 'text-2xs font-medium truncate';
         urlClass = 'hidden';
       } else if (size === 'large') {
         shapeClass = 'flex items-center gap-2.5 px-4 py-2 rounded-full min-h-[44px]';
         iconContainerClass = 'w-7 h-7 rounded-full';
         iconImgClass = 'w-4 h-4';
         titleClass = 'text-sm font-semibold truncate';
-        urlClass = 'text-[10px]';
+        urlClass = 'text-2xs';
       } else if (size === 'xl') {
         shapeClass = 'flex items-center gap-3 px-5 py-2.5 rounded-full min-h-[52px]';
         iconContainerClass = 'w-9 h-9 rounded-full';
@@ -280,7 +280,7 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
         iconContainerClass = 'w-6 h-6 rounded-full';
         iconImgClass = 'w-3.5 h-3.5';
         titleClass = 'text-xs font-medium truncate';
-        urlClass = 'text-[10px]';
+        urlClass = 'text-2xs';
       }
       break;
 
@@ -290,14 +290,14 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
         shapeClass = 'flex items-center gap-2 p-2 min-h-[40px]';
         iconContainerClass = 'w-6 h-6 rounded-lg';
         iconImgClass = 'w-3.5 h-3.5';
-        titleClass = 'text-[11px] font-semibold';
-        urlClass = 'text-[9px] text-fg-muted';
+        titleClass = 'text-2xs font-semibold';
+        urlClass = 'text-2xs text-fg-muted';
       } else if (size === 'compact') {
         shapeClass = 'flex items-center gap-2.5 p-2.5 min-h-[48px]';
         iconContainerClass = 'w-8 h-8 rounded-lg';
         iconImgClass = 'w-4 h-4';
         titleClass = 'text-xs font-semibold';
-        urlClass = 'text-[10px] text-fg-muted';
+        urlClass = 'text-2xs text-fg-muted';
       } else if (size === 'large') {
         shapeClass = 'flex items-center gap-3.5 p-3.5 min-h-[64px]';
         iconContainerClass = 'w-11 h-11 rounded-xl';
@@ -306,7 +306,7 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
         urlClass = 'text-xs text-fg-muted';
       } else if (size === 'xl') {
         shapeClass = 'flex items-center gap-4 p-4 min-h-[76px]';
-        iconContainerClass = 'w-14 h-14 rounded-2xl';
+        iconContainerClass = 'w-14 h-14 rounded-lg';
         iconImgClass = 'w-8 h-8';
         titleClass = 'text-base font-bold';
         urlClass = 'text-xs text-fg-muted';
@@ -316,7 +316,7 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
         iconContainerClass = 'w-9 h-9 rounded-xl';
         iconImgClass = 'w-5 h-5';
         titleClass = 'text-xs font-semibold';
-        urlClass = 'text-[10px] text-fg-muted';
+        urlClass = 'text-2xs text-fg-muted';
       }
       break;
   }

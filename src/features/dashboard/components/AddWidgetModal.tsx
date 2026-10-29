@@ -162,14 +162,14 @@ export const AddWidgetModal: React.FC = () => {
                           {w.size.defaultW}×{w.size.defaultH}
                         </Badge>
                       </div>
-                      <p className="text-[11px] text-fg-muted mt-1 line-clamp-2">
+                      <p className="text-2xs text-fg-muted mt-1 line-clamp-2">
                         {desc}
                       </p>
                     </div>
                   </div>
 
                   <div className="mt-3 pt-2 border-t border-line flex items-center justify-between">
-                    <span className="text-[10px] text-fg-muted font-mono capitalize">
+                    <span className="text-2xs text-fg-muted font-mono capitalize">
                       {w.surface}
                     </span>
 

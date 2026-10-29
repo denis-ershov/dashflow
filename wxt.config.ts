@@ -26,8 +26,8 @@ export default defineConfig({
       ],
       content_security_policy: {
         extension_pages: isDev
-          ? "script-src 'self' 'wasm-unsafe-eval' http://localhost:* http://127.0.0.1:*; object-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; frame-src https: 'self';"
-          : "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; frame-src https: 'self';",
+          ? "script-src 'self' 'wasm-unsafe-eval' http://localhost:* http://127.0.0.1:*; object-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src https: 'self';"
+          : "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src https: 'self';",
         sandbox: "sandbox allow-scripts; script-src 'self'; object-src 'none';",
       },
       icons: {

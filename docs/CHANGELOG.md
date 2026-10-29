@@ -9,6 +9,33 @@
 
 ## [Unreleased] - 2026-10-29
 
+### Этап C аудита: единая дизайн-система
+
+#### Исправлено
+- **Элементы без фона.** Класс `surface-elevated` (25 мест: дорожки прогресса, сегментированные переключатели, плитки диагностики) и `text-secondary-fg` ссылались на несуществующие токены. Заменены на `surface-active` и `primary-fg`.
+- **Не работал hover стекла.** Переменные `--dashflow-glass-bg-hover`, `--dashflow-glass-bg-subtle`, `--dashflow-glass-border-hover` использовались в `globals.css`, но нигде не объявлялись. Теперь они выводятся из переменных темы через `color-mix`.
+- **`glass-subtle` на светлых темах.** Был захардкожен белым (`rgb(255 255 255 / 0.04)`), на светлом фоне не виден; теперь берёт цвет текста темы.
+- **Скругления.** `rounded-3xl` давал 0px (иконки закладок XL были квадратными) → `rounded-xl`; `rounded-2xl` дублировал `rounded-lg` → `rounded-lg`.
+- **Нечитаемо мелкий текст.** 120 размеров `text-[8–12px]` переведены на шкалу; новый нижний шаг `text-2xs` = 11px.
+
+#### Изменено
+- Шрифты: убраны Google Fonts (Inter, JetBrains Mono, Nunito, Outfit, Roboto Slab, Sofia Sans). Интерфейс — системный шрифт, `font-serif`/`font-mono` — системные стеки, `font-display` — Outfit, встроенный в сборку (`@fontsource-variable/outfit`, OFL-1.1, 47 КБ woff2). `font-sofia` → `font-display`, неиспользуемый `font-friendly` удалён.
+- CSP (`wxt.config.ts`): из `style-src`/`font-src` убраны `fonts.googleapis.com` и `fonts.gstatic.com`.
+- Цвета статуса в «Диагностике» и менеджере RSS: `amber-*` → токен `warning`.
+
+#### Добавлено
+- Тест-страж `tests/unit/styles/designSystem.guard.test.ts`: размеры шрифта вне шкалы, радиусы вне шкалы, `var(--…)` без объявления, цвета палитры и несуществующие токены в элементах интерфейса, внешние шрифтовые CDN.
+- Токен `--text-2xs`, производные `--dashflow-glass-*-hover/subtle`, `--dashflow-tint-subtle*`.
+- Зависимость `@fontsource-variable/outfit`.
+
+#### Изменённые файлы
+`src/styles/{tokens,globals}.css`, `src/entrypoints/newtab/index.html`, `wxt.config.ts`, `package.json`, `package-lock.json`, ~40 компонентов и виджетов (замена классов), `tests/unit/styles/{tokens.contract,designSystem.guard}.test.ts`, `tests/unit/widgets/bookmarkStyles.test.ts`, `docs/{THEME_ENGINE_ARCHITECTURE,AUDIT_2026-10-29}.md`.
+
+#### Миграции и совместимость
+- Данные не затрагиваются. Пользовательский CSS, ссылавшийся на шрифты Google, перестанет их получать (CSP).
+- Визуально: подписи 8–10px стали 11px, часть элементов получила фон, который раньше не рисовался.
+- Откат: `git revert`.
+
 ### Этап B аудита: корректность стора дашборда
 
 #### Исправлено

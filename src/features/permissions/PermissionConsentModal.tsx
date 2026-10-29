@@ -74,12 +74,12 @@ export const PermissionConsentModal: React.FC<PermissionConsentModalProps> = ({
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold text-fg">{title}</span>
                       {def.isSensitive && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/20">
+                        <span className="text-2xs font-bold px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/20">
                           Чувствительное
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-fg-muted mt-0.5 leading-relaxed">{desc}</p>
+                    <p className="text-2xs text-fg-muted mt-0.5 leading-relaxed">{desc}</p>
                   </div>
                 </div>
               );
@@ -90,7 +90,7 @@ export const PermissionConsentModal: React.FC<PermissionConsentModalProps> = ({
         {/* Предупреждение безопасности */}
         <div className="flex items-start gap-2.5 p-3 rounded-lg bg-warning/10 border border-warning/20 text-warning text-xs">
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-          <p className="text-[11px] leading-relaxed">{t('permissions.warning')}</p>
+          <p className="text-2xs leading-relaxed">{t('permissions.warning')}</p>
         </div>
 
         {/* Кнопки действий (зоны нажатия >= 44x44 px) */}

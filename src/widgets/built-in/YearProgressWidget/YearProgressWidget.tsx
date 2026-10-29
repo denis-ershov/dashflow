@@ -148,12 +148,12 @@ export const YearProgressWidget: React.FC<WidgetProps<YearProgressSettings>> = (
 
         <div className="flex items-center gap-2">
           {showRemainingDays && current.remaining && (
-            <span className="text-[10px] text-fg-dim font-medium hidden sm:inline-block">
+            <span className="text-2xs text-fg-dim font-medium hidden sm:inline-block">
               {current.remaining}
             </span>
           )}
           {showPercentage && (
-            <span className="text-xs font-bold font-mono text-fg bg-surface-elevated/70 px-2 py-0.5 rounded-lg border border-line">
+            <span className="text-xs font-bold font-mono text-fg bg-surface-active/70 px-2 py-0.5 rounded-lg border border-line">
               {current.percent}%
             </span>
           )}
@@ -163,7 +163,7 @@ export const YearProgressWidget: React.FC<WidgetProps<YearProgressSettings>> = (
       {/* Полоса прогресса */}
       <div
         className={cn(
-          'w-full bg-surface-elevated overflow-hidden border border-line/60',
+          'w-full bg-surface-active overflow-hidden border border-line/60',
           progressStyle === 'pill' ? 'h-3 rounded-full p-0.5' : 'h-2 rounded-md',
         )}
       >

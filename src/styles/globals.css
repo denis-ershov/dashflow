@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './tokens.css';
+@import '@fontsource-variable/outfit';
 @import 'react-grid-layout/css/styles.css';
 @import 'react-resizable/css/styles.css';
 
@@ -132,17 +133,13 @@
 }
 
 .glass-subtle {
-  background-color: rgb(255 255 255 / 0.04);
-  border: 1px solid rgb(255 255 255 / 0.06);
+  background-color: var(--dashflow-tint-subtle);
+  border: 1px solid var(--dashflow-tint-subtle-line);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
 
 /* ── Typography Helper Classes ─────────────────────────────────────────── */
-
-.font-sofia {
-  font-family: var(--dashflow-font-sofia);
-}
 
 .font-display {
   font-family: var(--dashflow-font-display);
@@ -154,10 +151,6 @@
 
 .font-mono {
   font-family: var(--dashflow-font-mono);
-}
-
-.font-friendly {
-  font-family: var(--dashflow-font-friendly);
 }
 
 /* ── Сетка виджетов: базовые стили и правки react-grid-layout ────────────── */

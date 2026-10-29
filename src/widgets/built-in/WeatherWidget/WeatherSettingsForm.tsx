@@ -178,7 +178,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
           {/* Подсказки городов */}
           {showSuggestions && suggestions.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-[#161922] border border-line rounded-xl shadow-3 overflow-hidden p-1 backdrop-blur-xl animate-fade-in">
-              <div className="text-[10px] font-semibold text-fg-dim px-2.5 py-1 uppercase tracking-wider">
+              <div className="text-2xs font-semibold text-fg-dim px-2.5 py-1 uppercase tracking-wider">
                 Найденные города
               </div>
               <div className="max-h-48 overflow-y-auto space-y-0.5">
@@ -191,10 +191,10 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
                   >
                     <div>
                       <span className="font-semibold text-fg">{item.name}</span>
-                      {item.admin1 && <span className="text-fg-dim text-[11px]">, {item.admin1}</span>}
+                      {item.admin1 && <span className="text-fg-dim text-2xs">, {item.admin1}</span>}
                     </div>
                     {item.country && (
-                      <span className="text-[10px] text-fg-muted bg-canvas/60 px-1.5 py-0.5 rounded">
+                      <span className="text-2xs text-fg-muted bg-canvas/60 px-1.5 py-0.5 rounded">
                         {item.country}
                       </span>
                     )}
@@ -214,7 +214,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
         <div className="flex items-center justify-between pt-1">
           <div className="space-y-0.5">
             <span className="text-xs font-medium text-fg">Авто-обновление гео</span>
-            <p className="text-[11px] text-fg-muted">Определять текущее положение браузера при открытии</p>
+            <p className="text-2xs text-fg-muted">Определять текущее положение браузера при открытии</p>
           </div>
           <Switch
             checked={settings.autoLocation || false}
@@ -257,7 +257,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
                     <span className="text-xs font-bold text-fg">{mode.title}</span>
                     {isSelected && <Check className="w-3.5 h-3.5 text-primary stroke-3" />}
                   </div>
-                  <p className="text-[11px] text-fg-muted mt-0.5 line-clamp-2 leading-tight">
+                  <p className="text-2xs text-fg-muted mt-0.5 line-clamp-2 leading-tight">
                     {mode.desc}
                   </p>
                 </div>

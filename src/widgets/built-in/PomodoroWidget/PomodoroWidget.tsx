@@ -222,7 +222,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
                   'w-1.5 h-1.5 rounded-full transition-all duration-300',
                   isFilled
                     ? 'bg-primary shadow-[0_0_6px_rgba(56,189,248,0.6)] scale-110'
-                    : 'bg-surface-elevated border border-line',
+                    : 'bg-surface-active border border-line',
                 )}
               />
             );
@@ -236,7 +236,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
           <span className="text-4xl sm:text-5xl font-mono font-extrabold text-fg tracking-tighter drop-shadow-sm">
             {formatTime(timeLeft)}
           </span>
-          <span className="text-[11px] text-fg-muted mt-1 font-medium">
+          <span className="text-2xs text-fg-muted mt-1 font-medium">
             Сессия {cycle + 1} из 4
           </span>
         </div>
@@ -281,7 +281,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
             <span className="text-xl sm:text-2xl font-bold font-mono text-fg tracking-tight">
               {formatTime(timeLeft)}
             </span>
-            <span className="text-[9px] text-fg-muted font-medium uppercase tracking-wider">
+            <span className="text-2xs text-fg-muted font-medium uppercase tracking-wider">
               {cycle + 1}/4
             </span>
           </div>

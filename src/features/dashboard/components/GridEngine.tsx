@@ -152,7 +152,7 @@ export const GridEngine: React.FC = () => {
     >
       {/* Панель редактора сетки в активном режиме редактирования */}
       {isEditMode && (
-        <div className="mb-4 p-3 rounded-2xl glass-card border border-warning/40 shadow-3 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-200 select-none">
+        <div className="mb-4 p-3 rounded-lg glass-card border border-warning/40 shadow-3 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-200 select-none">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-warning/15 text-warning text-xs font-semibold border border-warning/30">
               <Move className="w-3.5 h-3.5" />

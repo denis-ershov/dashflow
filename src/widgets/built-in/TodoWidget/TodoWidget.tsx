@@ -259,7 +259,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
           >
             <CheckSquare className="w-4 h-4" />
             <span>Задачи</span>
-            <Badge variant="glass" className="ml-1 text-[10px]">
+            <Badge variant="glass" className="ml-1 text-2xs">
               {todos.length}
             </Badge>
           </button>
@@ -279,7 +279,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
           >
             <Calendar className="w-4 h-4" />
             <span>Привычки</span>
-            <Badge variant="glass" className="ml-1 text-[10px]">
+            <Badge variant="glass" className="ml-1 text-2xs">
               {habits.length}
             </Badge>
           </button>
@@ -451,7 +451,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
                         {habit.title}
                       </span>
                       {streak > 0 && (
-                        <span className="flex items-center gap-1 text-[10px] font-bold text-warning bg-warning/10 px-2 py-0.5 rounded-md">
+                        <span className="flex items-center gap-1 text-2xs font-bold text-warning bg-warning/10 px-2 py-0.5 rounded-md">
                           <Flame className="w-3 h-3 text-warning shrink-0" />
                           {streak} дн
                         </span>
@@ -480,7 +480,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
                           title={`${day.label} (${day.dateStr})`}
                           aria-label={`Отметить ${day.label} для ${habit.title}`}
                           className={cn(
-                            'flex flex-col items-center justify-center py-1 rounded-lg text-[10px] font-semibold transition-all cursor-pointer border',
+                            'flex flex-col items-center justify-center py-1 rounded-lg text-2xs font-semibold transition-all cursor-pointer border',
                             isDone
                               ? 'bg-primary text-primary-fg border-primary shadow-1'
                               : day.isToday
@@ -489,7 +489,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
                           )}
                         >
                           <span>{day.label}</span>
-                          <span className="text-[8px] mt-0.5 font-normal opacity-80">
+                          <span className="text-2xs mt-0.5 font-normal opacity-80">
                             {isDone ? '✓' : '•'}
                           </span>
                         </button>

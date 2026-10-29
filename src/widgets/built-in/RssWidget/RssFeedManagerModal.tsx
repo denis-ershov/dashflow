@@ -202,7 +202,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
               : 'text-fg-muted border-transparent hover:text-fg hover:bg-surface/50',
           )}
         >
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          <Sparkles className="w-3.5 h-3.5 text-warning" />
           Каталог источников
         </button>
 
@@ -274,7 +274,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-fg-muted px-1">
                   <Folder className="w-3.5 h-3.5 text-primary" />
                   <span>{folderName}</span>
-                  <span className="text-[10px] text-fg-muted/70">({folderFeeds.length})</span>
+                  <span className="text-2xs text-fg-muted/70">({folderFeeds.length})</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -295,7 +295,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
                         />
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-semibold text-fg truncate">{feed.name}</p>
-                          <p className="text-[10px] text-fg-muted truncate">{feed.url}</p>
+                          <p className="text-2xs text-fg-muted truncate">{feed.url}</p>
                         </div>
                       </div>
 
@@ -359,12 +359,12 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
                           />
                           <div className="min-w-0">
                             <p className="text-xs font-semibold text-fg truncate">{preset.name}</p>
-                            <p className="text-[10px] text-fg-muted truncate">{preset.url}</p>
+                            <p className="text-2xs text-fg-muted truncate">{preset.url}</p>
                           </div>
                         </div>
 
                         {isAdded ? (
-                          <span className="flex items-center gap-1 text-[11px] font-medium text-primary shrink-0 px-2 py-0.5 rounded-md bg-primary/10">
+                          <span className="flex items-center gap-1 text-2xs font-medium text-primary shrink-0 px-2 py-0.5 rounded-md bg-primary/10">
                             <Check className="w-3 h-3" />
                             Добавлено
                           </span>
@@ -373,7 +373,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
                             variant="secondary"
                             size="sm"
                             onClick={() => addPresetFeed(preset)}
-                            className="shrink-0 h-7 text-[11px] px-2.5 gap-1"
+                            className="shrink-0 h-7 text-2xs px-2.5 gap-1"
                           >
                             <Plus className="w-3 h-3" />
                             Добавить
@@ -520,7 +520,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
 
       {/* Footer */}
       <div className="border-t border-line p-3 flex justify-between items-center bg-surface shrink-0">
-        <span className="text-[11px] text-fg-muted">
+        <span className="text-2xs text-fg-muted">
           Активно лент: {feeds.filter((f) => f.enabled !== false).length} из {feeds.length}
         </span>
         <Button variant="primary" size="sm" onClick={onClose}>

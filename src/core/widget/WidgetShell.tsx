@@ -52,7 +52,7 @@ class WidgetErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySta
   public override render(): ReactNode {
     if (this.state.hasError) {
       return (
-        <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-surface/50 border border-line rounded-2xl">
+        <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-surface/50 border border-line rounded-lg">
           <ErrorState
             title="Ошибка виджета"
             message="Не удалось загрузить виджет"
@@ -105,11 +105,11 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
         isChromeless && 'bg-transparent border-transparent',
         !isChromeless &&
           !isTiles &&
-          'glass-card border border-line rounded-2xl shadow-2 hover:shadow-3',
-        isTiles && 'glass-subtle border border-line/80 rounded-2xl p-2 shadow-1',
+          'glass-card border border-line rounded-lg shadow-2 hover:shadow-3',
+        isTiles && 'glass-subtle border border-line/80 rounded-lg p-2 shadow-1',
         // Рамка в режиме редактирования
         isEditMode && 'ring-2 ring-primary/60 border-primary/80',
-        isChromeless && isEditMode && 'glass-panel border-dashed border-line rounded-2xl',
+        isChromeless && isEditMode && 'glass-panel border-dashed border-line rounded-lg',
         className,
       )}
     >

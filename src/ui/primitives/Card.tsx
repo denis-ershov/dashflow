@@ -32,7 +32,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
         role={interactive ? 'button' : undefined}
         tabIndex={interactive ? 0 : undefined}
         className={cn(
-          'rounded-2xl transition-all duration-fast overflow-hidden',
+          'rounded-lg transition-all duration-fast overflow-hidden',
           variants[variant],
           paddings[padding],
           interactive &&

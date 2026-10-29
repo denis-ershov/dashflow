@@ -33,7 +33,7 @@ describe('bookmarkStyles helper', () => {
     });
 
     expect(classes.containerClass).toContain('min-h-[64px]');
-    expect(classes.containerClass).toContain('rounded-2xl');
+    expect(classes.containerClass).toContain('rounded-lg');
     expect(classes.containerClass).toContain('bg-surface');
     expect(classes.containerClass).toContain('hover:-translate-y-1');
   });

@@ -97,14 +97,14 @@ export const ClockWidget: React.FC<WidgetProps<ClockSettings>> = ({ settings }) 
       case 'flip':
         return (
           <div className="flex items-center gap-2 sm:gap-3 select-none">
-            <div className="relative overflow-hidden glass-panel px-3 py-2 sm:px-4 sm:py-3 rounded-2xl shadow-2 text-center min-w-13.75 sm:min-w-18.75 border border-line/70">
+            <div className="relative overflow-hidden glass-panel px-3 py-2 sm:px-4 sm:py-3 rounded-lg shadow-2 text-center min-w-13.75 sm:min-w-18.75 border border-line/70">
               <div className="absolute inset-x-0 top-1/2 h-px bg-line/80 pointer-events-none" />
               <span className="text-3xl sm:text-5xl font-display font-bold text-fg tracking-tight" style={glowStyle}>
                 {hours}
               </span>
             </div>
             <span className={cn('text-2xl sm:text-4xl', colonClass)}>:</span>
-            <div className="relative overflow-hidden glass-panel px-3 py-2 sm:px-4 sm:py-3 rounded-2xl shadow-2 text-center min-w-13.75 sm:min-w-18.75 border border-line/70">
+            <div className="relative overflow-hidden glass-panel px-3 py-2 sm:px-4 sm:py-3 rounded-lg shadow-2 text-center min-w-13.75 sm:min-w-18.75 border border-line/70">
               <div className="absolute inset-x-0 top-1/2 h-px bg-line/80 pointer-events-none" />
               <span className="text-3xl sm:text-5xl font-display font-bold text-fg tracking-tight" style={glowStyle}>
                 {minutes}
@@ -121,7 +121,7 @@ export const ClockWidget: React.FC<WidgetProps<ClockSettings>> = ({ settings }) 
             )}
             {!is24Hour && (
               <div className="glass-subtle px-2 py-1 rounded-lg self-end mb-1 border border-line/50">
-                <span className="text-[10px] sm:text-xs font-semibold text-fg-muted">{ampm}</span>
+                <span className="text-2xs sm:text-xs font-semibold text-fg-muted">{ampm}</span>
               </div>
             )}
           </div>
@@ -225,7 +225,7 @@ export const ClockWidget: React.FC<WidgetProps<ClockSettings>> = ({ settings }) 
         <div className="mt-1.5 text-xs sm:text-sm text-fg-muted capitalize tracking-wide font-medium">
           {formatDate()}
           {timezone && timezone !== 'local' && (
-            <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-surface-elevated text-primary border border-line">
+            <span className="ml-1.5 text-2xs px-1.5 py-0.5 rounded bg-surface-active text-primary border border-line">
               {timezone.split('/')[1]?.replace('_', ' ') || timezone}
             </span>
           )}

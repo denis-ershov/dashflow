@@ -25,7 +25,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
 
   const fontClass = {
     sans: 'font-sans',
-    mono: 'font-mono text-[12.5px] leading-relaxed',
+    mono: 'font-mono text-13 leading-relaxed',
     serif: 'font-serif',
   }[fontFamily];
 
@@ -130,7 +130,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
     <div className="flex flex-col h-full gap-2 p-3 select-none">
       {/* Шапка с переключателем режимов и статусом */}
       <div className="flex items-center justify-between pb-2 border-b border-line">
-        <div className="flex items-center gap-1 bg-surface-elevated/60 p-0.5 rounded-xl border border-line">
+        <div className="flex items-center gap-1 bg-surface-active/60 p-0.5 rounded-xl border border-line">
           <button
             type="button"
             onClick={() => {
@@ -169,7 +169,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
         </div>
 
         {showSaveStatus && (
-          <div className="flex items-center gap-1 text-[10px] text-fg-dim font-medium">
+          <div className="flex items-center gap-1 text-2xs text-fg-dim font-medium">
             {isSaved ? (
               <span className="flex items-center gap-1 text-success">
                 <Check className="w-3.5 h-3.5" /> Сохранено
@@ -203,7 +203,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
 
       {/* Футер: счетчики слов и символов */}
       {showWordCount && (
-        <div className="flex items-center justify-between pt-2 border-t border-line text-[10px] text-fg-muted select-none mt-auto">
+        <div className="flex items-center justify-between pt-2 border-t border-line text-2xs text-fg-muted select-none mt-auto">
           <span>{wordCount} слов</span>
           {showCharCount && <span>{charCount} знаков</span>}
         </div>

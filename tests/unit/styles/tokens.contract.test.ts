@@ -70,13 +70,15 @@ describe('tokens.css — контракт шкал', () => {
 
   it('внешние радиусы Tailwind вне шкалы удалены', () => {
     const theme = block('@theme inline');
+    expect(declaredValue(theme, '--radius-2xl')).toBe('initial');
     expect(declaredValue(theme, '--radius-3xl')).toBe('initial');
     expect(declaredValue(theme, '--radius-4xl')).toBe('initial');
   });
 
-  it('типографическая шкала — 12/13/14/16/20/24/32/48/64 px с межстрочными', () => {
+  it('типографическая шкала — 11/12/13/14/16/20/24/32/48/64 px с межстрочными', () => {
     const theme = block('@theme {');
     const expected: Record<string, [string, string]> = {
+      '--text-2xs': ['0.6875rem', '1rem'],
       '--text-xs': ['0.75rem', '1rem'],
       '--text-13': ['0.8125rem', '1.125rem'],
       '--text-sm': ['0.875rem', '1.25rem'],

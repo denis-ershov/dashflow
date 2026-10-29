@@ -152,7 +152,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
             <Skeleton className="w-24 h-9 rounded-xl" />
             <Skeleton className="w-32 h-4 rounded-lg" />
           </div>
-          <Skeleton className="w-12 h-12 rounded-2xl" />
+          <Skeleton className="w-12 h-12 rounded-lg" />
         </div>
         <div className="grid grid-cols-4 gap-2 pt-2">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -167,7 +167,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
   if (!data) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-4 text-center space-y-3">
-        <div className="p-3 rounded-2xl bg-danger/10 text-danger border border-danger/20">
+        <div className="p-3 rounded-lg bg-danger/10 text-danger border border-danger/20">
           <ShieldAlert className="w-8 h-8" />
         </div>
         <div>
@@ -200,7 +200,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
             {data.isAutoLocation && <MapPin className="w-3 h-3 text-primary shrink-0" />}
             <span className="font-semibold text-fg truncate">{data.city}</span>
             {data.isOffline && (
-              <span className="text-[10px] text-amber-400 bg-amber-500/15 px-1 rounded">Офлайн</span>
+              <span className="text-2xs text-amber-400 bg-amber-500/15 px-1 rounded">Офлайн</span>
             )}
           </div>
           <button
@@ -218,11 +218,11 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
         <div className="flex items-center justify-between py-1">
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-fg font-sofia">
+              <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-fg font-display">
                 {formatTemperature(data.temperature, tempUnit)}
               </span>
               {showFeelsLike && data.metrics?.feelsLike !== undefined && (
-                <span className="text-[11px] text-fg-muted">
+                <span className="text-2xs text-fg-muted">
                   ощущ. {formatTemperature(data.metrics.feelsLike, tempUnit)}
                 </span>
               )}
@@ -233,7 +233,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
           </div>
           <div className="flex flex-col items-end">
             {getWeatherIcon(data.weathercode, data.metrics?.isDay, 'w-9 h-9')}
-            <span className="text-[11px] text-fg-muted mt-1 font-mono">
+            <span className="text-2xs text-fg-muted mt-1 font-mono">
               {data.minTemp}° / {data.maxTemp}°
             </span>
           </div>
@@ -266,7 +266,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
         <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-xs font-bold text-fg truncate">{data.city}</span>
-            <span className="text-[11px] text-fg-muted">• 24-часовой прогноз</span>
+            <span className="text-2xs text-fg-muted">• 24-часовой прогноз</span>
           </div>
           <button
             type="button"
@@ -289,12 +289,12 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
               <div className="flex items-center gap-2">
                 {getWeatherIcon(h.code, h.isDay, 'w-4 h-4')}
                 {h.precipitationProbability !== undefined && h.precipitationProbability > 15 && (
-                  <span className="text-[10px] text-cyan-400 font-semibold flex items-center gap-0.5">
+                  <span className="text-2xs text-cyan-400 font-semibold flex items-center gap-0.5">
                     💧 {h.precipitationProbability}%
                   </span>
                 )}
               </div>
-              <span className="text-xs font-bold text-fg font-sofia">
+              <span className="text-xs font-bold text-fg font-display">
                 {formatTemperature(h.temp, tempUnit)}
               </span>
             </div>
@@ -351,7 +351,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
           )}
           <span className="text-xs font-bold text-fg truncate">{data.city}</span>
           {data.isOffline && (
-            <span className="text-[10px] text-amber-400 bg-amber-500/15 px-1 py-0.5 rounded font-medium">
+            <span className="text-2xs text-amber-400 bg-amber-500/15 px-1 py-0.5 rounded font-medium">
               Офлайн
             </span>
           )}
@@ -365,7 +365,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
               onClick={() => setActiveTab('overview')}
               title="Общий обзор"
               className={cn(
-                'px-2 py-0.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer',
+                'px-2 py-0.5 rounded-md text-2xs font-semibold transition-all cursor-pointer',
                 activeTab === 'overview' ? 'bg-primary text-primary-fg shadow-1' : 'text-fg-muted hover:text-fg',
               )}
             >
@@ -376,7 +376,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
               onClick={() => setActiveTab('hourly')}
               title="По часам"
               className={cn(
-                'px-2 py-0.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer',
+                'px-2 py-0.5 rounded-md text-2xs font-semibold transition-all cursor-pointer',
                 activeTab === 'hourly' ? 'bg-primary text-primary-fg shadow-1' : 'text-fg-muted hover:text-fg',
               )}
             >
@@ -387,7 +387,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
               onClick={() => setActiveTab('daily')}
               title="На 7 дней"
               className={cn(
-                'px-2 py-0.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer',
+                'px-2 py-0.5 rounded-md text-2xs font-semibold transition-all cursor-pointer',
                 activeTab === 'daily' ? 'bg-primary text-primary-fg shadow-1' : 'text-fg-muted hover:text-fg',
               )}
             >
@@ -398,7 +398,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
               onClick={() => setActiveTab('metrics')}
               title="Атмосферные параметры"
               className={cn(
-                'px-2 py-0.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer',
+                'px-2 py-0.5 rounded-md text-2xs font-semibold transition-all cursor-pointer',
                 activeTab === 'metrics' ? 'bg-primary text-primary-fg shadow-1' : 'text-fg-muted hover:text-fg',
               )}
             >
@@ -424,10 +424,10 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
         {activeTab === 'overview' && (
           <>
             {/* Hero блок текущей температуры */}
-            <div className="flex items-center justify-between p-2.5 rounded-2xl bg-surface/40 border border-line/40 backdrop-blur-md">
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface/40 border border-line/40 backdrop-blur-md">
               <div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-fg font-sofia">
+                  <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-fg font-display">
                     {formatTemperature(data.temperature, tempUnit)}
                   </span>
                   {showFeelsLike && data.metrics?.feelsLike !== undefined && (
@@ -440,11 +440,11 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
                   <span className="text-xs font-medium text-fg">
                     {getWeatherDescription(data.weathercode, data.metrics?.isDay)}
                   </span>
-                  <span className="text-[11px] text-fg-dim font-mono">• {data.minTemp}° / {data.maxTemp}°</span>
+                  <span className="text-2xs text-fg-dim font-mono">• {data.minTemp}° / {data.maxTemp}°</span>
                 </div>
               </div>
 
-              <div className="p-2 rounded-2xl bg-surface/60 shadow-1 border border-line/40">
+              <div className="p-2 rounded-lg bg-surface/60 shadow-1 border border-line/40">
                 {getWeatherIcon(data.weathercode, data.metrics?.isDay, 'w-9 h-9 sm:w-10 sm:h-10')}
               </div>
             </div>
@@ -452,11 +452,11 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
             {/* Горизонтальный таймлайн на 24 часа */}
             {showHourly && data.hourly && data.hourly.length > 0 && (
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[11px] font-semibold text-fg-muted px-1">
+                <div className="flex items-center justify-between text-2xs font-semibold text-fg-muted px-1">
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3 text-primary" /> Почасовой прогноз
                   </span>
-                  <span className="text-[10px] text-fg-dim">24 часа</span>
+                  <span className="text-2xs text-fg-dim">24 часа</span>
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar pt-0.5">
                   {data.hourly.slice(0, 12).map((h, i) => (
@@ -469,15 +469,15 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
                           : 'bg-surface/40 border-line/40 hover:bg-surface/70',
                       )}
                     >
-                      <span className="text-[10px] text-fg-muted font-mono">{h.time}</span>
+                      <span className="text-2xs text-fg-muted font-mono">{h.time}</span>
                       {getWeatherIcon(h.code, h.isDay, 'w-4 h-4')}
-                      <span className="text-xs font-bold text-fg font-sofia">
+                      <span className="text-xs font-bold text-fg font-display">
                         {formatTemperature(h.temp, tempUnit)}
                       </span>
                       {h.precipitationProbability !== undefined && h.precipitationProbability > 15 ? (
-                        <span className="text-[9px] text-cyan-400 font-bold">💧{h.precipitationProbability}%</span>
+                        <span className="text-2xs text-cyan-400 font-bold">💧{h.precipitationProbability}%</span>
                       ) : (
-                        <span className="text-[9px] text-transparent select-none">-</span>
+                        <span className="text-2xs text-transparent select-none">-</span>
                       )}
                     </div>
                   ))}
@@ -488,12 +488,12 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
             {/* Компактный список 5 дней */}
             {showDaily && data.daily && data.daily.length > 0 && (
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[11px] font-semibold text-fg-muted px-1">
+                <div className="flex items-center justify-between text-2xs font-semibold text-fg-muted px-1">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3 h-3 text-secondary" /> Прогноз на неделю
                   </span>
                 </div>
-                <div className="space-y-1 bg-surface/30 p-2 rounded-2xl border border-line/40">
+                <div className="space-y-1 bg-surface/30 p-2 rounded-lg border border-line/40">
                   {data.daily.slice(0, 5).map((day, idx) => (
                     <DailyRow
                       key={idx}
@@ -562,11 +562,11 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
                 </div>
                 <div className="flex items-center gap-3">
                   {h.precipitationProbability !== undefined && h.precipitationProbability > 0 && (
-                    <span className="text-[11px] text-cyan-400 font-semibold">
+                    <span className="text-2xs text-cyan-400 font-semibold">
                       💧 {h.precipitationProbability}%
                     </span>
                   )}
-                  <span className="text-xs font-bold text-fg font-sofia w-12 text-right">
+                  <span className="text-xs font-bold text-fg font-display w-12 text-right">
                     {formatTemperature(h.temp, tempUnit)}
                   </span>
                 </div>
@@ -577,7 +577,7 @@ export const WeatherWidget: React.FC<WidgetProps<WeatherSettings>> = ({ settings
 
         {/* Таб 7 дней */}
         {activeTab === 'daily' && (
-          <div className="space-y-1.5 bg-surface/30 p-2 rounded-2xl border border-line/40">
+          <div className="space-y-1.5 bg-surface/30 p-2 rounded-lg border border-line/40">
             {data.daily.map((day, idx) => (
               <DailyRow
                 key={idx}
@@ -675,17 +675,17 @@ const DailyRow: React.FC<DailyRowProps> = ({ item, weekMin, weekMax, tempUnit, g
       <div className="flex items-center gap-1.5 w-12 justify-center shrink-0">
         {getWeatherIcon(item.code, true, 'w-4 h-4')}
         {item.precipitationProbability !== undefined && item.precipitationProbability > 20 && (
-          <span className="text-[9px] text-cyan-400 font-bold">💧</span>
+          <span className="text-2xs text-cyan-400 font-bold">💧</span>
         )}
       </div>
 
       {/* Термо-бар диапазона */}
       <div className="flex-1 flex items-center gap-2 min-w-0">
-        <span className="text-[11px] text-fg-muted font-mono w-7 text-right">
+        <span className="text-2xs text-fg-muted font-mono w-7 text-right">
           {formatTemperature(item.minTemp, tempUnit)}
         </span>
 
-        <div className="flex-1 h-1.5 rounded-full bg-surface-elevated overflow-hidden relative">
+        <div className="flex-1 h-1.5 rounded-full bg-surface-active overflow-hidden relative">
           <div
             className="absolute top-0 bottom-0 rounded-full bg-linear-to-r from-cyan-400 via-amber-400 to-rose-400"
             style={{
@@ -695,7 +695,7 @@ const DailyRow: React.FC<DailyRowProps> = ({ item, weekMin, weekMax, tempUnit, g
           />
         </div>
 
-        <span className="text-[11px] font-bold text-fg font-mono w-7">
+        <span className="text-2xs font-bold text-fg font-mono w-7">
           {formatTemperature(item.maxTemp, tempUnit)}
         </span>
       </div>
@@ -716,17 +716,17 @@ interface MetricCardProps {
 const MetricCard: React.FC<MetricCardProps> = ({ icon, title, value, subtitle, badge, badgeClass }) => (
   <div className="p-2.5 rounded-xl bg-surface/40 border border-line/40 backdrop-blur-sm space-y-1">
     <div className="flex items-center justify-between">
-      <span className="text-[11px] text-fg-muted flex items-center gap-1.5">
+      <span className="text-2xs text-fg-muted flex items-center gap-1.5">
         {icon}
         <span className="truncate">{title}</span>
       </span>
       {badge && (
-        <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded-full border', badgeClass)}>
+        <span className={cn('text-2xs font-bold px-1.5 py-0.5 rounded-full border', badgeClass)}>
           {badge}
         </span>
       )}
     </div>
-    <div className="text-sm font-bold text-fg font-sofia">{value}</div>
-    {subtitle && <p className="text-[10px] text-fg-dim truncate">{subtitle}</p>}
+    <div className="text-sm font-bold text-fg font-display">{value}</div>
+    {subtitle && <p className="text-2xs text-fg-dim truncate">{subtitle}</p>}
   </div>
 );

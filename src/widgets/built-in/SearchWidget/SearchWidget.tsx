@@ -281,16 +281,16 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
                   createPortal(
                     <div
                       ref={dropdownMenuRef}
-                      className="fixed z-99999 w-56 p-1.5 rounded-2xl shadow-3 border border-line animate-fade-in backdrop-blur-xl"
+                      className="fixed z-99999 w-56 p-1.5 rounded-lg shadow-3 border border-line animate-fade-in backdrop-blur-xl"
                       style={{
                         top: `${dropdownPos.top}px`,
                         left: `${dropdownPos.left}px`,
-                        backgroundColor: 'var(--dashflow-surface-elevated, rgba(24, 24, 27, 0.96))',
+                        backgroundColor: 'var(--dashflow-surface-active)',
                       }}
                       role="menu"
                       aria-label="Поисковая система"
                     >
-                      <div className="text-[10px] font-semibold text-fg-dim px-2.5 py-1 uppercase tracking-wider select-none">
+                      <div className="text-2xs font-semibold text-fg-dim px-2.5 py-1 uppercase tracking-wider select-none">
                         Поисковая система
                       </div>
                       <div className="flex flex-col gap-0.5 mt-0.5">
@@ -340,7 +340,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
 
             {/* Подсказка горячей клавиши */}
             {!query.trim() && showHotkeyBadge && (
-              <kbd className="hidden sm:inline-flex items-center justify-center h-5 min-w-5 px-1 mr-1 text-[10px] font-mono text-fg-muted bg-surface-elevated/80 border border-line rounded-md shadow-xs select-none pointer-events-none">
+              <kbd className="hidden sm:inline-flex items-center justify-center h-5 min-w-5 px-1 mr-1 text-2xs font-mono text-fg-muted bg-surface-active/80 border border-line rounded-md shadow-xs select-none pointer-events-none">
                 /
               </kbd>
             )}

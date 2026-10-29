@@ -223,7 +223,7 @@ export const MarketplaceModal: React.FC = () => {
               onClick={() => setActiveTab('import')}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'import'
-                  ? 'bg-secondary text-secondary-fg shadow-1'
+                  ? 'bg-secondary text-primary-fg shadow-1'
                   : 'text-fg-muted hover:text-fg'
               }`}
             >
@@ -339,7 +339,7 @@ export const MarketplaceModal: React.FC = () => {
                                 <h4 className="text-xs font-semibold text-fg truncate">
                                   {item.name}
                                 </h4>
-                                <span className="text-[10px] text-fg-muted block">
+                                <span className="text-2xs text-fg-muted block">
                                   от {item.author} • v{item.version}
                                 </span>
                               </div>
@@ -357,14 +357,14 @@ export const MarketplaceModal: React.FC = () => {
                           {/* Разрешения */}
                           <div className="flex items-center gap-2 mt-2">
                             <ShieldAlert className="w-4 h-4 text-warning shrink-0" />
-                            <span className="text-[10px] text-fg-muted truncate">
+                            <span className="text-2xs text-fg-muted truncate">
                               Права: {item.permissions.length > 0 ? item.permissions.join(', ') : 'Не требуются'}
                             </span>
                           </div>
                         </div>
 
                         <div className="flex items-center justify-between pt-3 mt-3 border-t border-line/50">
-                          <span className="text-[10px] text-fg-muted font-mono">
+                          <span className="text-2xs text-fg-muted font-mono">
                             {item.w}×{item.h} ({item.surface})
                           </span>
 

@@ -136,7 +136,7 @@ export function WidgetSettingsForm<S>({
             <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
               {label}
             </label>
-            <div className="p-1 bg-surface-elevated/70 border border-line rounded-xl flex gap-1">
+            <div className="p-1 bg-surface-active/70 border border-line rounded-xl flex gap-1">
               {field.options?.map((opt) => {
                 const currentVal = rawValue ?? field.defaultValue;
                 const isSelected =

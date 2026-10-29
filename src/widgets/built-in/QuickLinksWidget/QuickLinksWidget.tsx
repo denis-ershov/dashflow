@@ -29,7 +29,7 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
   const [url, setUrl] = useState('');
 
   const shapeClass = {
-    squircle: 'rounded-2xl',
+    squircle: 'rounded-lg',
     circle: 'rounded-full',
     square: 'rounded-lg',
   }[shape];
@@ -161,7 +161,7 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
               }}
               className="group relative flex flex-col items-center justify-center p-2 rounded-xl bg-surface hover:bg-surface-hover border border-line hover:border-line-hover transition-all cursor-pointer text-center"
             >
-              <div className={cn('w-10 h-10 bg-surface-elevated flex items-center justify-center overflow-hidden mb-1.5 border border-line shadow-xs group-hover:scale-105 transition-transform', shapeClass)}>
+              <div className={cn('w-10 h-10 bg-surface-active flex items-center justify-center overflow-hidden mb-1.5 border border-line shadow-xs group-hover:scale-105 transition-transform', shapeClass)}>
                 {getFaviconUrl(link.url) ? (
                   <img
                     src={getFaviconUrl(link.url)}
@@ -177,13 +177,13 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
               </div>
 
               {showTitles && (
-                <span className="text-[11px] font-medium text-fg truncate w-full group-hover:text-primary transition-colors">
+                <span className="text-2xs font-medium text-fg truncate w-full group-hover:text-primary transition-colors">
                   {link.title}
                 </span>
               )}
 
               {showDomain && (
-                <span className="text-[9px] text-fg-muted truncate w-full">
+                <span className="text-2xs text-fg-muted truncate w-full">
                   {getDomain(link.url)}
                 </span>
               )}
@@ -209,7 +209,7 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
             className="flex flex-col items-center justify-center p-2 rounded-xl border border-dashed border-line hover:border-primary text-fg-muted hover:text-primary transition-all cursor-pointer min-h-16"
           >
             <Plus className="w-5 h-5 mb-1" />
-            <span className="text-[10px] font-medium">Добавить</span>
+            <span className="text-2xs font-medium">Добавить</span>
           </button>
         </div>
       )}
