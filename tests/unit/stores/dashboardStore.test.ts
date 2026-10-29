@@ -87,14 +87,11 @@ describe('useDashboardStore (v2)', () => {
     expect(updated.layouts.xl[1].x).toBe(2);
   });
 
-  it('должен переключать режимы редактирования и блокировки', () => {
+  it('должен переключать режим редактирования', () => {
     const store = useDashboardStore.getState();
     expect(store.isEditMode).toBe(false);
 
     store.toggleEditMode();
     expect(useDashboardStore.getState().isEditMode).toBe(true);
-
-    store.setLocked(true);
-    expect(useDashboardStore.getState().isLocked).toBe(true);
   });
 });

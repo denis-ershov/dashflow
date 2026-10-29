@@ -7,6 +7,46 @@
 
 ---
 
+## [Unreleased] - 2026-10-29
+
+### Этап A аудита: удаление мёртвого кода и подключение «висящих» модулей
+
+План и обоснование — [`docs/AUDIT_2026-10-29.md`](AUDIT_2026-10-29.md).
+
+#### Исправлено
+- **Одиночная закладка без адреса.** В режиме «Одиночный сайт» нельзя было задать URL — плитка всегда вела на google.com. В схему манифеста добавлены поля `singleTitle`, `singleUrl`, `singleIconUrl`; URL и иконка принимаются только с протоколом http(s), иначе используется значение по умолчанию.
+- **Клавиатурная правка сетки.** `useGridKeyboardNav` был написан и покрыт тестом, но не подключён. Теперь в режиме правки: стрелки двигают виджет, Shift+стрелки меняют размер, Escape выходит из режима. Стрелки в полях ввода внутри виджета сетку не трогают.
+
+#### Добавлено
+- `WidgetSettingFieldSchema.visibleWhen` — условная видимость поля в автоматической форме настроек (`src/core/widget/types.ts`, `WidgetSettingsForm.tsx`).
+- `isSafeHttpUrl` в `src/core/network/url.ts` вместо трёх копий в `IframeWidget`, `rssParser`, `SingleBookmarkTile`.
+- `featureFlags.whenReady()` — ожидание загрузки переопределений из хранилища.
+- `normalizeActiveModal` — приведение сохранённого ключа модалки к допустимому набору.
+
+#### Изменено
+- Флаг `ambientAudio` теперь реально управляет звуками: при выключении кнопка в доке и панель скрываются, играющие треки останавливаются.
+- Флаг `webVitalsMonitoring` теперь управляет запуском `webVitals.init()` в `main.tsx`.
+- `ActiveModal` сокращён до `'addWidget' | 'settings' | 'appearance' | 'marketplace'`; старые `'themes'` → `'appearance'`, `'add'` → `'addWidget'`.
+- `ChromeBookmarksSync` перенесён из `src/services/storage/` в `src/widgets/built-in/BookmarksWidget/` — у него один потребитель.
+
+#### Удалено
+- `src/features/navigation/` (NavRail) и его тест — навигацию выполняет `FloatingDock`.
+- Фасады `src/services/storage/StorageAdapter.ts`, `src/services/localization/i18n.ts`.
+- `BookmarksSettingsForm.tsx` — дублировал схему манифеста и не был подключён; недостающие поля перенесены в манифест.
+- `useDashboardStore`: `isLocked`, `setLocked`, пустой `initializeDashboard`.
+- `useAppStore`: `theme`, `setTheme`, тип `ThemeMode` — тема живёт только в `themeStore`.
+- Флаги `aiSearchEngines`, `systemMonitorBars`, `offlineIndicator` (дублировали настройки виджетов и нигде не читались) и `experimentalPlugins` (по умолчанию `false`: подключение выключило бы уже работающие плагины).
+
+#### Изменённые файлы
+`src/core/featureFlags/{flags,types}.ts`, `src/core/network/{index,url}.ts`, `src/core/storage/dashboardMigrations.ts`, `src/core/widget/{types.ts,WidgetSettingsForm.tsx}`, `src/entrypoints/newtab/{App,main}.tsx`, `src/features/dashboard/components/GridEngine.tsx`, `src/features/dashboard/hooks/useGridKeyboardNav.ts`, `src/features/dock/FloatingDock.tsx`, `src/features/settings/components/ImportExportModal.tsx`, `src/stores/{useAppStore,useDashboardStore}.ts`, `src/widgets/built-in/BookmarksWidget/*`, `src/widgets/built-in/IframeWidget/IframeWidget.tsx`, `src/widgets/built-in/RssWidget/{rssParser.ts,RssFeedManagerModal.tsx}`, тесты, документация.
+
+#### Миграции и совместимость
+- Схема хранилища не менялась. Сохранённые `isLocked`, `app_theme` и переопределения удалённых флагов просто игнорируются при чтении.
+- Экспорт конфигурации больше не содержит `settings.theme`; импорт старых файлов с этим полем работает (поле игнорируется).
+- Откат: `git revert` коммита; данные пользователей откат не затрагивает.
+
+---
+
 ## [3.7.3] - 2026-10-22
 
 ### Комплексный аудит стабильности, безопасности и целостности архитектуры (Full Codebase Revision)

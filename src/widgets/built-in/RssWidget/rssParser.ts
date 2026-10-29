@@ -1,14 +1,5 @@
 import type { RssFeedConfig, RssItem } from './types';
-
-export const isSafeHttpUrl = (urlStr?: string): boolean => {
-  if (!urlStr) return false;
-  try {
-    const parsed = new URL(urlStr);
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
-  } catch {
-    return false;
-  }
-};
+import { isSafeHttpUrl } from '@/core/network';
 
 /**
  * Извлечение первого валидного URL изображения из HTML-текста описания

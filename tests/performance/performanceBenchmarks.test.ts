@@ -31,7 +31,7 @@ describe('Performance Benchmarks & Profiling', () => {
     const start = performance.now();
 
     for (let i = 0; i < 1000; i++) {
-      featureFlags.isEnabled('aiSearchEngines');
+      featureFlags.isEnabled('webVitalsMonitoring');
       featureFlags.isEnabled('ambientAudio');
     }
 

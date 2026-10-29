@@ -3,17 +3,8 @@ import { ShieldAlert, RotateCcw, ExternalLink, Globe } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { EmptyState } from '@/ui/feedback';
 import { cn } from '@/ui/lib/cn';
+import { isSafeHttpUrl } from '@/core/network';
 import type { IframeSettings } from './types';
-
-const isSafeHttpsUrl = (urlStr?: string): boolean => {
-  if (!urlStr) return false;
-  try {
-    const parsed = new URL(urlStr);
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
-  } catch {
-    return false;
-  }
-};
 
 export const IframeWidget: React.FC<WidgetProps<IframeSettings>> = ({ settings }) => {
   const rawUrl = settings?.url?.trim() || 'https://wxt.dev';
@@ -35,7 +26,7 @@ export const IframeWidget: React.FC<WidgetProps<IframeSettings>> = ({ settings }
     );
   }
 
-  if (!isSafeHttpsUrl(rawUrl)) {
+  if (!isSafeHttpUrl(rawUrl)) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-4 text-center">
         <ShieldAlert className="w-8 h-8 text-danger mb-2" />

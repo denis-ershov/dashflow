@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ResponsiveGridLayout, useContainerWidth, verticalCompactor } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
 import { Columns, Move, Plus, Check, Sliders } from 'lucide-react';
@@ -10,6 +10,7 @@ import { useTranslation } from '@/core/i18n';
 import { LazyWidgetRenderer } from './LazyWidgetRenderer';
 import { WidgetSettingsDrawer } from './WidgetSettingsDrawer';
 import { useGridMetrics } from '../hooks/useGridMetrics';
+import { useGridKeyboardNav, applyKeyboardDelta } from '../hooks/useGridKeyboardNav';
 import { EmptyState } from '@/ui/feedback/EmptyState';
 import { Button } from '@/ui/primitives/Button';
 import type { BaseColumns, Breakpoint } from '@/core/storage';
@@ -42,11 +43,13 @@ export const GridEngine: React.FC = () => {
     setGap,
     updateLayout,
     removeWidget,
+    activeModal,
     setActiveModal,
   } = useDashboardStore();
 
   const [activeSettingsInstanceId, setActiveSettingsInstanceId] = useState<string | null>(null);
   const [currentBreakpoint, setCurrentBreakpoint] = useState<Breakpoint>('xl');
+  const [focusedInstanceId, setFocusedInstanceId] = useState<string | null>(null);
   const { width, containerRef, mounted } = useContainerWidth();
 
   const responsiveCols = getResponsiveCols(columns);
@@ -55,6 +58,39 @@ export const GridEngine: React.FC = () => {
     containerRef: containerRef as React.RefObject<HTMLElement>,
     cols: columns,
     margin: gap,
+  });
+
+  const applyDelta = useCallback(
+    (instanceId: string, dx: number, dy: number, mode: 'move' | 'resize') => {
+      const items = layouts[currentBreakpoint];
+      const target = items.find((item) => item.i === instanceId);
+      if (!target) return;
+      const widgetId = widgets.find((w) => w.instanceId === instanceId)?.widgetId;
+      const size = widgetId ? WidgetRegistry.get(widgetId)?.size : undefined;
+      const next = applyKeyboardDelta(
+        target,
+        dx,
+        dy,
+        mode,
+        responsiveCols[currentBreakpoint],
+        size?.minW,
+        size?.minH,
+      );
+      updateLayout(
+        currentBreakpoint,
+        items.map((item) => (item.i === instanceId ? next : item)),
+      );
+    },
+    [layouts, currentBreakpoint, widgets, responsiveCols, updateLayout],
+  );
+
+  const { liveAnnouncement } = useGridKeyboardNav({
+    // Пока открыта модалка или панель настроек, Escape и стрелки принадлежат им
+    enabled: isEditMode && activeModal === null && activeSettingsInstanceId === null,
+    selectedInstanceId: focusedInstanceId,
+    onExitEditMode: () => setEditMode(false),
+    onMoveWidget: (id, dx, dy) => applyDelta(id, dx, dy, 'move'),
+    onResizeWidget: (id, dx, dy) => applyDelta(id, dx, dy, 'resize'),
   });
 
   const handleLayoutChange = (currentLayout: Layout) => {
@@ -201,7 +237,13 @@ export const GridEngine: React.FC = () => {
           const widgetTitle = definition?.nameKey ? t(definition.nameKey) : definition?.name || item.widgetId;
 
           return (
-            <div key={item.instanceId}>
+            <div
+              key={item.instanceId}
+              tabIndex={isEditMode ? 0 : undefined}
+              aria-label={isEditMode ? String(widgetTitle) : undefined}
+              onFocus={() => setFocusedInstanceId(item.instanceId)}
+              className="focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 rounded-xl"
+            >
               <WidgetShell
                 instanceId={item.instanceId}
                 title={String(widgetTitle)}
@@ -221,6 +263,10 @@ export const GridEngine: React.FC = () => {
           );
         })}
       </ResponsiveGridLayout>
+
+      <div aria-live="polite" className="sr-only">
+        {liveAnnouncement}
+      </div>
 
       {/* Выдвижная панель настроек виджета */}
       <WidgetSettingsDrawer

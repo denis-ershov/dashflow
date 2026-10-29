@@ -20,7 +20,8 @@ export interface FloatingDockProps {
   onOpenAddWidget: () => void;
   onOpenMarketplace?: () => void;
   onOpenAppearance: () => void;
-  onOpenAudio: () => void;
+  /** Не передан — кнопка звуков скрыта (флаг ambientAudio выключен) */
+  onOpenAudio?: () => void;
   onOpenSettings: () => void;
   onOpenCommandPalette: () => void;
   isEditMode?: boolean;
@@ -127,21 +128,23 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
       </Tooltip>
 
       {/* Звуки природы */}
-      <Tooltip content={isAudioPlaying ? 'Звуки природы (активны)' : 'Звуки природы'}>
-        <button
-          type="button"
-          onClick={onOpenAudio}
-          aria-label="Звуки природы"
-          className={cn(
-            'p-2.5 rounded-full transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90',
-            isAudioPlaying
-              ? 'text-primary bg-primary/15 shadow-[0_0_12px_var(--dashflow-primary-glow)]'
-              : 'text-fg-muted hover:text-fg hover:bg-surface-hover',
-          )}
-        >
-          <Volume2 className="w-4 h-4" />
-        </button>
-      </Tooltip>
+      {onOpenAudio && (
+        <Tooltip content={isAudioPlaying ? 'Звуки природы (активны)' : 'Звуки природы'}>
+          <button
+            type="button"
+            onClick={onOpenAudio}
+            aria-label="Звуки природы"
+            className={cn(
+              'p-2.5 rounded-full transition-all min-w-11 min-h-11 flex items-center justify-center cursor-pointer active:scale-90',
+              isAudioPlaying
+                ? 'text-primary bg-primary/15 shadow-[0_0_12px_var(--dashflow-primary-glow)]'
+                : 'text-fg-muted hover:text-fg hover:bg-surface-hover',
+            )}
+          >
+            <Volume2 className="w-4 h-4" />
+          </button>
+        </Tooltip>
+      )}
 
       {/* Режим редактирования сетки */}
       {onToggleEditMode && (layoutMode === 'modular' || layoutMode === 'canvas') && (

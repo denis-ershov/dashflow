@@ -1,19 +1,15 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { StorageAdapter } from '@/services/storage/StorageAdapter';
+import { StorageAdapter } from '@/core/storage';
 import { type SupportedLanguage, useI18nStore, detectBrowserLanguage } from '@/core/i18n';
-import { useThemeStore } from '@/core/theme/themeStore';
 
-export type ThemeMode = 'dark' | 'light' | 'custom';
 
 interface AppState {
   language: SupportedLanguage;
-  theme: ThemeMode;
   animationsEnabled: boolean;
   isInitialized: boolean;
 
   setLanguage: (lang: SupportedLanguage) => Promise<void>;
-  setTheme: (theme: ThemeMode) => Promise<void>;
   setAnimationsEnabled: (enabled: boolean) => Promise<void>;
   initialize: () => Promise<void>;
 }
@@ -21,7 +17,6 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   immer((set) => ({
     language: 'ru',
-    theme: 'dark',
     animationsEnabled: true,
     isInitialized: false,
 
@@ -31,12 +26,10 @@ export const useAppStore = create<AppState>()(
         'app_language',
         i18nLang || detectBrowserLanguage(),
       );
-      const savedTheme = await StorageAdapter.get<ThemeMode>('app_theme', 'dark');
       const savedAnim = await StorageAdapter.get<boolean>('app_animations', true);
 
       set((state) => {
         state.language = savedLang;
-        state.theme = savedTheme;
         state.animationsEnabled = savedAnim;
         state.isInitialized = true;
       });
@@ -53,20 +46,6 @@ export const useAppStore = create<AppState>()(
       });
       useI18nStore.getState().setLanguage(lang);
       await StorageAdapter.set('app_language', lang);
-    },
-
-    setTheme: async (theme) => {
-      set((state) => {
-        state.theme = theme;
-      });
-      await StorageAdapter.set('app_theme', theme);
-
-      // Синхронизация с Theme Engine
-      if (theme === 'light') {
-        useThemeStore.getState().setPreset('default-light');
-      } else if (theme === 'dark') {
-        useThemeStore.getState().setPreset('neutral-dark');
-      }
     },
 
     setAnimationsEnabled: async (enabled) => {

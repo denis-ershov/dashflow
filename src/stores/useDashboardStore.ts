@@ -32,7 +32,6 @@ export interface LegacyWidgetItem {
 export interface DashboardState {
   version: 2;
   isEditMode: boolean;
-  isLocked: boolean;
   layoutMode: 'zen' | 'modular' | 'canvas';
   heroSettings: import('@/core/storage').HeroSettings;
   speedDialLinks: import('@/core/storage').SpeedDialLink[];
@@ -50,7 +49,6 @@ export interface DashboardState {
   // Actions
   toggleEditMode: () => void;
   setEditMode: (val: boolean) => void;
-  setLocked: (val: boolean) => void;
   setLayoutMode: (mode: 'zen' | 'modular' | 'canvas') => void;
   updateHeroSettings: (settings: Partial<import('@/core/storage').HeroSettings>) => void;
   addSpeedDialLink: (link: Omit<import('@/core/storage').SpeedDialLink, 'id'>) => void;
@@ -61,7 +59,6 @@ export interface DashboardState {
   setColumns: (cols: BaseColumns) => void;
   setGap: (gap: number) => void;
   setActiveModal: (modal: ActiveModal) => void;
-  initializeDashboard: () => void;
 
   addWidget: (
     widgetId: string,
@@ -107,7 +104,6 @@ export const useDashboardStore = create<DashboardState>()(
 
       toggleEditMode: () => set((state) => ({ isEditMode: !state.isEditMode })),
       setEditMode: (val) => set({ isEditMode: val }),
-      setLocked: (val) => set({ isLocked: val }),
       setLayoutMode: (mode) => set({ layoutMode: mode }),
       updateHeroSettings: (settings) =>
         set((state) => ({
@@ -142,7 +138,6 @@ export const useDashboardStore = create<DashboardState>()(
       setColumns: (cols) => get().setBaseColumns(cols),
       setGap: (gap) => set({ gap }),
       setActiveModal: (modal) => set({ activeModal: modal }),
-      initializeDashboard: () => {},
 
       addWidget: (widgetId, defaultW = 4, defaultH = 3, initialSettings = {}) =>
         set((state) => {

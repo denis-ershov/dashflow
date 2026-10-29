@@ -74,6 +74,8 @@ export interface WidgetSettingFieldSchema<S, K extends keyof S = keyof S> {
   max?: number;
   step?: number;
   unit?: string;
+  /** Поле показывается только когда предикат истинен (например, зависит от выбранного режима) */
+  visibleWhen?: (values: S) => boolean;
 }
 
 /**

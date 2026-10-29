@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { LayoutItem } from '@/core/storage';
 
 export interface UseGridKeyboardNavOptions {
   enabled: boolean;
@@ -6,6 +7,30 @@ export interface UseGridKeyboardNavOptions {
   onExitEditMode?: () => void;
   onMoveWidget?: (instanceId: string, deltaX: number, deltaY: number) => void;
   onResizeWidget?: (instanceId: string, deltaW: number, deltaH: number) => void;
+}
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+/** Сдвиг или изменение размера одного элемента раскладки с удержанием в границах сетки */
+export function applyKeyboardDelta(
+  item: LayoutItem,
+  dx: number,
+  dy: number,
+  mode: 'move' | 'resize',
+  cols: number,
+  minW = 1,
+  minH = 1,
+): LayoutItem {
+  if (mode === 'move') {
+    return { ...item, x: clamp(item.x + dx, 0, cols - item.w), y: Math.max(item.y + dy, 0) };
+  }
+  const w = clamp(item.w + dx, Math.min(minW, cols), cols - item.x);
+  return { ...item, w, h: Math.max(item.h + dy, minH) };
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
 }
 
 /**
@@ -37,7 +62,8 @@ export function useGridKeyboardNav({
         return;
       }
 
-      if (!selectedInstanceId) return;
+      // Стрелки в полях ввода внутри виджета принадлежат полю, а не сетке
+      if (!selectedInstanceId || isEditableTarget(event.target)) return;
 
       let deltaX = 0;
       let deltaY = 0;

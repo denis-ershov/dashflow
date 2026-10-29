@@ -1,6 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useGridKeyboardNav } from '@/features/dashboard/hooks/useGridKeyboardNav';
+import {
+  useGridKeyboardNav,
+  applyKeyboardDelta,
+} from '@/features/dashboard/hooks/useGridKeyboardNav';
 
 describe('useGridKeyboardNav hook', () => {
   it('при нажатии Escape должен вызывать onExitEditMode', () => {
@@ -84,5 +87,39 @@ describe('useGridKeyboardNav hook', () => {
 
     expect(onMoveWidget).not.toHaveBeenCalled();
     expect(onExitEditMode).not.toHaveBeenCalled();
+  });
+
+  it('не должен двигать виджет стрелками, нажатыми в поле ввода', () => {
+    const onMoveWidget = vi.fn();
+    renderHook(() =>
+      useGridKeyboardNav({ enabled: true, selectedInstanceId: 'widget-1', onMoveWidget }),
+    );
+
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    act(() => {
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    });
+    input.remove();
+
+    expect(onMoveWidget).not.toHaveBeenCalled();
+  });
+});
+
+describe('applyKeyboardDelta', () => {
+  const item = { i: 'w', x: 0, y: 0, w: 4, h: 2 };
+
+  it('не выводит виджет за левую, правую и верхнюю границы', () => {
+    expect(applyKeyboardDelta(item, -1, -1, 'move', 12)).toMatchObject({ x: 0, y: 0 });
+    expect(applyKeyboardDelta({ ...item, x: 8 }, 1, 0, 'move', 12)).toMatchObject({ x: 8 });
+  });
+
+  it('ограничивает размер минимумом манифеста и шириной сетки', () => {
+    expect(applyKeyboardDelta({ ...item, w: 2, h: 2 }, -1, -1, 'resize', 12, 2, 2)).toMatchObject({
+      w: 2,
+      h: 2,
+    });
+    expect(applyKeyboardDelta({ ...item, x: 8 }, 1, 0, 'resize', 12)).toMatchObject({ w: 4 });
+    expect(applyKeyboardDelta(item, 1, 1, 'resize', 12)).toMatchObject({ w: 5, h: 3 });
   });
 });

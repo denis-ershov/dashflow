@@ -5,6 +5,7 @@ import {
   isRectangleColliding,
   findFirstAvailablePosition,
   resolveLayoutCollisions,
+  normalizeActiveModal,
 } from '@/core/storage/dashboardMigrations';
 import type { LayoutItem } from '@/core/storage/dashboardMigrations';
 
@@ -167,6 +168,24 @@ describe('Dashboard State Migrations & Collision Resolution', () => {
         expect(item.x + item.w).toBeLessThanOrEqual(2);
       }
       expect(isRectangleColliding(layouts.xs[0], layouts.xs[1])).toBe(false);
+    });
+  });
+
+  describe('normalizeActiveModal', () => {
+    it('пропускает актуальные ключи модалок', () => {
+      expect(normalizeActiveModal('settings')).toBe('settings');
+      expect(normalizeActiveModal('appearance')).toBe('appearance');
+    });
+
+    it('сводит устаревшие ключи к актуальным', () => {
+      expect(normalizeActiveModal('themes')).toBe('appearance');
+      expect(normalizeActiveModal('add')).toBe('addWidget');
+    });
+
+    it('отбрасывает неизвестные и нестроковые значения', () => {
+      expect(normalizeActiveModal('importExport')).toBeNull();
+      expect(normalizeActiveModal(42)).toBeNull();
+      expect(normalizeActiveModal(undefined)).toBeNull();
     });
   });
 });

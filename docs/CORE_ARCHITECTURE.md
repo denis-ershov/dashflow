@@ -33,7 +33,7 @@
 ┌─────────────────────────────────────────────────────────┐
 │                 UI & FEATURES LAYER                     │
 │  ┌───────────────────┐        ┌──────────────────────┐  │
-│  │ NavRail & Grid    │        │ 12 Built-in Widgets  │  │
+│  │ FloatingDock+Grid │        │ 12 Built-in Widgets  │  │
 │  │ (5 Breakpoints)   │        │ & Declarative Plugins│  │
 │  └───────────────────┘        └──────────────────────┘  │
 └─────────────────────────────────────────────────────────┘
@@ -83,7 +83,7 @@
 - [ADR-010: Type-Safe i18n Strategy](file:///e:/DEV/Project/dashflow/docs/adr/ADR-010-i18n-strategy.md)
 - [ADR-011: Widget Shell Resilience & Error Boundaries](file:///e:/DEV/Project/dashflow/docs/adr/ADR-011-widget-shell-resilience.md)
 - [ADR-012: Widget Code Splitting & Dynamic Imports](file:///e:/DEV/Project/dashflow/docs/adr/ADR-012-widget-code-splitting.md)
-- [ADR-013: Responsive Grid Layout & NavRail](file:///e:/DEV/Project/dashflow/docs/adr/ADR-013-responsive-grid-and-nav-rail.md)
+- [ADR-013: Responsive Grid Layout (NavRail заменён FloatingDock)](file:///e:/DEV/Project/dashflow/docs/adr/ADR-013-responsive-grid-and-nav-rail.md)
 - [ADR-014: Declarative Plugins & Sandbox Bridge](file:///e:/DEV/Project/dashflow/docs/adr/ADR-014-declarative-plugins-and-sandbox-bridge.md)
 - [ADR-015: Permissions Consent Flow](file:///e:/DEV/Project/dashflow/docs/adr/ADR-015-permissions-consent-flow.md)
 

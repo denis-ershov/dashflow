@@ -3,21 +3,9 @@ import type { FeatureFlags, FeatureFlagKey, FeatureFlagDefinition } from './type
 
 export const FEATURE_FLAG_DEFINITIONS: FeatureFlagDefinition[] = [
   {
-    key: 'aiSearchEngines',
-    title: 'AI-поисковые системы',
-    description: 'Интеграция ChatGPT, Claude, Perplexity AI и Brave Search в строку поиска',
-    defaultValue: true,
-  },
-  {
     key: 'ambientAudio',
     title: 'Звуки окружения (Ambient Audio)',
     description: 'Фоновые процедурные звуковые генераторы (дождь, костер, волны, белый шум)',
-    defaultValue: true,
-  },
-  {
-    key: 'systemMonitorBars',
-    title: 'Детальные шкалы системного монитора',
-    description: 'Режим отображения горизонтальных прогресс-баров батареи и оперативной памяти',
     defaultValue: true,
   },
   {
@@ -25,19 +13,6 @@ export const FEATURE_FLAG_DEFINITIONS: FeatureFlagDefinition[] = [
     title: 'Мониторинг Core Web Vitals',
     description: 'Локальный замер показателей скорости загрузки (LCP, CLS, INP) новой вкладки',
     defaultValue: true,
-  },
-  {
-    key: 'offlineIndicator',
-    title: 'Индикатор автономного режима',
-    description: 'Визуальный бейдж при временном отключении от сети Интернет',
-    defaultValue: true,
-  },
-  {
-    key: 'experimentalPlugins',
-    title: 'Пользовательские плагины (Beta)',
-    description: 'Загрузка и песочница сторонних декларативных виджетов',
-    defaultValue: false,
-    isExperimental: true,
   },
 ];
 
@@ -49,26 +24,38 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = FEATURE_FLAG_DEFINITIONS.redu
   {} as FeatureFlags,
 );
 
+/** Отбрасывает переопределения удалённых флагов, сохранённые старыми версиями */
+function pickKnownFlags(stored: unknown): Partial<FeatureFlags> {
+  if (!stored || typeof stored !== 'object') return {};
+  const result: Partial<FeatureFlags> = {};
+  for (const key of Object.keys(DEFAULT_FEATURE_FLAGS) as FeatureFlagKey[]) {
+    const value = (stored as Record<string, unknown>)[key];
+    if (typeof value === 'boolean') result[key] = value;
+  }
+  return result;
+}
+
 class FeatureFlagsManager {
   private overrides: Partial<FeatureFlags> = {};
   private listeners = new Set<(flags: FeatureFlags) => void>();
-  private isLoaded = false;
+  private readonly loaded: Promise<void>;
 
   constructor() {
-    void this.loadFromStorage();
+    this.loaded = this.loadFromStorage();
+  }
+
+  /** Резолвится, когда переопределения из хранилища прочитаны */
+  public whenReady(): Promise<void> {
+    return this.loaded;
   }
 
   private async loadFromStorage(): Promise<void> {
-    if (this.isLoaded) return;
     try {
-      const stored = await StorageAdapter.get<Partial<FeatureFlags>>(STORAGE_KEYS.FEATURE_FLAGS, {});
-      if (stored && typeof stored === 'object') {
-        this.overrides = stored;
-      }
+      const stored = await StorageAdapter.get<Record<string, unknown>>(STORAGE_KEYS.FEATURE_FLAGS, {});
+      this.overrides = pickKnownFlags(stored);
     } catch {
       this.overrides = {};
     } finally {
-      this.isLoaded = true;
       this.notifyListeners();
     }
   }

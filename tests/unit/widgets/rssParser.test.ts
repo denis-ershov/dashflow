@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { isSafeHttpUrl } from '@/core/network';
 import {
   parseRssXml,
-  isSafeHttpUrl,
   cleanHtmlText,
   formatRssTimeAgo,
   exportFeedsToOpml,

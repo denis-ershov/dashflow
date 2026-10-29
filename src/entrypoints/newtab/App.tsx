@@ -13,6 +13,7 @@ import { SpeedDialGrid, AddLinkModal } from '@/features/speedDial';
 import { FloatingDock } from '@/features/dock';
 import { AmbientSoundDrawer } from '@/features/audio';
 import { useAudioStore } from '@/core/audio';
+import { useFeatureFlags } from '@/core/featureFlags';
 import { useThemeStore } from '@/core/theme/themeStore';
 import { Spinner, RootErrorBoundary } from '@/ui/feedback';
 import { ToastContainer } from '@/ui/primitives/Toast';
@@ -22,7 +23,6 @@ function DashboardContent() {
   const {
     activeModal,
     setActiveModal,
-    initializeDashboard,
     layoutMode,
     setLayoutMode,
     heroSettings,
@@ -36,6 +36,8 @@ function DashboardContent() {
   } = useDashboardStore();
   const initializeTheme = useThemeStore((state) => state.initialize);
   const isAudioPlaying = useAudioStore((state) => Object.values(state.activeTracks).some(Boolean));
+  const stopAllAudio = useAudioStore((state) => state.stopAll);
+  const isAudioEnabled = useFeatureFlags().isEnabled('ambientAudio');
   const { t } = useTranslation();
 
   const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
@@ -43,9 +45,13 @@ function DashboardContent() {
 
   useEffect(() => {
     initApp();
-    initializeDashboard();
     initializeTheme();
-  }, [initApp, initializeDashboard, initializeTheme]);
+  }, [initApp, initializeTheme]);
+
+  // Выключение флага ambientAudio должно глушить уже играющие треки
+  useEffect(() => {
+    if (!isAudioEnabled) stopAllAudio();
+  }, [isAudioEnabled, stopAllAudio]);
 
   if (!isInitialized) {
     return (
@@ -105,8 +111,8 @@ function DashboardContent() {
         }}
         onOpenAddWidget={() => setActiveModal('addWidget')}
         onOpenMarketplace={() => setActiveModal('marketplace')}
-        onOpenAppearance={() => setActiveModal('themes')}
-        onOpenAudio={() => setIsAudioDrawerOpen(true)}
+        onOpenAppearance={() => setActiveModal('appearance')}
+        onOpenAudio={isAudioEnabled ? () => setIsAudioDrawerOpen(true) : undefined}
         onOpenSettings={() => setActiveModal('settings')}
         onOpenCommandPalette={() => setCommandPaletteOpen(true)}
         isEditMode={isEditMode}
@@ -120,7 +126,7 @@ function DashboardContent() {
       <AddWidgetModal />
       <MarketplaceModal />
       <AppearanceModal
-        isOpen={activeModal === 'themes' || activeModal === 'appearance'}
+        isOpen={activeModal === 'appearance'}
         onClose={() => setActiveModal(null)}
       />
       <AddLinkModal
@@ -129,7 +135,7 @@ function DashboardContent() {
         onAdd={addSpeedDialLink}
       />
       <AmbientSoundDrawer
-        isOpen={isAudioDrawerOpen}
+        isOpen={isAudioEnabled && isAudioDrawerOpen}
         onClose={() => setIsAudioDrawerOpen(false)}
       />
       <ToastContainer />

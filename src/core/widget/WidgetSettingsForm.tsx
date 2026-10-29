@@ -50,10 +50,15 @@ export function WidgetSettingsForm<S>({
 
   const valuesObj = effectiveValues as Record<string, unknown>;
 
+  const visibleSchema = useMemo(
+    () => schema.filter((field) => !field.visibleWhen || field.visibleWhen(effectiveValues)),
+    [schema, effectiveValues],
+  );
+
   // Группировка по секциям (если заданы)
   const sections = useMemo(() => {
     const map = new Map<string, WidgetSettingFieldSchema<S>[]>();
-    for (const field of schema) {
+    for (const field of visibleSchema) {
       const sec = field.section || 'default';
       if (!map.has(sec)) {
         map.set(sec, []);
@@ -61,7 +66,7 @@ export function WidgetSettingsForm<S>({
       map.get(sec)!.push(field);
     }
     return Array.from(map.entries());
-  }, [schema]);
+  }, [visibleSchema]);
 
   const renderField = (field: WidgetSettingFieldSchema<S>) => {
     const key = field.key;
@@ -281,7 +286,7 @@ export function WidgetSettingsForm<S>({
   if (sections.length <= 1) {
     return (
       <div className="flex flex-col gap-4">
-        {schema.map((field) => renderField(field))}
+        {visibleSchema.map((field) => renderField(field))}
       </div>
     );
   }

@@ -3,15 +3,26 @@ import type { WidgetInstance } from '@/core/widget/types';
 export type Breakpoint = 'xl' | 'lg' | 'md' | 'sm' | 'xs';
 export type BaseColumns = 12 | 16 | 24;
 
-export type ActiveModal =
-  | 'add'
-  | 'addWidget'
-  | 'settings'
-  | 'themes'
-  | 'appearance'
-  | 'marketplace'
-  | 'importExport'
-  | null;
+export type ActiveModal = 'addWidget' | 'settings' | 'appearance' | 'marketplace' | null;
+
+const ACTIVE_MODALS: ReadonlySet<string> = new Set([
+  'addWidget',
+  'settings',
+  'appearance',
+  'marketplace',
+]);
+
+/** Устаревшие ключи модалок из ранних версий, сводятся к актуальным. */
+const LEGACY_MODAL_ALIASES: Readonly<Record<string, ActiveModal>> = {
+  add: 'addWidget',
+  themes: 'appearance',
+};
+
+export function normalizeActiveModal(raw: unknown): ActiveModal {
+  if (typeof raw !== 'string') return null;
+  if (ACTIVE_MODALS.has(raw)) return raw as ActiveModal;
+  return LEGACY_MODAL_ALIASES[raw] ?? null;
+}
 
 export const BREAKPOINTS: Record<Breakpoint, number> = {
   xl: 1200,
@@ -69,7 +80,6 @@ export interface MigratedDashboardState {
   baseColumns: BaseColumns;
   gap: number;
   isEditMode: boolean;
-  isLocked: boolean;
   layoutMode: 'zen' | 'modular' | 'canvas';
   heroSettings: HeroSettings;
   speedDialLinks: SpeedDialLink[];
@@ -251,7 +261,6 @@ export function createDefaultDashboardState(): MigratedDashboardState {
     baseColumns: 12,
     gap: 16,
     isEditMode: false,
-    isLocked: false,
     layoutMode: 'modular',
     heroSettings: { ...DEFAULT_HERO_SETTINGS },
     speedDialLinks: [...DEFAULT_SPEED_DIAL_LINKS],
@@ -294,12 +303,10 @@ export function migrateDashboardState(rawState: unknown): MigratedDashboardState
         baseColumns: baseCols,
         gap: typeof rawObj.gap === 'number' ? rawObj.gap : 16,
         isEditMode: Boolean(rawObj.isEditMode),
-        isLocked: Boolean(rawObj.isLocked),
         layoutMode,
         heroSettings,
         speedDialLinks,
-        activeModal:
-          typeof rawObj.activeModal === 'string' ? (rawObj.activeModal as ActiveModal) : null,
+        activeModal: normalizeActiveModal(rawObj.activeModal),
         instances: rawObj.instances as WidgetInstance[],
         layouts: sanitizedLayouts,
       };
@@ -346,7 +353,6 @@ export function migrateDashboardState(rawState: unknown): MigratedDashboardState
       baseColumns: baseCols,
       gap,
       isEditMode: false,
-      isLocked: Boolean(rawObj.isLocked),
       layoutMode: 'modular',
       heroSettings: { ...DEFAULT_HERO_SETTINGS },
       speedDialLinks: [...DEFAULT_SPEED_DIAL_LINKS],

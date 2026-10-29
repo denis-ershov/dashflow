@@ -37,7 +37,7 @@ export interface WidgetDefinition<S = Record<string, unknown>> {
   surface: WidgetSurfaceType;
   size: WidgetSize;
   permissions?: WidgetPermission[];
-  settingsSchema?: WidgetSettingFieldSchema<S>[];
+  settingsSchema?: WidgetSettingFieldSchema<S>[]; // поле может иметь visibleWhen(values) => boolean
   load: () => Promise<{ default: React.ComponentType<WidgetProps<S>> }>;
   loadSettings?: () => Promise<{ default: React.ComponentType<{ settings: S; onChange: (newSettings: S) => void }> }>;
 }

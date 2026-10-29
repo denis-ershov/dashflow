@@ -5,18 +5,10 @@
  */
 
 export interface FeatureFlags {
-  /** Поддержка современных AI-поисковиков в SearchWidget (ChatGPT, Claude, Perplexity) */
-  aiSearchEngines: boolean;
   /** Процедурный синтезатор звуков окружения (Web Audio API) */
   ambientAudio: boolean;
-  /** Детальные горизонтальные шкалы в SystemMonitorWidget */
-  systemMonitorBars: boolean;
   /** Сбор локальных метрик Core Web Vitals и производительности */
   webVitalsMonitoring: boolean;
-  /** Индикатор автономного режима (Offline State) */
-  offlineIndicator: boolean;
-  /** Экспериментальная среда запуска пользовательских плагинов */
-  experimentalPlugins: boolean;
 }
 
 export type FeatureFlagKey = keyof FeatureFlags;

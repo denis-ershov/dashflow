@@ -1,6 +1,7 @@
 import React from 'react';
 import { ExternalLink } from 'lucide-react';
 import { cn } from '@/ui/lib/cn';
+import { isSafeHttpUrl } from '@/core/network';
 import type { BookmarkSettings } from './types';
 import { getBookmarkTileClasses, getBookmarkFallbackGradient } from './bookmarkStyles';
 
@@ -9,9 +10,12 @@ export interface SingleBookmarkTileProps {
   settings?: BookmarkSettings;
 }
 
+const DEFAULT_SINGLE_URL = 'https://google.com';
+
 export const SingleBookmarkTile: React.FC<SingleBookmarkTileProps> = ({ settings }) => {
   const title = settings?.singleTitle || 'Быстрая закладка';
-  const url = settings?.singleUrl || 'https://google.com';
+  const rawUrl = settings?.singleUrl;
+  const url = rawUrl && isSafeHttpUrl(rawUrl) ? rawUrl : DEFAULT_SINGLE_URL;
   const showTitle = settings?.showTitle !== false;
   const showIcon = settings?.showIcon !== false;
   const showUrl = settings?.showUrl === true;
@@ -20,7 +24,7 @@ export const SingleBookmarkTile: React.FC<SingleBookmarkTileProps> = ({ settings
   const [imgError, setImgError] = React.useState(false);
 
   const getFaviconUrl = (targetUrl: string) => {
-    if (settings?.singleIconUrl) return settings.singleIconUrl;
+    if (settings?.singleIconUrl && isSafeHttpUrl(settings.singleIconUrl)) return settings.singleIconUrl;
     try {
       const hostname = new URL(targetUrl).hostname;
       return `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`;

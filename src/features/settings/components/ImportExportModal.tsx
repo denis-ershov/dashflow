@@ -15,7 +15,7 @@ export interface ImportExportModalProps {
 export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, onClose }) => {
   const { widgets, columns, gap } = useDashboardStore();
   const { activePresetId, wallpaperUrl, scrim, customCss } = useThemeStore();
-  const { language, theme } = useAppStore();
+  const language = useAppStore((state) => state.language);
 
   const [importJson, setImportJson] = useState('');
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -39,7 +39,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
       },
       layout: { columns, gap },
       widgets,
-      settings: { language, theme },
+      settings: { language },
     };
 
     const jsonStr = JSON.stringify(data, null, 2);

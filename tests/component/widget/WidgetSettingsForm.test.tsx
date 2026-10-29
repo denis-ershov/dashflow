@@ -100,4 +100,39 @@ describe('WidgetSettingsForm Component', () => {
       enabled: true,
     });
   });
+
+  it('скрывает поля, для которых visibleWhen возвращает false', () => {
+    interface ModeSettings {
+      mode: string;
+      url: string;
+    }
+    const conditionalSchema: WidgetSettingFieldSchema<ModeSettings>[] = [
+      { key: 'mode', labelKey: 'Режим', type: 'text', defaultValue: 'folder' },
+      {
+        key: 'url',
+        labelKey: 'Адрес сайта',
+        type: 'text',
+        defaultValue: '',
+        visibleWhen: (s) => s.mode === 'single',
+      },
+    ];
+
+    const { rerender } = render(
+      <WidgetSettingsForm
+        schema={conditionalSchema}
+        values={{ mode: 'folder', url: '' }}
+        onChange={vi.fn()}
+      />,
+    );
+    expect(screen.queryByLabelText('Адрес сайта')).not.toBeInTheDocument();
+
+    rerender(
+      <WidgetSettingsForm
+        schema={conditionalSchema}
+        values={{ mode: 'single', url: '' }}
+        onChange={vi.fn()}
+      />,
+    );
+    expect(screen.getByLabelText('Адрес сайта')).toBeInTheDocument();
+  });
 });

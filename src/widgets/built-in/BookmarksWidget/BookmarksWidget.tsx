@@ -29,7 +29,7 @@ import {
   BookmarkNode,
   extractBookmarkFolders,
   flattenBookmarkNodes,
-} from '@/services/storage/ChromeBookmarksSync';
+} from './ChromeBookmarksSync';
 import { Button, Badge } from '@/ui/primitives';
 import { EmptyState } from '@/ui/feedback';
 import { cn } from '@/ui/lib/cn';

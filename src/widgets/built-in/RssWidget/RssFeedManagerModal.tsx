@@ -19,7 +19,8 @@ import { Switch } from '@/ui/primitives/Switch';
 import { cn } from '@/ui/lib/cn';
 import type { RssFeedConfig } from './types';
 import { RSS_PRESET_CATEGORIES } from './presets';
-import { exportFeedsToOpml, parseOpml, isSafeHttpUrl } from './rssParser';
+import { exportFeedsToOpml, parseOpml } from './rssParser';
+import { isSafeHttpUrl } from '@/core/network';
 
 export interface RssFeedManagerModalProps {
   isOpen: boolean;
