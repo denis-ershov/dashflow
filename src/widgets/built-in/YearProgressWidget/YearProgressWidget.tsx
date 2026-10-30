@@ -50,7 +50,7 @@ export const YearProgressWidget: React.FC<WidgetProps<YearProgressSettings>> = (
       'week',
     ];
     const nextIdx = (modes.indexOf(viewMode) + 1) % modes.length;
-    const nextMode = modes[nextIdx];
+    const nextMode = modes[nextIdx] ?? viewMode;
     setViewMode(nextMode);
     onUpdateSettings?.({ defaultMode: nextMode });
   };

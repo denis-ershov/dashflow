@@ -67,7 +67,7 @@ describe('Стражи дизайн-системы', () => {
     // Переменные палитры, которые Theme Engine печатает из ключей токенов
     const themeKeys = readFileSync(join(SRC, 'core/theme/tokens.ts'), 'utf8');
     for (const m of themeKeys.matchAll(/'([a-z][a-zA-Z0-9]*)'/g)) {
-      declared.add(`--dashflow-${m[1].replace(/([A-Z0-9])/g, '-$1').toLowerCase()}`);
+      declared.add(`--dashflow-${m[1]?.replace(/([A-Z0-9])/g, '-$1').toLowerCase()}`);
     }
 
     const missing = findAll(/var\((--[a-z0-9-]+)/g)
@@ -97,7 +97,7 @@ describe('Стражи дизайн-системы', () => {
       .filter(({ file }) => /\.(ts|tsx)$/.test(file) && !ILLUSTRATION_PALETTE_FILES.has(file))
       .flatMap(({ file, text }) =>
         [...text.matchAll(utility)]
-          .filter((m) => palette.test(m[1]) || /-elevated$|-fg$/.test(m[1]))
+          .filter((m) => palette.test(m[1] ?? '') || /-elevated$|-fg$/.test(m[1] ?? ''))
           .filter((m) => !allowed.has(m[1]))
           .map((m) => `${file}: ${m[0]}`),
       );

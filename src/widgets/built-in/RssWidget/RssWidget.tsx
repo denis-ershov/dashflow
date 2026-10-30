@@ -32,6 +32,7 @@ import { originPatternsFor, useBrowserPermissions } from '@/core/permissions/bro
 import { getRssCardClasses } from './rssStyles';
 import { RssFeedManagerModal } from './RssFeedManagerModal';
 import { runLogged } from '@/core/observability';
+import { displayHost } from '@/core/network';
 
 export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
   instanceId,
@@ -50,7 +51,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
     if (settings?.feedUrls && settings.feedUrls.length > 0) {
       return settings.feedUrls.map((url, idx) => ({
         id: `feed-legacy-${idx}`,
-        name: url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0],
+        name: displayHost(url),
         url,
         enabled: true,
         folder: DEFAULT_FOLDER,
@@ -60,7 +61,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
       return [
         {
           id: 'feed-legacy-single',
-          name: settings.feedUrl.replace(/^https?:\/\/(www\.)?/, '').split('/')[0],
+          name: displayHost(settings.feedUrl),
           url: settings.feedUrl,
           enabled: true,
           folder: DEFAULT_FOLDER,

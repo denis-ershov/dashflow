@@ -17,7 +17,8 @@ permissions:
 jobs:
   audit-and-build:
     name: Typecheck, Lint, Test, Build & E2E
-    # Образ закреплён: ubuntu-latest перешёл на 26.04, которую Playwright 1.56 не поддерживает
+    # Образ закреплён ради воспроизводимости: смена ubuntu-latest (на 26.04) уже ломала установку
+    # браузера Playwright. Обновлять осознанно, вместе с проверкой E2E
     runs-on: ubuntu-24.04
 
     steps:

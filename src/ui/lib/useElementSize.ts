@@ -21,6 +21,7 @@ export function useElementSize<T extends HTMLElement>(): [(node: T | null) => vo
     if (!node || typeof ResizeObserver === 'undefined') return;
 
     const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return;
       const { width, height } = entry.contentRect;
       setSize((prev) =>
         prev.width === width && prev.height === height ? prev : { width, height },

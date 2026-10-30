@@ -24,12 +24,8 @@ export function useFocusTrap(
 
     const container = containerRef.current;
     if (container) {
-      const focusable = container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
-      if (focusable.length > 0) {
-        focusable[0].focus();
-      } else {
-        container.focus();
-      }
+      const firstFocusable = container.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (firstFocusable ?? container).focus();
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -43,13 +39,12 @@ export function useFocusTrap(
         const focusable = Array.from(
           containerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
         );
-        if (focusable.length === 0) {
+        const firstElement = focusable[0];
+        const lastElement = focusable[focusable.length - 1];
+        if (!firstElement || !lastElement) {
           e.preventDefault();
           return;
         }
-
-        const firstElement = focusable[0];
-        const lastElement = focusable[focusable.length - 1];
 
         if (e.shiftKey) {
           if (

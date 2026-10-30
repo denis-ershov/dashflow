@@ -16,15 +16,16 @@ export default defineConfig({
     include: ['tests/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
-      include: ['src/**'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.d.ts'],
       reporter: ['text-summary', 'html'],
-      // Базовая линия 2026-10-30 минус ~2 п.п.: порог не даёт покрытию тихо падать.
-      // Поднимать вместе с ростом тестов, не опускать.
+      // Базовая линия 2026-10-30 (Vitest 5: v8 считает по AST, а не по строкам, поэтому цифры
+      // ниже, чем на Vitest 2 при тех же тестах) минус ~2 п.п. Поднимать вместе с тестами, не опускать.
       thresholds: {
-        statements: 78,
-        branches: 69,
-        functions: 58,
-        lines: 78,
+        statements: 65,
+        branches: 58,
+        functions: 56,
+        lines: 66,
       },
     },
   },

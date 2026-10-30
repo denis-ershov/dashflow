@@ -52,11 +52,11 @@ describe('WidgetRegistry', () => {
 
     const productivity = WidgetRegistry.getByCategory('productivity');
     expect(productivity).toHaveLength(1);
-    expect(productivity[0].id).toBe('clock');
+    expect(productivity[0]?.id).toBe('clock');
 
     const utilities = WidgetRegistry.getByCategory('utilities');
     expect(utilities).toHaveLength(1);
-    expect(utilities[0].id).toBe('weather');
+    expect(utilities[0]?.id).toBe('weather');
 
     const empty = WidgetRegistry.getByCategory('finance');
     expect(empty).toHaveLength(0);

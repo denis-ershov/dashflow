@@ -81,7 +81,7 @@ function block(header: string): string {
 function dashflowDeclarations(source: string): Map<string, string> {
   const map = new Map<string, string>();
   for (const match of source.matchAll(/(--dashflow-[a-z0-9-]+)\s*:\s*([^;]+);/g)) {
-    map.set(match[1], match[2].replace(/\s+/g, ' ').trim());
+    map.set(match[1] ?? '', (match[2] ?? '').replace(/\s+/g, ' ').trim());
   }
   return map;
 }

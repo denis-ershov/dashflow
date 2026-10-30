@@ -68,7 +68,7 @@ describe('Виджеты на английском', () => {
   });
 
   it('цитаты отдаются на языке интерфейса', () => {
-    expect(getQuotes('en')[0].text).toBe('Simplicity is prerequisite for reliability.');
+    expect(getQuotes('en')[0]?.text).toBe('Simplicity is prerequisite for reliability.');
   });
 
   it('форма настроек переводит подписи манифеста', () => {

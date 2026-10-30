@@ -22,7 +22,7 @@ import { cn } from '@/ui/lib/cn';
 import type { RssFeedConfig } from './types';
 import { RSS_PRESET_CATEGORIES } from './presets';
 import { exportFeedsToOpml, parseOpml } from './rssParser';
-import { isSafeHttpUrl } from '@/core/network';
+import { isSafeHttpUrl, displayHost } from '@/core/network';
 
 export interface RssFeedManagerModalProps {
   isOpen: boolean;
@@ -92,7 +92,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
 
     const newFeed: RssFeedConfig = {
       id: `feed-custom-${Date.now()}`,
-      name: trimmedName || trimmedUrl.replace(/^https?:\/\/(www\.)?/, '').split('/')[0],
+      name: trimmedName || displayHost(trimmedUrl),
       url: trimmedUrl,
       folder: feedFolder.trim() || DEFAULT_FOLDER,
       enabled: true,

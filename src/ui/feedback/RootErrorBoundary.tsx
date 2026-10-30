@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle, RotateCcw, RefreshCw } from 'lucide-react';
 import { Button } from '@/ui/primitives';
 import { StorageAdapter, STORAGE_KEYS } from '@/core/storage';
@@ -34,7 +34,7 @@ export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErr
     };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+  public override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     crashLogger.logFatal(error, 'root', {
       componentStack: errorInfo.componentStack || '',
     });
@@ -59,7 +59,7 @@ export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErr
     }
   };
 
-  public render(): ReactNode {
+  public override render(): ReactNode {
     if (this.state.hasError) {
       // Хуки в классе недоступны; язык читается из стора в момент сбоя
       const language = useI18nStore.getState().language;

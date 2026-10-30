@@ -5,6 +5,8 @@ import pkg from './package.json';
 // https://wxt.dev/api/config.html
 export default defineConfig({
   srcDir: 'src',
+  // С WXT 0.20 public по умолчанию в корне проекта; иконки и _locales лежат в src/public
+  publicDir: 'src/public',
   modules: ['@wxt-dev/module-react'],
   manifest: (env) => {
     const isDev = env.mode === 'development';
@@ -56,6 +58,12 @@ export default defineConfig({
         gecko: {
           id: 'dashflow@addon',
           strict_min_version: '109.0',
+          // Обязательно для новых дополнений AMO с 03.11.2025. Виджет погоды (есть в раскладке
+          // по умолчанию) отправляет в Open-Meteo и геокодеры координаты — найденные или выбранного
+          // города; больше никакие данные с устройства не уходят
+          data_collection_permissions: {
+            required: ['locationInfo'],
+          },
         },
       },
     };
@@ -63,7 +71,9 @@ export default defineConfig({
   vite: () => ({
     plugins: [tailwindcss()],
     build: {
-      chunkSizeWarningLimit: 650,
+      // Главный чанк новой вкладки на Vite 7 — 742 КБ (иконки ≈12 КБ, основное — React и код
+      // приложения). Разбор и бюджеты — этап 7 ROADMAP; лимит не даёт расти дальше незаметно
+      chunkSizeWarningLimit: 760,
     },
   }),
 });

@@ -10,9 +10,9 @@ import {
   stringAt,
 } from '@/core/network';
 import { t, useI18nStore, type SupportedLanguage, type TranslationKey } from '@/core/i18n';
-import { DEFAULT_CITY, POPULAR_CITIES } from './cities';
+import { DEFAULT_CITY, defaultCityCoordinates, findKnownCity } from './cities';
 
-export { DEFAULT_CITY, POPULAR_CITIES };
+export { DEFAULT_CITY };
 import type {
   CitySearchResult,
   DailyForecastItem,
@@ -177,25 +177,17 @@ export async function fetchFullWeatherData(params: {
     }
   }
 
-  // 3. Поиск по имени города
+  // 3. Поиск по имени города; если город не найден — город по умолчанию
   if (!activeCoords) {
     const rawCity = params.city || DEFAULT_CITY;
-    const norm = rawCity.trim().toLowerCase();
-    if (POPULAR_CITIES[norm]) {
-      activeCoords = POPULAR_CITIES[norm];
-    } else {
-      const results = await searchCities(rawCity);
-      if (results.length > 0) {
-        activeCoords = {
-          lat: results[0].latitude,
-          lon: results[0].longitude,
-          name: results[0].name,
-          country: results[0].country,
-        };
-      } else {
-        activeCoords = POPULAR_CITIES[DEFAULT_CITY.toLowerCase()];
-      }
-    }
+    const lang = currentLanguage();
+    const known = findKnownCity(rawCity, lang);
+    const found = known ? undefined : (await searchCities(rawCity, lang))[0];
+    activeCoords =
+      known ??
+      (found
+        ? { lat: found.latitude, lon: found.longitude, name: found.name, country: found.country }
+        : defaultCityCoordinates(lang));
   }
 
   try {
@@ -460,7 +452,13 @@ export function getUvIndexInfo(
 
 const COMPASS = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'] as const;
 
+/** Румб для направления ветра; отрицательные градусы и > 360 нормализуются */
+function compassPoint(deg: number): (typeof COMPASS)[number] {
+  const index = ((Math.round(deg / 45) % 8) + 8) % 8;
+  return COMPASS[index] ?? 'n';
+}
+
 export function getWindDirectionText(deg?: number, lang: SupportedLanguage = 'ru'): string {
   if (deg === undefined) return '—';
-  return t(`weather.compass.${COMPASS[Math.round(deg / 45) % 8]}`, undefined, lang);
+  return t(`weather.compass.${compassPoint(deg)}`, undefined, lang);
 }

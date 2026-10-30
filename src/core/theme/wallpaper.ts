@@ -28,7 +28,7 @@ export function isAllowedWallpaperUrl(url: string): boolean {
   if (DANGEROUS_CHARS.test(trimmed)) return false;
 
   const schemeMatch = /^([a-z][a-z0-9+.-]*):/i.exec(trimmed);
-  if (!schemeMatch) return false;
+  if (!schemeMatch?.[1]) return false;
 
   const scheme = schemeMatch[1].toLowerCase();
   if (!ALLOWED_WALLPAPER_SCHEMES.includes(scheme as AllowedWallpaperScheme)) {

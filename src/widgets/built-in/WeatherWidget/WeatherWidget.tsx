@@ -115,7 +115,8 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
   }, []);
 
   const { data: remoteData, isLoading, isFetching, refetch } = useQuery<WeatherData>({
-    queryKey: ['weather', city, autoLocation, coords?.lat, coords?.lon],
+    // Язык в ключе: название города и время прогноза приходят на языке интерфейса
+    queryKey: ['weather', city, autoLocation, coords?.lat, coords?.lon, language],
     queryFn: () => fetchFullWeatherData({ city, coords, autoLocation }),
     staleTime: 1000 * 60 * 20, // 20 минут
     refetchOnWindowFocus: false,

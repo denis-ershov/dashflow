@@ -5,6 +5,7 @@ import { AddWidgetModal } from '@/features/dashboard/components/AddWidgetModal';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useI18nStore } from '@/core/i18n/i18nStore';
 import { registerBuiltInWidgets } from '@/widgets/built-in';
+import { at } from '../../helpers/at';
 
 describe('AddWidgetModal Component', () => {
   beforeEach(() => {
@@ -38,7 +39,7 @@ describe('AddWidgetModal Component', () => {
     render(<AddWidgetModal />);
 
     const addButtons = screen.getAllByRole('button', { name: /добавить/i });
-    fireEvent.click(addButtons[0]);
+    fireEvent.click(at(addButtons, 0));
 
     expect(useDashboardStore.getState().instances.length).toBe(1);
     expect(useDashboardStore.getState().activeModal).toBeNull();

@@ -5,6 +5,7 @@ import { useTranslation } from '@/core/i18n';
 import { WidgetRegistry } from '@/core/widget/registry';
 import { useThemeStore } from '@/core/theme/themeStore';
 import { PRESETS } from '@/core/theme/presets';
+import { PRESET_META } from '@/features/appearance';
 import {
   Search,
   Plus,
@@ -111,7 +112,8 @@ export const CommandPalette: React.FC = () => {
   // Команды переключения тем
   const themeCommands = PRESETS.map((p) => ({
     id: `theme-${p.id}`,
-    title: t('commandPalette.theme', { name: p.id }),
+    // Название темы — как в окне «Темы и обои», а не технический id
+    title: t('commandPalette.theme', { name: PRESET_META[p.id]?.name ?? p.id }),
     category: t('commandPalette.categories.themes'),
     icon: <Palette className="w-4 h-4 text-primary" />,
     action: () => {

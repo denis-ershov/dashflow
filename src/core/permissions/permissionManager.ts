@@ -1,8 +1,8 @@
 import { StorageAdapter, STORAGE_KEYS } from '@/core/storage';
 import {
-  PermissionType,
-  PermissionGrant,
-  PermissionGrantsMap,
+  type PermissionType,
+  type PermissionGrant,
+  type PermissionGrantsMap,
   PERMISSION_DEFINITIONS,
 } from './types';
 

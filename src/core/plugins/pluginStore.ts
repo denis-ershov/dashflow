@@ -1,12 +1,16 @@
 import { create } from 'zustand';
 import { StorageAdapter, STORAGE_KEYS } from '@/core/storage';
 import { WidgetRegistry } from '@/core/widget/registry';
-import { WidgetManifest, WidgetProps } from '@/core/widget/types';
+import { type WidgetManifest, type WidgetProps } from '@/core/widget/types';
 import { PermissionManager } from '@/core/permissions/permissionManager';
 import type { PermissionType } from '@/core/permissions/types';
 import type { IframeSettings } from '@/widgets/built-in/IframeWidget/types';
 import type { RssSettings } from '@/widgets/built-in/RssWidget/types';
-import { DeclarativePluginManifest, EmbedPluginConfig, RssPluginConfig } from './types';
+import {
+  type DeclarativePluginManifest,
+  type EmbedPluginConfig,
+  type RssPluginConfig,
+} from './types';
 import { validatePluginManifest } from './validator';
 
 export interface PluginState {

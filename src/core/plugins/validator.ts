@@ -1,4 +1,8 @@
-import { DeclarativePluginManifest, DeclarativePluginType, PluginPermission } from './types';
+import {
+  type DeclarativePluginManifest,
+  type DeclarativePluginType,
+  type PluginPermission,
+} from './types';
 
 const ALLOWED_TYPES: DeclarativePluginType[] = ['rss', 'embed', 'links', 'api'];
 const ALLOWED_PERMISSIONS: PluginPermission[] = ['storage', 'network', 'bookmarks'];

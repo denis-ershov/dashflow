@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useDashboardStore, pickPersistedDashboard } from '@/stores/useDashboardStore';
+import { at } from '../../helpers/at';
 
 describe('useDashboardStore (v2)', () => {
   beforeEach(() => {
@@ -37,8 +38,8 @@ describe('useDashboardStore (v2)', () => {
 
     for (let i = 0; i < xlLayout.length; i++) {
       for (let j = i + 1; j < xlLayout.length; j++) {
-        const itemA = xlLayout[i];
-        const itemB = xlLayout[j];
+        const itemA = at(xlLayout, i);
+        const itemB = at(xlLayout, j);
         const collides = !(
           itemA.x + itemA.w <= itemB.x ||
           itemA.x >= itemB.x + itemB.w ||
@@ -52,7 +53,7 @@ describe('useDashboardStore (v2)', () => {
 
   it('должен удалять виджет из instances и всех раскладок layouts', () => {
     const store = useDashboardStore.getState();
-    const firstInstanceId = store.instances[0].instanceId;
+    const firstInstanceId = at(store.instances, 0).instanceId;
 
     store.removeWidget(firstInstanceId);
 
@@ -64,7 +65,7 @@ describe('useDashboardStore (v2)', () => {
 
   it('должен обновлять настройки конкретного экземпляра виджета', () => {
     const store = useDashboardStore.getState();
-    const firstInstanceId = store.instances[0].instanceId;
+    const firstInstanceId = at(store.instances, 0).instanceId;
 
     store.updateWidgetSettings(firstInstanceId, { customOption: 42 });
 
@@ -83,8 +84,8 @@ describe('useDashboardStore (v2)', () => {
     store.updateLayout('xl', newXlLayout);
 
     const updated = useDashboardStore.getState();
-    expect(updated.layouts.xl[0].x).toBe(0);
-    expect(updated.layouts.xl[1].x).toBe(2);
+    expect(updated.layouts.xl[0]?.x).toBe(0);
+    expect(updated.layouts.xl[1]?.x).toBe(2);
   });
 
   it('должен переключать режим редактирования', () => {

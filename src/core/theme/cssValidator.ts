@@ -64,7 +64,7 @@ function urlScheme(raw: string): string {
   if (/^data:/i.test(value)) return 'data';
   if (/^chrome-extension:/i.test(value)) return 'chrome-extension';
   const match = /^([a-z][a-z0-9+.-]*):/i.exec(value);
-  if (match) return match[1].toLowerCase();
+  if (match?.[1]) return match[1].toLowerCase();
   if (value.startsWith('//')) return 'protocol-relative';
   return 'relative';
 }
@@ -100,8 +100,13 @@ export function validateCustomCss(
   }
 
   const legacy = /(?:^|[\s;{])(-moz-binding|-ms-behavior|behavior)\s*:/i.exec(withoutStrings);
-  if (legacy !== null) {
-    return reject('legacy-property', `Свойство ${legacy[1]} запрещено.`, legacy[1].toLowerCase());
+  const legacyProperty = legacy?.[1];
+  if (legacyProperty) {
+    return reject(
+      'legacy-property',
+      `Свойство ${legacyProperty} запрещено.`,
+      legacyProperty.toLowerCase(),
+    );
   }
 
   // Число совпадений url(...) сверяется с числом «url(»: расхождение означает

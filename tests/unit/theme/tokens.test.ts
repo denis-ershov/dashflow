@@ -43,7 +43,7 @@ function declarations(source: string): Map<string, string> {
   const map = new Map<string, string>();
   for (const line of source.split('\n')) {
     const match = /^\s*(--dashflow-[a-z0-9-]+):\s*(.+);$/.exec(line);
-    if (match !== null) map.set(match[1], match[2]);
+    if (match?.[1] && match[2]) map.set(match[1], match[2]);
   }
   return map;
 }

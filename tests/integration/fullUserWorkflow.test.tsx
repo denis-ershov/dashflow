@@ -7,6 +7,7 @@ import { PermissionManager } from '@/core/permissions/permissionManager';
 import { WidgetRegistry } from '@/core/widget/registry';
 import { validateCustomCss } from '@/core/theme/cssValidator';
 import { registerBuiltInWidgets } from '@/widgets/built-in/registry';
+import { at } from '../helpers/at';
 
 describe('Integration: Full User Workflow & Core Resilience', () => {
   beforeEach(async () => {
@@ -40,8 +41,8 @@ describe('Integration: Full User Workflow & Core Resilience', () => {
     // 1. Добавление виджета часов
     useDashboardStore.getState().addWidget('clock');
     expect(useDashboardStore.getState().instances).toHaveLength(initialCount + 1);
-    const clockInstance =
-      useDashboardStore.getState().instances[useDashboardStore.getState().instances.length - 1];
+    const { instances } = useDashboardStore.getState();
+    const clockInstance = at(instances, instances.length - 1);
     expect(clockInstance.widgetId).toBe('clock');
     expect(clockInstance.instanceId).toBeDefined();
 

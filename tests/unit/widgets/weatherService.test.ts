@@ -93,8 +93,8 @@ describe('weatherService Unit Tests', () => {
 
       const res = await searchCities('Казань');
       expect(res).toHaveLength(1);
-      expect(res[0].name).toBe('Казань');
-      expect(res[0].latitude).toBe(55.7887);
+      expect(res[0]?.name).toBe('Казань');
+      expect(res[0]?.latitude).toBe(55.7887);
     });
 
     it('запрашивает города на языке интерфейса или переданном языке', async () => {
@@ -103,10 +103,10 @@ describe('weatherService Unit Tests', () => {
         .mockResolvedValue({ ok: true, json: () => Promise.resolve({ results: [] }) } as Response);
 
       await searchCities('Berlin');
-      expect(fetchSpy.mock.calls[0][0]).toContain('language=ru');
+      expect(fetchSpy.mock.calls[0]?.[0]).toContain('language=ru');
 
       await searchCities('Berlin', 'en');
-      expect(fetchSpy.mock.calls[1][0]).toContain('language=en');
+      expect(fetchSpy.mock.calls[1]?.[0]).toContain('language=en');
     });
   });
 

@@ -27,7 +27,7 @@ function block(header: string): string {
 
 function declaredValue(source: string, name: string): string | undefined {
   const match = new RegExp(`${name}\\s*:\\s*([^;]+);`).exec(source);
-  return match?.[1].trim();
+  return match?.[1]?.trim();
 }
 
 describe('tokens.css — контракт шкал', () => {
@@ -101,7 +101,7 @@ describe('tokens.css — контракт шкал', () => {
     const colors = [...theme.matchAll(/(--color-[a-z-]+)\s*:\s*([^;]+);/g)];
     expect(colors.length).toBeGreaterThanOrEqual(18);
     for (const [, name, value] of colors) {
-      expect(value.trim(), name).toMatch(/^var\(--dashflow-[a-z0-9-]+\)$/);
+      expect(value?.trim(), name).toMatch(/^var\(--dashflow-[a-z0-9-]+\)$/);
     }
   });
 
@@ -113,7 +113,7 @@ describe('tokens.css — контракт шкал', () => {
     ];
     expect(aliases.length).toBeGreaterThanOrEqual(20);
     for (const [, alias, target] of aliases) {
-      expect(declaredValue(CSS, target), `${alias} → ${target}`).toBeDefined();
+      expect(declaredValue(CSS, target ?? ''), `${alias} → ${target}`).toBeDefined();
     }
   });
 

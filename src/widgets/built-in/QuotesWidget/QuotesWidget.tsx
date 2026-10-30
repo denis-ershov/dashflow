@@ -60,6 +60,9 @@ export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }
     }
   };
 
+  // Пустая коллекция цитат — виджету нечего показать
+  if (!current) return null;
+
   return (
     <div className="flex flex-col justify-between h-full p-3 relative group select-none">
       <Quote className="w-6 h-6 text-primary opacity-20 absolute top-2 left-2 pointer-events-none" />

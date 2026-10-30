@@ -38,7 +38,7 @@ export function getBookmarkFallbackGradient(str: string): string {
     hash |= 0;
   }
   const index = Math.abs(hash) % gradients.length;
-  return gradients[index];
+  return gradients[index] ?? gradients[0] ?? '';
 }
 
 export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {

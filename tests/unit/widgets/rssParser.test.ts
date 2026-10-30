@@ -65,12 +65,12 @@ describe('rssParser utils', () => {
 
     const items = parseRssXml(xml, dummyFeed);
     expect(items.length).toBe(1);
-    expect(items[0].title).toBe('Тестовая новость');
-    expect(items[0].link).toBe('https://habr.com/post/100');
-    expect(items[0].thumbnail).toBe('https://habr.com/img.jpg');
-    expect(items[0].description).toBe('Краткое описание статьи');
-    expect(items[0].feedName).toBe('Habr Best');
-    expect(items[0].folder).toBe('IT');
+    expect(items[0]?.title).toBe('Тестовая новость');
+    expect(items[0]?.link).toBe('https://habr.com/post/100');
+    expect(items[0]?.thumbnail).toBe('https://habr.com/img.jpg');
+    expect(items[0]?.description).toBe('Краткое описание статьи');
+    expect(items[0]?.feedName).toBe('Habr Best');
+    expect(items[0]?.folder).toBe('IT');
   });
 
   it('должен парсить Atom 1.0 формат (<entry>)', () => {
@@ -87,9 +87,9 @@ describe('rssParser utils', () => {
 
     const items = parseRssXml(atomXml, dummyFeed);
     expect(items.length).toBe(1);
-    expect(items[0].title).toBe('Atom Entry Title');
-    expect(items[0].link).toBe('https://atom.example.com/entry/1');
-    expect(items[0].description).toBe('Atom summary text');
+    expect(items[0]?.title).toBe('Atom Entry Title');
+    expect(items[0]?.link).toBe('https://atom.example.com/entry/1');
+    expect(items[0]?.description).toBe('Atom summary text');
   });
 
   it('должен экспортировать и импортировать OPML подписки', () => {

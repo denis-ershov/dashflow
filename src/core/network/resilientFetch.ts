@@ -102,7 +102,7 @@ export async function resilientFetch(
       `Сетевой сбой при запросе к ${url.split('?')[0]}: ${lastError instanceof Error ? lastError.message : String(lastError)}`,
       'network',
       {
-        url: url.split('?')[0],
+        url: url.split('?')[0] ?? url,
         retries,
         circuitBreaker: circuitBreakerName || 'none',
       },

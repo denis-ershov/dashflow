@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { WidgetSettingsDrawer } from '@/features/dashboard/components/WidgetSettingsDrawer';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { registerBuiltInWidgets } from '@/widgets/built-in';
+import { at } from '../../helpers/at';
 
 describe('WidgetSettingsDrawer Component', () => {
   beforeEach(() => {
@@ -35,7 +36,7 @@ describe('WidgetSettingsDrawer Component', () => {
     const switches = screen.getAllByRole('switch');
     expect(switches.length).toBeGreaterThan(0);
 
-    fireEvent.click(switches[0]);
+    fireEvent.click(at(switches, 0));
 
     const updatedInstance = useDashboardStore
       .getState()

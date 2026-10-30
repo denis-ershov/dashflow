@@ -4,6 +4,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { GridEngine } from '@/features/dashboard/components/GridEngine';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { registerBuiltInWidgets } from '@/widgets/built-in';
+import { at } from '../../helpers/at';
 
 describe('GridEngine Component', () => {
   beforeEach(() => {
@@ -92,7 +93,7 @@ describe('GridEngine Component', () => {
     const removeButtons = screen.getAllByRole('button', { name: /удалить виджет/i });
     expect(removeButtons.length).toBe(2);
 
-    fireEvent.click(removeButtons[0]);
+    fireEvent.click(at(removeButtons, 0));
     expect(useDashboardStore.getState().instances.length).toBe(1);
   });
 });

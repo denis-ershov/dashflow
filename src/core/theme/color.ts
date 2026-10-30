@@ -34,7 +34,7 @@ function parseHex(input: string): Rgba | null {
   const match = HEX_PATTERN.exec(input);
   if (match === null) return null;
 
-  const digits = match[1];
+  const digits = match[1] ?? '';
   const full = digits.length === 3 || digits.length === 4 ? expandShortHex(digits) : digits;
   if (full.length !== 6 && full.length !== 8) return null;
 
@@ -58,9 +58,9 @@ function parseRgb(input: string): Rgba | null {
   const match = RGB_PATTERN.exec(input);
   if (match === null) return null;
 
-  const body = match[1].trim();
+  const body = (match[1] ?? '').trim();
   const [channelPart, alphaPart] = body.includes('/') ? body.split('/') : [body, undefined];
-  const channels = channelPart
+  const channels = (channelPart ?? '')
     .trim()
     .split(/[\s,]+/)
     .filter((token) => token !== '');
@@ -69,16 +69,17 @@ function parseRgb(input: string): Rgba | null {
   const rawAlpha = alphaPart ?? (channels.length === 4 ? channels.pop() : undefined);
   if (channels.length !== 3) return null;
 
-  const rgb = channels.map((token) => parseComponent(token, 255));
-  if (rgb.some((value) => Number.isNaN(value))) return null;
+  const [red, green, blue] = channels.map((token) => parseComponent(token, 255));
+  if (red === undefined || green === undefined || blue === undefined) return null;
+  if ([red, green, blue].some((value) => Number.isNaN(value))) return null;
 
   const alpha = rawAlpha === undefined ? 1 : parseComponent(rawAlpha, 1);
   if (Number.isNaN(alpha)) return null;
 
   return {
-    r: clamp(Math.round(rgb[0]), 0, 255),
-    g: clamp(Math.round(rgb[1]), 0, 255),
-    b: clamp(Math.round(rgb[2]), 0, 255),
+    r: clamp(Math.round(red), 0, 255),
+    g: clamp(Math.round(green), 0, 255),
+    b: clamp(Math.round(blue), 0, 255),
     a: clamp(alpha, 0, 1),
   };
 }

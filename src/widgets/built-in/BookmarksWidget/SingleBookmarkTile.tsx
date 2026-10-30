@@ -1,7 +1,7 @@
 import React from 'react';
 import { ExternalLink } from 'lucide-react';
 import { cn } from '@/ui/lib/cn';
-import { isSafeHttpUrl } from '@/core/network';
+import { isSafeHttpUrl, displayHost } from '@/core/network';
 import { useTranslation } from '@/core/i18n';
 import type { BookmarkCardStyle, BookmarkSettings } from './types';
 import { getBookmarkTileClasses, getBookmarkFallbackGradient } from './bookmarkStyles';
@@ -61,7 +61,7 @@ export const SingleBookmarkTile: React.FC<SingleBookmarkTileProps> = ({ settings
   });
 
   const firstLetter = (title || 'W').charAt(0).toUpperCase();
-  const domain = url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0];
+  const domain = displayHost(url);
   const gradientClass = getBookmarkFallbackGradient(title || url);
 
   return (

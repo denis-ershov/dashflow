@@ -3,7 +3,7 @@ import { ShieldAlert, Globe, Bookmark, HardDrive, MapPin, AlertTriangle } from '
 import { Modal } from '@/ui/overlays/Modal';
 import { Button } from '@/ui/primitives/Button';
 import { useTranslation } from '@/core/i18n';
-import { PermissionType, PERMISSION_DEFINITIONS } from '@/core/permissions/types';
+import { type PermissionType, PERMISSION_DEFINITIONS } from '@/core/permissions/types';
 
 export interface PermissionConsentModalProps {
   isOpen: boolean;

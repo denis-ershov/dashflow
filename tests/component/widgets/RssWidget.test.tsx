@@ -65,7 +65,7 @@ describe('RssWidget Component & Manifest', () => {
 
     // DashFlow 2.0 (14:00) должен идти раньше React 19 (12:00)
     const titles = screen.getAllByText(/вышел dashflow 2.0|релиз react 19/i);
-    expect(titles[0].textContent).toContain('Вышел DashFlow 2.0');
+    expect(titles[0]?.textContent).toContain('Вышел DashFlow 2.0');
   });
 
   it('должен фильтровать новости по ключевым словам поиска', async () => {

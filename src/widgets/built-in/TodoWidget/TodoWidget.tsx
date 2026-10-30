@@ -9,6 +9,7 @@ import { EmptyState } from '@/ui/feedback';
 import { cn } from '@/ui/lib/cn';
 import type { TodoItem, TodoPriority, TodoFilter, TodoSettings, HabitItem, TodoTab } from './types';
 import { runLogged } from '@/core/observability';
+import { toLocalDateKey } from '@/core/datetime';
 
 /**
  * Стартовые задачи и привычки становятся данными пользователя при первом запуске,
@@ -34,12 +35,12 @@ const getDaysOfWeek = (lang: SupportedLanguage) => {
 
   const days: { dateStr: string; label: string; isToday: boolean }[] = [];
   const weekdayFormat = new Intl.DateTimeFormat(lang === 'ru' ? 'ru-RU' : 'en-US', { weekday: 'short' });
-  const todayStr = now.toISOString().split('T')[0];
+  const todayStr = toLocalDateKey(now);
 
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = toLocalDateKey(d);
     days.push({
       dateStr,
       label: weekdayFormat.format(d),
@@ -53,14 +54,14 @@ const calculateStreak = (history: Record<string, boolean>) => {
   let streak = 0;
   const d = new Date();
   while (true) {
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = toLocalDateKey(d);
     if (history[dateStr]) {
       streak++;
       d.setDate(d.getDate() - 1);
     } else {
       if (streak === 0) {
         d.setDate(d.getDate() - 1);
-        const yStr = d.toISOString().split('T')[0];
+        const yStr = toLocalDateKey(d);
         if (history[yStr]) {
           streak++;
           d.setDate(d.getDate() - 1);

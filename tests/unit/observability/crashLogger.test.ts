@@ -53,7 +53,7 @@ describe('Observability: CrashLoggerService', () => {
 
     const reports = crashLogger.getCrashReports();
     expect(reports.length).toBe(1);
-    expect(reports[0].id).toBe(report.id);
+    expect(reports[0]?.id).toBe(report.id);
   });
 
   it('должен логировать предупреждения', () => {
@@ -70,8 +70,8 @@ describe('Observability: CrashLoggerService', () => {
 
     const reports = crashLogger.getCrashReports();
     expect(reports.length).toBe(20);
-    expect(reports[reports.length - 1].message).toBe('Ошибка #24');
-    expect(reports[0].message).toBe('Ошибка #5');
+    expect(reports[reports.length - 1]?.message).toBe('Ошибка #24');
+    expect(reports[0]?.message).toBe('Ошибка #5');
   });
 
   it('должен очищать журнал отчетов', async () => {
@@ -96,6 +96,6 @@ describe('Observability: CrashLoggerService', () => {
     };
     expect(parsed.appVersion).toBeDefined();
     expect(parsed.crashCount).toBe(1);
-    expect(parsed.crashes[0].message).toBe('Сбой для экспорта');
+    expect(parsed.crashes[0]?.message).toBe('Сбой для экспорта');
   });
 });

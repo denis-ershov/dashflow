@@ -32,7 +32,7 @@ import type { WidgetProps } from '@/core/widget';
 import { SingleBookmarkTile } from './SingleBookmarkTile';
 import {
   useChromeBookmarksStore,
-  BookmarkNode,
+  type BookmarkNode,
   extractBookmarkFolders,
   flattenBookmarkNodes,
 } from './ChromeBookmarksSync';
@@ -52,7 +52,7 @@ import {
   getBookmarkFallbackGradient,
 } from './bookmarkStyles';
 import { runLogged } from '@/core/observability';
-import { isSafeHttpUrl } from '@/core/network';
+import { isSafeHttpUrl, displayHost } from '@/core/network';
 import { onActivationKey } from '@/ui/lib/activation';
 
 /**
@@ -1029,7 +1029,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                             ? item.folderName
                             : item.children
                               ? t('bookmarks.folder')
-                              : item.url?.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}
+                              : (item.url ? displayHost(item.url) : undefined)}
                         </span>
                       )}
                     </div>
@@ -1087,7 +1087,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                           ? item.folderName
                           : item.children
                             ? t('bookmarks.folder')
-                            : item.url?.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}
+                            : (item.url ? displayHost(item.url) : undefined)}
                       </span>
                     </div>
                   </div>

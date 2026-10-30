@@ -8,6 +8,7 @@ import {
   normalizeActiveModal,
 } from '@/core/storage/dashboardMigrations';
 import type { LayoutItem } from '@/core/storage/dashboardMigrations';
+import { at } from '../../helpers/at';
 
 describe('Dashboard State Migrations & Collision Resolution', () => {
   const v1State = {
@@ -100,7 +101,7 @@ describe('Dashboard State Migrations & Collision Resolution', () => {
     const result = migrateDashboardState(v2State);
     expect(result.version).toBe(2);
     expect(result.baseColumns).toBe(16);
-    expect(result.instances[0].instanceId).toBe('test-1');
+    expect(result.instances[0]?.instanceId).toBe('test-1');
   });
 
   describe('isRectangleColliding', () => {
@@ -143,8 +144,8 @@ describe('Dashboard State Migrations & Collision Resolution', () => {
       const resolved = resolveLayoutCollisions(overlapping, 12);
       expect(resolved).toHaveLength(2);
       expect(resolved[0]).toEqual({ i: 'w1', x: 0, y: 0, w: 6, h: 3 });
-      expect(resolved[1].y).toBeGreaterThanOrEqual(3);
-      expect(isRectangleColliding(resolved[0], resolved[1])).toBe(false);
+      expect(resolved[1]?.y).toBeGreaterThanOrEqual(3);
+      expect(isRectangleColliding(at(resolved, 0), at(resolved, 1))).toBe(false);
     });
   });
 
@@ -167,7 +168,7 @@ describe('Dashboard State Migrations & Collision Resolution', () => {
         expect(item.w).toBeLessThanOrEqual(2);
         expect(item.x + item.w).toBeLessThanOrEqual(2);
       }
-      expect(isRectangleColliding(layouts.xs[0], layouts.xs[1])).toBe(false);
+      expect(isRectangleColliding(at(layouts.xs, 0), at(layouts.xs, 1))).toBe(false);
     });
   });
 
