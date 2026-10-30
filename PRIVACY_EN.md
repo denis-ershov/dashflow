@@ -1,6 +1,6 @@
 # DashFlow Privacy Policy
 
-**Last Updated:** September 30, 2026  
+**Last Updated:** October 30, 2026  
 **Version:** 1.0.0
 
 ---
@@ -64,9 +64,11 @@ No personal identity tokens, cookies, or account identifiers are attached to the
 In compliance with the Chrome Web Store and Mozilla Add-ons Developer Program Policies:
 
 - **`storage`**: Required to persist your dashboard layout, theme preferences, and widget content locally on your computer.
-- **`bookmarks`** *(Optional)*: Required solely for the Bookmarks widget to display your browser bookmarks in a visual Speed Dial format.
-- **`geolocation`** *(Optional)*: Used solely to detect your local city for weather forecasts. Coordinates are never saved or uploaded.
-- **`tabs` / `topSites`** *(Optional)*: Used to display open tabs or frequently visited sites in the quick-access panels.
+- **`bookmarks`** *(optional, requested when you click "Allow access" in the widget)*: Lets the Bookmarks widget show and edit your browser bookmarks. Bookmarks are read on your device and never transmitted.
+- **`tabs`, `sessions`** *(optional, requested on click)*: Power the "Open tabs" and "Recently closed" views of the Bookmarks widget. Tab titles and addresses are shown on your device only; they are never transmitted or stored.
+- **Access to RSS feed sites** *(optional, requested on click)*: Granted only for the sites of feeds you add (e.g. `https://example.com/*`), solely to download those feeds. DashFlow never reads or changes pages on those sites.
+- **Geolocation** *(not a manifest permission)*: Your browser asks for consent the first time the weather widget detects your city. Coordinates are sent to Open-Meteo and geocoding services (BigDataCloud, OpenStreetMap Nominatim) to get the forecast and city name, and are not stored by DashFlow. You can pick a city manually instead.
+- **Weather hosts** (`api.open-meteo.com`, `geocoding-api.open-meteo.com`, `api.bigdatacloud.net`, `nominatim.openstreetmap.org`): Fetch forecasts and city names for the weather widget.
 
 ---
 

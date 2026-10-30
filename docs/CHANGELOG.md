@@ -7,35 +7,70 @@
 
 ---
 
-## [Unreleased] - 2026-10-29
+## [3.8.0] - 2026-10-30
 
-### Сетка виджетов на всю ширину
+### Этап 0 плана развития: готовность к публикации
 
-#### Изменено
+#### Безопасность и права
+- **Манифест больше не запрашивает доступ ко всем сайтам.** При установке — только `storage` и хосты погоды/геокодинга. `bookmarks`, `tabs`, `sessions` и сайты RSS-лент перенесены в `optional_permissions` / `optional_host_permissions` (в Firefox MV2 хосты — в `optional_permissions`). `geolocation` и `images.unsplash.com` удалены: геолокацию браузер запрашивает сам, обои грузятся как изображения.
+- **Запрос прав по клику.** `src/core/permissions/browserPermissions.ts`: `useBrowserPermissions`, `requestBrowserPermissions`, `originPatternsFor`. Виджет «Закладки» показывает состояние «нужен доступ» для закладок, открытых и недавно закрытых вкладок; виджет RSS — для сайтов включённых лент. Без права закладок виджет больше не показывает демо-дерево вместо настоящих закладок.
+- **RSS-прокси в воркере** (`src/core/network/feedProxy.ts`): типизированный контракт сообщений, блок приватных адресов IPv4/IPv6 и служебных доменов в том числе после редиректов и в десятичной/hex-записи, лимит ответа 2 МБ, коды ошибок вместо текста исключений, `credentials: 'omit'`, строгая проверка отправителя.
+- **Обновление без потери ввода:** `runtime.reload()` вызывается, только когда не открыта ни одна вкладка DashFlow; флаг ожидания хранится в `storage.session`.
+
+#### Исправлено
+- Название и описание в манифесте локализованы (`__MSG_extensionName__`, `default_locale: en`).
+- `useAppStore.initialize` при ошибке чтения хранилища запускает интерфейс на значениях по умолчанию, вместо вечного спиннера; ошибка пишется в `crashLogger`.
+- Политики конфиденциальности (`PRIVACY.md`, `PRIVACY_EN.md`) описывали `geolocation` и `https://*/*` и утверждали, что координаты никуда не передаются. Теперь они соответствуют манифесту и указывают передачу координат сервисам погоды.
+
+#### Инфраструктура
+- E2E smoke на собранном расширении в Chromium: `playwright.config.ts`, `tests/e2e/extension.spec.ts`, `npm run test:e2e` (рендер, перезагрузка, манифест).
+- Пороги покрытия в `vitest.config.ts` (78/69/58/78 при базовой линии 80/71/60/80), `npm run test:coverage`.
+- CI и релиз: actions закреплены по SHA, Node 22, минимальные права токена, `npm audit --omit=dev --audit-level=high`, `format:check`, E2E с трассами при падении. Добавлен `.github/dependabot.yml`.
+- `npm audit fix` (без мажорных обновлений). Prettier применён к 13 неотформатированным файлам.
+- ESLint теперь проверяет `src/entrypoints/`; из списка исключений убраны несуществующие каталоги.
+
+#### Документация
+- Новый `CHROMEWEBSTORE.md`: тексты листинга ru/en, обоснование каждого права, раскрытие данных, статус ассетов.
+- `SLO.md`, `MONITORING.md`, `BACKUP_STRATEGY.md`, `DEPLOYMENT_PROCEDURES.md` переписаны под реальные процессы (≈2 200 → ≈280 строк).
+- `SECURITY_ARCHITECTURE.md`, `PLUGINS_AND_SECURITY_ARCHITECTURE.md`, `COMPLIANCE_CHECKLIST.md` приведены к фактическому манифесту.
+
+#### Файлы
+`wxt.config.ts`, `src/entrypoints/background.ts`, `src/entrypoints/newtab/App.tsx`, `src/core/permissions/browserPermissions.ts`, `src/core/network/feedProxy.ts`, `src/widgets/built-in/RssWidget/{RssWidget.tsx,rssParser.ts}`, `src/widgets/built-in/BookmarksWidget/{BookmarksWidget.tsx,ChromeBookmarksSync.ts}`, `src/stores/useAppStore.ts`, `src/core/i18n/locales/{ru,en}/widgets.ts`, `src/public/_locales/{ru,en}/messages.json`, `vitest.config.ts`, `playwright.config.ts`, `eslint.config.js`, `.github/workflows/{ci,release}.yml`, `.github/dependabot.yml`, тесты `tests/unit/core/{feedProxy,browserPermissions}.test.ts`, `tests/e2e/extension.spec.ts`, документы выше.
+
+#### Миграции и совместимость
+- Данные не меняются. У существующих пользователей уже выданные права сохраняются; при обновлении Chrome не показывает новых предупреждений, так как прав стало меньше.
+- Новые установки увидят в виджетах «Закладки» и RSS кнопку «Разрешить доступ».
+- Откат: `git revert` коммитов этапа 0; пакет 3.7.3 есть в GitHub Releases.
+
+### Аудит 2026-10-29 (этапы A–E) и доработки
+
+#### Сетка виджетов на всю ширину
+
+##### Изменено
 - Снято ограничение `max-w-screen-2xl` у сетки (`src/entrypoints/newtab/App.tsx`): сетка занимает всю ширину страницы, как до этапа D. Плотность на широких экранах регулируется числом колонок (12/16/24) в настройках.
 - Обоснование: решение владельца продукта — гибкость раскладки важнее фиксированной ширины контента.
 - Откат: вернуть классы `max-w-screen-2xl mx-auto` у `<main>`.
 
-### Экспорт и импорт содержимого виджетов
+#### Экспорт и импорт содержимого виджетов
 
-#### Исправлено
+##### Исправлено
 - **Резервная копия теряла данные пользователя.** Экспорт сохранял только раскладку, тему и язык — задачи, привычки, заметки и быстрые ссылки в файл не попадали, хотя `BACKUP_STRATEGY.md` обещал обратное. Теперь входят и общие ключи, и копии каждого экземпляра виджета.
 
-#### Добавлено
+##### Добавлено
 - `src/core/storage/userContent.ts`: `collectUserContent`, `restoreUserContent`, `contentKindOf`, `USER_CONTENT_LIMITS`.
 - Поле `content` в файле экспорта, версия файла `2.1` → `2.2`.
 - Тесты `tests/unit/core/userContent.test.ts`: полный цикл, отказ чужим ключам (права, плагины), невалидным элементам, ссылкам `javascript:`, превышению лимитов.
 
-#### Безопасность
+##### Безопасность
 - Импорт пишет только ключи содержимого виджетов и только значения, прошедшие проверку формы и размеров. Плагины и их данные не восстанавливаются: это обошло бы окно согласия на права.
 
-#### Миграции и совместимость
+##### Миграции и совместимость
 - Файлы `2.0`/`2.1` импортируются как раньше; без поля `content` содержимое не меняется.
 - Откат: `git revert`.
 
-### Этап E аудита, часть 2: локализация встроенных виджетов
+#### Этап E аудита, часть 2: локализация встроенных виджетов
 
-#### Исправлено
+##### Исправлено
 - **Все 14 виджетов были только на русском.** Подписи настроек всех манифестов (365 строк) вынесены в `widgetFields`, интерфейс виджетов — в `widgets`; страж больше не исключает `src/widgets/built-in`.
 - **Погода:** время восхода и заката выводилось сырой ISO-строкой — теперь `formatSunTime`. В подробном виде показывались выдуманные данные: «Точка росы в норме» (ничем не вычислялась), «Отличная прозрачность», влажность 60%, давление 1013 и видимость 10 км при отсутствии данных, порывы ветра как скорость × 1,3. Теперь — только пришедшие значения или «—».
 - **Погода:** «Сейчас» и названия дней сохранялись в кэш на языке момента загрузки; поле `dayName` убрано, всё вычисляется при отрисовке.
@@ -44,76 +79,76 @@
 - `WidgetSettingsForm` не переводил `placeholder` и `unit` полей.
 - В закладках переменная цикла `t` затеняла функцию перевода — переименована.
 
-#### Изменено
+##### Изменено
 - Цитаты — двуязычный файл данных `QuotesWidget/quotes.ts`; текст «надежности» исправлен на «надёжности».
 - Справочник городов и город по умолчанию вынесены в `WeatherWidget/cities.ts`.
 - Форматтеры `weatherService` и `formatRssTimeAgo` принимают язык; стартовые задачи, привычки и заметка создаются на языке интерфейса.
 
-#### Добавлено
+##### Добавлено
 - Модули словаря `locales/{ru,en}/{widgetFields,widgets}.ts`; английские тесты виджетов в `englishUi.test.tsx`.
 
-#### Миграции и совместимость
+##### Миграции и совместимость
 - Сохранённые настройки читаются без миграции: `activeFolder = 'Все темы'` трактуется как «все папки», папка `Общие` показывается переведённой. В старом кэше погоды поле `dayName` просто игнорируется.
 - Уже созданные задачи, привычки и заметки остаются на том языке, на котором были созданы.
 - Откат: `git revert`.
 
-### Этап E аудита, часть 1: локализация оболочки приложения
+#### Этап E аудита, часть 1: локализация оболочки приложения
 
-#### Исправлено
+##### Исправлено
 - **Форма настроек виджета не переводилась.** `WidgetSettingsForm` вызывал `t()` без языка — подписи всегда оставались русскими. Теперь через `useTranslation`.
 - **Захардкоженный русский интерфейс.** Док, сетка и её редактор, оболочка виджета, каталог и палитра команд, Hero и поиск, быстрые ссылки, настройки, импорт/экспорт, диагностика, каталог плагинов, оформление (темы, обои, CSS), звуки, окно разрешений, оверлеи, тосты, экраны ошибок — все тексты и `aria-label` в словаре. Существовавшие, но не использовавшиеся ключи `backup.*` подключены.
 - Ошибки CSS-редактора показываются по коду валидатора на языке интерфейса; ошибки добавления ссылки и загрузки виджета хранятся ключом и переводятся при отрисовке.
 - `PluginHost`: значения, вставляемые в HTML песочницы, экранируются.
 
-#### Изменено
+##### Изменено
 - Словари разбиты на модули `locales/{ru,en}/{base,shell,panels}.ts`; `en` типизирован как `LocaleShape<typeof ru>` — пропущенный ключ стал ошибкой компиляции.
 - `resolveNested` в `i18n.ts` проверяет собственные свойства (`Object.hasOwn`), ключ `toString` больше не «находится» в словаре.
 - Справочники хранят id вместо текста: звуки, флаги функций (`title`/`description` убраны из `FeatureFlagDefinition`), описания тем, обои, поисковики (`placeholderKey`, `nameKey`).
 - Тесты выполняются на русском (`tests/setup.ts`), английский проверяется отдельно.
 
-#### Добавлено
+##### Добавлено
 - `tp()` и `useTranslation().tp` — множественное число по `Intl.PluralRules`, тип `PluralKey`.
 - Страж `tests/unit/i18n/noHardcodedStrings.test.ts` (TypeScript Compiler API) с явным списком исключений; виджеты пока исключены — следующий шаг.
 - Тесты английского интерфейса и `tp()`.
 
-#### Миграции и совместимость
+##### Миграции и совместимость
 - Данные не меняются. Сторонние плагины с готовым текстом в `labelKey` работают как раньше: не-ключ показывается как есть.
 - Откат: `git revert`.
 
-### Этап D, пункт 6: общая логика Hero и виджетов (ADR-016)
+#### Этап D, пункт 6: общая логика Hero и виджетов (ADR-016)
 
-#### Исправлено
+##### Исправлено
 - **Поиск вёл себя по-разному в Hero и в виджете.** Две разные регулярки распознавания адреса: в Hero числа и версии вроде `3.14` или `v1.2` открывались как сайт `https://3.14`, в виджете уходили в поиск. Теперь одна функция `resolveSearchTarget`: адрес — только домен с буквенной зоной или явный http(s), всё остальное — в поисковик.
 - **Новая вкладка без `noopener`.** Виджет «Поиск» открывал результаты через `window.open(url, '_blank')`, открытая страница получала доступ к `window.opener`.
 - **Прогресс периодов.** Сутки считались как 86 400 000 мс — в дни перехода на летнее/зимнее время проценты дня, недели и т. д. сдвигались; неделя в воскресенье показывала «осталось 0 дн.» при 6/7 прошедшей. Теперь границы календарные, неделя с понедельника.
 - **Приветствие только по-русски.** Тексты «Доброе утро…» были захардкожены в трёх местах; теперь ключи `greeting.*` в обеих локалях.
 - Дата под часами в Hero всегда форматировалась как `ru-RU`, теперь — по языку интерфейса.
 
-#### Изменено
+##### Изменено
 - Hero и виджеты используют общие модули `src/core/datetime` (время, часть суток, части часов, часовой пояс, прогресс периодов) и `src/core/search` (реестр поисковиков, разбор запроса, «/»). Разметка у каждой пары своя.
 - В поиске Hero доступны те же 10 поисковиков, что и в виджете (добавлены ChatGPT, Claude AI, Brave Search); `HeroSettings.defaultSearchEngine` типизирован через `SearchEngineId`.
 - Иконки ChatGPT, Claude и Brave используют токены `success`/`warning`/`danger` вместо цветов палитры.
 - `WidgetShell` рисует карточку через примитив `Card` (варианты `glass` и `subtle`).
 
-#### Добавлено
+##### Добавлено
 - `src/core/datetime/*`, `src/core/search/*`, ключи i18n `greeting.*`, ADR-016, тесты `tests/unit/core/{datetime,search}.test.ts`.
 
-#### Изменённые файлы
+##### Изменённые файлы
 `src/core/datetime/*`, `src/core/search/*`, `src/core/storage/dashboardMigrations.ts`, `src/core/i18n/locales/{ru,en}.ts`, `src/core/widget/WidgetShell.tsx`, `src/features/hero/{HeroClock,HeroSection,SearchBar2,SmartGreeting,YearProgression}.tsx`, `src/widgets/built-in/{ClockWidget/ClockWidget,GreetingWidget/GreetingWidget,YearProgressWidget/YearProgressWidget,SearchWidget/SearchWidget}.tsx`, `src/widgets/built-in/SearchWidget/types.ts`, тесты, `docs/{CORE_ARCHITECTURE,THEME_ENGINE_ARCHITECTURE,AUDIT_2026-10-29}.md`, `docs/adr/ADR-016-shared-hero-widget-logic.md`.
 
-#### Миграции и совместимость
+##### Миграции и совместимость
 - Формат данных не меняется: сохранённые `defaultSearchEngine` и `engine` остаются валидными; неизвестное значение даёт Google (`getSearchEngine`).
 - Откат: `git revert`.
 
-### Этап D аудита: визуальный редизайн Hero, дока и виджетов
+#### Этап D аудита: визуальный редизайн Hero, дока и виджетов
 
-#### Исправлено
+##### Исправлено
 - **Обои не затемнялись.** Затемнение хранится как 0..1, а фон делил его ещё на 100: «30%» на ползунке давало 0,3%. Теперь фон берёт значения из `applyWallpaper`, и URL обоев проходит проверку (раньше вставлялся в `style` как есть).
 - **`text-lg` не работал.** Шаг выключен в шкале, но использовался в приветствии, AM/PM, часах и размерах виджета приветствия — текст получал размер по умолчанию.
 - **Погода показывала выдуманные данные.** Компактный вид подставлял влажность 60% и ветер 3 м/с, если сервис их не вернул; теперь отсутствующее не показывается.
 - **Док на телефоне.** На 375px панель прокручивалась внутри себя и прятала кнопку настроек; подсказки обрезались.
 
-#### Изменено
+##### Изменено
 - Hero: приветствие и часы поверх обоев используют светлые чернила с тенью (`.on-wallpaper`), за Hero-зоной — мягкая виньетка. Дата под часами читается на светлом небе.
 - Единая форма «пилюль»: поиск (52px), ссылки быстрого доступа, прогресс года, док — `rounded-full`, стекло `glass-pill`, высота 44px.
 - Док: компонент `DockButton` вместо 8 копий разметки, подсветка открытой панели (`activePanel`), `aria-pressed`, иконки 20px.
@@ -121,89 +156,89 @@
 - Погода: в ячейке ниже 280px «Метеостанция» показывается компактным видом; компактный вид перекомпонован в три строки (город, температура и состояние, сводка).
 - Сетка виджетов ограничена `max-w-screen-2xl` и центрируется на широких экранах.
 
-#### Добавлено
+##### Добавлено
 - `useElementSize` (`src/ui/lib`), токены `--dashflow-on-wallpaper*`, класс `.on-wallpaper`, `.wallpaper-hero-vignette`, атрибут `data-wallpaper`.
 - Страж `text-lg` в `designSystem.guard.test.ts`; тесты дока, признака обоев и адаптивной погоды.
 
-#### Изменённые файлы
+##### Изменённые файлы
 `src/core/theme/applyTheme.ts`, `src/core/widget/WidgetShell.tsx`, `src/entrypoints/newtab/App.tsx`, `src/features/appearance/WallpaperBackground.tsx`, `src/features/dock/FloatingDock.tsx`, `src/features/hero/{HeroSection,HeroClock,SmartGreeting,SearchBar2,YearProgression}.tsx`, `src/features/speedDial/SpeedDialGrid.tsx`, `src/styles/{tokens,globals}.css`, `src/ui/lib/useElementSize.ts`, `src/widgets/built-in/{WeatherWidget/WeatherWidget,ClockWidget/ClockWidget,GreetingWidget/GreetingWidget}.tsx`, тесты, `docs/{THEME_ENGINE_ARCHITECTURE,LAYOUT_ENGINE_ARCHITECTURE,AUDIT_2026-10-29}.md`.
 
-#### Миграции и совместимость
+##### Миграции и совместимость
 - Данные не меняются. Визуально: у кого стоят обои, они станут темнее — ползунок затемнения наконец работает в заявленном масштабе (по умолчанию 30%).
 - Откат: `git revert`.
 
-### Этап C аудита: единая дизайн-система
+#### Этап C аудита: единая дизайн-система
 
-#### Исправлено
+##### Исправлено
 - **Элементы без фона.** Класс `surface-elevated` (25 мест: дорожки прогресса, сегментированные переключатели, плитки диагностики) и `text-secondary-fg` ссылались на несуществующие токены. Заменены на `surface-active` и `primary-fg`.
 - **Не работал hover стекла.** Переменные `--dashflow-glass-bg-hover`, `--dashflow-glass-bg-subtle`, `--dashflow-glass-border-hover` использовались в `globals.css`, но нигде не объявлялись. Теперь они выводятся из переменных темы через `color-mix`.
 - **`glass-subtle` на светлых темах.** Был захардкожен белым (`rgb(255 255 255 / 0.04)`), на светлом фоне не виден; теперь берёт цвет текста темы.
 - **Скругления.** `rounded-3xl` давал 0px (иконки закладок XL были квадратными) → `rounded-xl`; `rounded-2xl` дублировал `rounded-lg` → `rounded-lg`.
 - **Нечитаемо мелкий текст.** 120 размеров `text-[8–12px]` переведены на шкалу; новый нижний шаг `text-2xs` = 11px.
 
-#### Изменено
+##### Изменено
 - Шрифты: убраны Google Fonts (Inter, JetBrains Mono, Nunito, Outfit, Roboto Slab, Sofia Sans). Интерфейс — системный шрифт, `font-serif`/`font-mono` — системные стеки, `font-display` — Outfit, встроенный в сборку (`@fontsource-variable/outfit`, OFL-1.1, 47 КБ woff2). `font-sofia` → `font-display`, неиспользуемый `font-friendly` удалён.
 - CSP (`wxt.config.ts`): из `style-src`/`font-src` убраны `fonts.googleapis.com` и `fonts.gstatic.com`.
 - Цвета статуса в «Диагностике» и менеджере RSS: `amber-*` → токен `warning`.
 
-#### Добавлено
+##### Добавлено
 - Тест-страж `tests/unit/styles/designSystem.guard.test.ts`: размеры шрифта вне шкалы, радиусы вне шкалы, `var(--…)` без объявления, цвета палитры и несуществующие токены в элементах интерфейса, внешние шрифтовые CDN.
 - Токен `--text-2xs`, производные `--dashflow-glass-*-hover/subtle`, `--dashflow-tint-subtle*`.
 - Зависимость `@fontsource-variable/outfit`.
 
-#### Изменённые файлы
+##### Изменённые файлы
 `src/styles/{tokens,globals}.css`, `src/entrypoints/newtab/index.html`, `wxt.config.ts`, `package.json`, `package-lock.json`, ~40 компонентов и виджетов (замена классов), `tests/unit/styles/{tokens.contract,designSystem.guard}.test.ts`, `tests/unit/widgets/bookmarkStyles.test.ts`, `docs/{THEME_ENGINE_ARCHITECTURE,AUDIT_2026-10-29}.md`.
 
-#### Миграции и совместимость
+##### Миграции и совместимость
 - Данные не затрагиваются. Пользовательский CSS, ссылавшийся на шрифты Google, перестанет их получать (CSP).
 - Визуально: подписи 8–10px стали 11px, часть элементов получила фон, который раньше не рисовался.
 - Откат: `git revert`.
 
-### Этап B аудита: корректность стора дашборда
+#### Этап B аудита: корректность стора дашборда
 
-#### Исправлено
+##### Исправлено
 - **Состояние UI переживало перезагрузку.** Стор сохранял `activeModal`, `isEditMode`, `isCommandPaletteOpen`: открытая модалка или режим правки возвращались после перезагрузки вкладки. Теперь сохраняются только данные (`partialize`), а при чтении старых сохранений UI-поля отбрасываются (`merge`).
 - **Переключатель «Анимации» ничего не делал.** Теперь он ставит `data-motion="reduced"` на `<html>` и включает тот же режим, что `prefers-reduced-motion`.
 - **Импорт принимал любой язык.** Строка из файла приводилась к `'ru' | 'en'` без проверки; теперь неизвестный язык игнорируется (`isSupportedLanguage`). JSON-массив больше не принимается за конфигурацию.
 - **Лишние перерисовки.** Компоненты подписывались на весь стор (`useDashboardStore()`): любое изменение, включая каждый шаг перетаскивания в сетке, перерисовывало `App`, все модалки и каждый `LazyWidgetRenderer`. Все потребители переведены на селекторы (`useShallow` или одиночное поле).
 
-#### Удалено
+##### Удалено
 - Legacy-поля стора `widgets`, `columns`, действие `setColumns`, перегрузка `updateLayout(items[])`, неиспользуемое `reorderWidgets`, тип `LegacyWidgetItem` и пересчёт `computeLegacyWidgets` на каждом изменении.
 - Из файла экспорта — дублирующие `layout` и `widgets` (версия файла `2.0` → `2.1`).
 
-#### Добавлено
+##### Добавлено
 - `pickPersistedDashboard`, `PersistedDashboardState`, тип `LayoutMode` (`src/stores/useDashboardStore.ts`).
 - `isSupportedLanguage` (`src/core/i18n/i18n.ts`), `applyMotionPreference` (`src/core/theme/applyTheme.ts`).
 
-#### Изменённые файлы
+##### Изменённые файлы
 `src/stores/{useDashboardStore,useAppStore}.ts`, `src/core/i18n/i18n.ts`, `src/core/theme/applyTheme.ts`, `src/styles/tokens.css`, `src/entrypoints/newtab/App.tsx`, `src/features/dashboard/components/{GridEngine,AddWidgetModal,CommandPalette,LazyWidgetRenderer,WidgetSettingsDrawer}.tsx`, `src/features/marketplace/components/MarketplaceModal.tsx`, `src/features/settings/components/{SettingsModal,ImportExportModal}.tsx`, `src/widgets/built-in/RssWidget/RssWidget.tsx`, тесты, `docs/{STORAGE_ARCHITECTURE,BACKUP_STRATEGY,THEME_ENGINE_ARCHITECTURE,AUDIT_2026-10-29}.md`.
 
-#### Миграции и совместимость
+##### Миграции и совместимость
 - Версия persist не менялась (2). Старые сохранения читаются: лишние поля игнорируются и исчезают при следующей записи. Данные пользователя не теряются — удаляются только производные (`widgets`, `columns`) и UI-поля.
 - Старые файлы экспорта (`2.0` и с массивом `widgets`) импортируются как раньше.
 - Откат: `git revert`. Старый код прочитает новое сохранение: `widgets`/`columns` пересчитываются из `instances`/`layouts` при первом изменении (до него `columns` возьмётся из начального состояния — 12).
 
-### Этап A аудита: удаление мёртвого кода и подключение «висящих» модулей
+#### Этап A аудита: удаление мёртвого кода и подключение «висящих» модулей
 
 План и обоснование — [`docs/AUDIT_2026-10-29.md`](AUDIT_2026-10-29.md).
 
-#### Исправлено
+##### Исправлено
 - **Одиночная закладка без адреса.** В режиме «Одиночный сайт» нельзя было задать URL — плитка всегда вела на google.com. В схему манифеста добавлены поля `singleTitle`, `singleUrl`, `singleIconUrl`; URL и иконка принимаются только с протоколом http(s), иначе используется значение по умолчанию.
 - **Клавиатурная правка сетки.** `useGridKeyboardNav` был написан и покрыт тестом, но не подключён. Теперь в режиме правки: стрелки двигают виджет, Shift+стрелки меняют размер, Escape выходит из режима. Стрелки в полях ввода внутри виджета сетку не трогают.
 
-#### Добавлено
+##### Добавлено
 - `WidgetSettingFieldSchema.visibleWhen` — условная видимость поля в автоматической форме настроек (`src/core/widget/types.ts`, `WidgetSettingsForm.tsx`).
 - `isSafeHttpUrl` в `src/core/network/url.ts` вместо трёх копий в `IframeWidget`, `rssParser`, `SingleBookmarkTile`.
 - `featureFlags.whenReady()` — ожидание загрузки переопределений из хранилища.
 - `normalizeActiveModal` — приведение сохранённого ключа модалки к допустимому набору.
 
-#### Изменено
+##### Изменено
 - Флаг `ambientAudio` теперь реально управляет звуками: при выключении кнопка в доке и панель скрываются, играющие треки останавливаются.
 - Флаг `webVitalsMonitoring` теперь управляет запуском `webVitals.init()` в `main.tsx`.
 - `ActiveModal` сокращён до `'addWidget' | 'settings' | 'appearance' | 'marketplace'`; старые `'themes'` → `'appearance'`, `'add'` → `'addWidget'`.
 - `ChromeBookmarksSync` перенесён из `src/services/storage/` в `src/widgets/built-in/BookmarksWidget/` — у него один потребитель.
 
-#### Удалено
+##### Удалено
 - `src/features/navigation/` (NavRail) и его тест — навигацию выполняет `FloatingDock`.
 - Фасады `src/services/storage/StorageAdapter.ts`, `src/services/localization/i18n.ts`.
 - `BookmarksSettingsForm.tsx` — дублировал схему манифеста и не был подключён; недостающие поля перенесены в манифест.
@@ -211,10 +246,10 @@
 - `useAppStore`: `theme`, `setTheme`, тип `ThemeMode` — тема живёт только в `themeStore`.
 - Флаги `aiSearchEngines`, `systemMonitorBars`, `offlineIndicator` (дублировали настройки виджетов и нигде не читались) и `experimentalPlugins` (по умолчанию `false`: подключение выключило бы уже работающие плагины).
 
-#### Изменённые файлы
+##### Изменённые файлы
 `src/core/featureFlags/{flags,types}.ts`, `src/core/network/{index,url}.ts`, `src/core/storage/dashboardMigrations.ts`, `src/core/widget/{types.ts,WidgetSettingsForm.tsx}`, `src/entrypoints/newtab/{App,main}.tsx`, `src/features/dashboard/components/GridEngine.tsx`, `src/features/dashboard/hooks/useGridKeyboardNav.ts`, `src/features/dock/FloatingDock.tsx`, `src/features/settings/components/ImportExportModal.tsx`, `src/stores/{useAppStore,useDashboardStore}.ts`, `src/widgets/built-in/BookmarksWidget/*`, `src/widgets/built-in/IframeWidget/IframeWidget.tsx`, `src/widgets/built-in/RssWidget/{rssParser.ts,RssFeedManagerModal.tsx}`, тесты, документация.
 
-#### Миграции и совместимость
+##### Миграции и совместимость
 - Схема хранилища не менялась. Сохранённые `isLocked`, `app_theme` и переопределения удалённых флагов просто игнорируются при чтении.
 - Экспорт конфигурации больше не содержит `settings.theme`; импорт старых файлов с этим полем работает (поле игнорируется).
 - Откат: `git revert` коммита; данные пользователей откат не затрагивает.

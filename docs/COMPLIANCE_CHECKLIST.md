@@ -12,7 +12,7 @@
 |---|---|---|
 | **Single Purpose Policy** | ✅ Соответствует | Превращение новой вкладки (New Tab) в настраиваемый продуктивный дашборд. Нет скрытых или посторонних функций. |
 | **User Data Policy (Privacy)** | ✅ Соответствует | Ссылки на [`PRIVACY.md`](../PRIVACY.md) и [`PRIVACY_EN.md`](../PRIVACY_EN.md). Все данные хранятся локально, нулевая телеметрия. |
-| **Permissions Justification** | ✅ Соответствует | Запрашиваются минимальные права (`storage`). Чувствительные права (`bookmarks`, `geolocation`, `tabs`) опциональны и требуют согласия через `PermissionConsentModal`. |
+| **Permissions Justification** | ✅ Соответствует (с 3.8.0) | При установке — только `storage` и хосты погоды. `bookmarks`, `tabs`, `sessions` и сайты RSS-лент — `optional_*`, запрашиваются по клику в виджете. Обоснование каждого права — `CHROMEWEBSTORE.md`. До 3.8.0 манифест запрашивал `https://*/*` и обязательные `bookmarks`/`geolocation`, что расходилось с этим пунктом. |
 | **No Remote Code Execution (Manifest V3)** | ✅ Соответствует | Нет `eval()`, нет загрузки скриптов с внешних CDN. Все компоненты и звуки собраны локально в бандл. |
 | **Content Security Policy (CSP)** | ✅ Соответствует | Строгий CSP: `script-src 'self'; object-src 'self'`. Iframe изолирован без `allow-same-origin`. |
 | **Monetization & Ads Transparency** | ✅ Соответствует | DashFlow распространяется бесплатно, не содержит рекламы, баннеров, аффилированных ссылок или скрытых крипто-майнеров. |

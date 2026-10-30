@@ -14,10 +14,10 @@
 │  - sandbox: sandbox allow-scripts; script-src 'self';       │
 │    object-src 'none'                                        │
 ├─────────────────────────────────────────────────────────────┤
-│  Host Permissions & Data Minimization                       │
-│  - Сужение host_permissions до конкретных доменов           │
-│    (api.open-meteo.com, images.unsplash.com)                │
-│  - Запрет wildcard ('<all_urls>')                           │
+│  Права браузера & Data Minimization                         │
+│  - При установке: storage + хосты погоды/геокодинга         │
+│  - По клику: bookmarks, tabs, sessions, сайты RSS-лент      │
+│    (optional_permissions / optional_host_permissions)       │
 ├─────────────────────────────────────────────────────────────┤
 │  Permissions Consent Flow (ADR-015)                         │
 │  - Диалог согласия перед установкой чувствительных плагинов │
@@ -40,7 +40,20 @@
 
 ---
 
-## 3. Модель Разрешений (ADR-015)
+## 3. Права браузера
+
+| Право | Когда выдаётся | Кто запрашивает |
+|---|---|---|
+| `storage`, хосты Open-Meteo, BigDataCloud, Nominatim | При установке | Манифест |
+| `bookmarks` | Кнопка «Разрешить доступ» в виджете «Закладки» (источник — закладки браузера) | `useBrowserPermissions` |
+| `tabs` | Вкладка «Открытые» виджета «Закладки» | `useBrowserPermissions` |
+| `sessions` + `tabs` | Вкладка «Недавно закрытые» | `useBrowserPermissions` |
+| Сайты RSS-лент (`https://host/*`) | Кнопка «Разрешить доступ» в виджете RSS — только хосты включённых лент | `useBrowserPermissions` |
+| Геолокация | Стандартный запрос браузера при автоопределении города (в манифест не входит: в Chrome это право не может быть необязательным) | `navigator.geolocation` |
+
+`src/core/permissions/browserPermissions.ts`: запрос вызывается синхронно из обработчика клика (иначе браузер теряет жест пользователя); хук следит за `permissions.onAdded/onRemoved`, поэтому отзыв права в настройках браузера сразу возвращает виджет в состояние «нужен доступ». Вне расширения (dev, тесты) права считаются выданными.
+
+## 3.1. Права плагинов (ADR-015)
 
 - Чувствительные разрешения (`network`, `bookmarks`, `geolocation`) запрашиваются через `PermissionConsentModal` перед активацией.
 - При установке плагина из каталога права регистрируются автоматически, а при удалении плагина — полностью отзываются (`PermissionManager.revokePermissions`).
@@ -53,7 +66,7 @@
 1. **Санитаризация Пользовательского CSS (`cssValidator.ts`):** Блокировка `@import`, внешних шрифтов без разрешения и устаревших XSS-векторов.
 2. **Санитаризация Обоев (`wallpaper.ts`):** Валидация протоколов `https:`, `chrome-extension:`, `data:` и экранирование кавычек.
 3. **Безопасные ссылки в RSS и Iframe:** Проверка схемы `isSecureUrl()` (только `https:`).
-4. **Защита от SSRF в Background Service Worker (`background.ts`):** Запрет обращения к внутренним подсетям RFC 1918, localhost, IPv6 loopback и link-local адресам облачных метаданных (`169.254.169.254`). Обработка запросов только от внутреннего `sender.id === chrome.runtime.id`.
+4. **Фоновый воркер и RSS-прокси (`background.ts`, `src/core/network/feedProxy.ts`):** проверка приватных адресов до запроса и после редиректов, лимит 2 МБ, таймаут 10 с, коды ошибок без деталей, только сообщения от самого расширения. Подробно — `PLUGINS_AND_SECURITY_ARCHITECTURE.md`, раздел 5.
 5. **Конфиденциальность в логах:** В логах `RootErrorBoundary` и `WidgetShell` не выводятся пользовательские настройки и токены.
 
 ---
