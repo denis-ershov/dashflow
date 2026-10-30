@@ -27,7 +27,8 @@
 dashflow_items (IndexedDB, v1)
 ├── items    keyPath id     индексы: kind, status, boardId, updatedAt, remindAt, deletedAt
 ├── boards   keyPath id
-└── changes  autoIncrement  индекс: itemId      { itemId, op, version, at, source }
+├── changes  autoIncrement  индекс: itemId      { itemId, op, version, at, source }
+└── meta     keyPath key    служебные записи (маркер миграции)
 ```
 
 - **Почему отдельная база, а не `StorageAdapter`:** нужны индексы, транзакции «запись + журнал» и объём больше квоты `chrome.storage.local` (10 МБ без `unlimitedStorage`).
@@ -76,6 +77,13 @@ UI / импорт / (Hub, агенты)                 другие вклад�
 | `board.create` / `board.update` | доска | архив / прежние название и колонки |
 
 Отмена сверяет поля с тем, что оставила команда, и не затирает чужие правки (`UndoConflictError`). `commandBus` — шина интерфейса; `useUndoHotkey` (Ctrl+Z / Cmd+Z вне полей ввода) подключён в `App.tsx`; `dispatchWithUndoToast` показывает тост «Отменить».
+
+## 5.2. Перенос данных 3.8 (шаг 1.3)
+
+- `legacy.ts` — `convertLegacyContent`: чистая функция «снимок старых ключей + экземпляры виджетов → записи и доски». Todo → доска «Задачи» (колонки `todo`/`done`) на экземпляр, заметка → `kind: 'note'` со статусом `active` (заголовок — первая строка без Markdown), быстрые ссылки → доска «Ссылки» со статусом `saved`. Данные экземпляра — своя копия `<ключ>_<instanceId>`, иначе общий ключ (как показывал виджет). Содержимое удалённых виджетов — в архив. Невалидные значения пропускаются и считаются (`skipped`). Привычки не переносятся.
+- `migration.ts` — `runLegacyMigration`: маркер `legacyMigration` в store `meta` пишется в той же транзакции (`importBatch`), что и данные, — перенос атомарный и однократный. Старые ключи не удаляются до 3.10.0.
+- Заметки и ссылки получают статусы `active` и `saved`, чтобы не попадать во «Входящие» (`inbox`).
+- Запуск миграции при старте и перевод виджетов на Item — шаг 1.4 (иначе виджеты продолжали бы писать в старые ключи после переноса).
 
 ## 6. Лимиты (`ITEM_LIMITS`)
 

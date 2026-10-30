@@ -13,7 +13,13 @@ import {
   type ItemQuery,
   type ItemSource,
 } from './types';
-import { parseBoardDraft, parseItemDraft, parseItemPatch } from './validation';
+import {
+  parseBoardDraft,
+  parseItemDraft,
+  parseItemPatch,
+  parseStoredBoard,
+  parseStoredItem,
+} from './validation';
 
 /**
  * Доступ к Item и доскам. Каждая запись меняется в одной транзакции с журналом `changes`,
@@ -312,6 +318,52 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
       return boards
         .filter((board) => !board.archivedAt)
         .sort((a, b) => compare(a.createdAt, b.createdAt));
+    },
+
+    /**
+     * Пакетная запись готовых записей и досок (миграция, импорт файла) одной транзакцией:
+     * либо пишется всё вместе со служебной записью meta, либо ничего. Записи с тем же id
+     * заменяются. Каждая запись проверяется полностью, включая служебные поля.
+     */
+    async importBatch(input: {
+      items: readonly unknown[];
+      boards: readonly unknown[];
+      source: ItemSource;
+      meta?: { key: string; value: unknown };
+    }): Promise<{ items: number; boards: number }> {
+      const items = input.items.map(parseStoredItem);
+      const boards = input.boards.map(parseStoredBoard);
+      const database = await db();
+      const tx = database.transaction(['items', 'boards', 'changes', 'meta'], 'readwrite');
+      for (const board of boards) await tx.objectStore('boards').put(board);
+      for (const item of items) {
+        await tx.objectStore('items').put(item);
+        await tx
+          .objectStore('changes')
+          .add({ ...changeOf(item, 'create', input.source), at: now() });
+      }
+      if (input.meta) await tx.objectStore('meta').put(input.meta);
+      await tx.done;
+      notify({
+        type: 'items-changed',
+        itemIds: items.map((item) => item.id),
+        boards: boards.length > 0,
+      });
+      return { items: items.length, boards: boards.length };
+    },
+
+    /** Все записи (кроме корзины) и доски — для экспорта в файл */
+    async exportAll(): Promise<{ items: Item[]; boards: Board[] }> {
+      const database = await db();
+      const [items, boards] = await Promise.all([
+        database.getAll('items'),
+        database.getAll('boards'),
+      ]);
+      return { items: items.filter((item) => !item.deletedAt), boards };
+    },
+
+    async getMeta(key: string): Promise<unknown> {
+      return (await (await db()).get('meta', key))?.value;
     },
 
     /** Закрывает соединение (тесты, удаление базы) */

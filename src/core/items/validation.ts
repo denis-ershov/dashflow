@@ -4,6 +4,11 @@ import { isValidOrderKey } from './ids';
 import {
   ITEM_KINDS,
   ITEM_PRIORITIES,
+  SOURCE_TYPES,
+  type Board,
+  type Item,
+  type ItemSource,
+  type ItemSourceType,
   CLEARABLE_FIELDS,
   type BoardColumn,
   type BoardDraft,
@@ -42,7 +47,10 @@ export type ItemValidationCode =
   | 'date'
   | 'tags'
   | 'flag'
-  | 'columns';
+  | 'columns'
+  | 'id'
+  | 'version'
+  | 'source';
 
 export class ItemValidationError extends Error {
   constructor(
@@ -203,4 +211,62 @@ export function parseBoardDraft(input: unknown): BoardDraft {
   const title =
     readText(record.title, 'title', ITEM_LIMITS.titleLength, true) ?? fail('title', 'title');
   return compact({ title, columns: readColumns(record.columns) });
+}
+
+/** Записи, приходящие целиком (импорт файла, миграция): служебные поля проверяются тоже */
+
+function readRequiredDate(value: unknown, field: string): string {
+  return readDate(value, field) ?? fail('date', field);
+}
+
+function readSource(value: unknown): ItemSource {
+  const record = asRecord(value);
+  const type = readEnum<ItemSourceType>(record.type, SOURCE_TYPES, 'source.type', 'source');
+  const id = readId(record.id, 'source.id', 'source');
+  const name = record.name;
+  if (!type || !id || typeof name !== 'string' || name.length > ITEM_LIMITS.titleLength) {
+    return fail('source', 'source');
+  }
+  return { type, id, name };
+}
+
+export function parseStoredItem(input: unknown): Item {
+  const draft = parseItemDraft(input);
+  const record = asRecord(input);
+  const id = readId(record.id, 'id', 'id') ?? fail('id', 'id');
+  const version = record.version;
+  if (typeof version !== 'number' || !Number.isInteger(version) || version < 1) {
+    return fail('version', 'version');
+  }
+  const item: Item = {
+    ...draft,
+    id,
+    status: draft.status ?? fail('status', 'status'),
+    order: draft.order ?? fail('order', 'order'),
+    tags: draft.tags ?? [],
+    source: readSource(record.source),
+    createdAt: readRequiredDate(record.createdAt, 'createdAt'),
+    updatedAt: readRequiredDate(record.updatedAt, 'updatedAt'),
+    version,
+  };
+  const archivedAt = readDate(record.archivedAt, 'archivedAt');
+  const deletedAt = readDate(record.deletedAt, 'deletedAt');
+  if (archivedAt) item.archivedAt = archivedAt;
+  if (deletedAt) item.deletedAt = deletedAt;
+  return item;
+}
+
+export function parseStoredBoard(input: unknown): Board {
+  const draft = parseBoardDraft(input);
+  const record = asRecord(input);
+  const board: Board = {
+    id: readId(record.id, 'id', 'id') ?? fail('id', 'id'),
+    title: draft.title,
+    columns: draft.columns ?? fail('columns', 'columns'),
+    createdAt: readRequiredDate(record.createdAt, 'createdAt'),
+    updatedAt: readRequiredDate(record.updatedAt, 'updatedAt'),
+  };
+  const archivedAt = readDate(record.archivedAt, 'archivedAt');
+  if (archivedAt) board.archivedAt = archivedAt;
+  return board;
 }

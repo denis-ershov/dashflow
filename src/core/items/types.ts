@@ -19,6 +19,11 @@ export type ItemKind = (typeof ITEM_KINDS)[number];
 /** Стандартные статусы; колонки досок могут задавать свои id */
 export const BASE_STATUSES = ['inbox', 'todo', 'doing', 'done'] as const;
 
+/** Статус заметок из виджета «Заметки»: не задача и не входящее */
+export const NOTE_STATUS = 'active';
+/** Статус сохранённых ссылок (быстрые ссылки) */
+export const LINK_STATUS = 'saved';
+
 export const ITEM_PRIORITIES = ['low', 'medium', 'high'] as const;
 export type ItemPriority = (typeof ITEM_PRIORITIES)[number];
 

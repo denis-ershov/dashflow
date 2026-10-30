@@ -18,10 +18,10 @@
 
 Настройки → «Данные» → «Скачать JSON-конфигурацию» / «Импорт».
 
-**Формат экспорта** (`ImportExportModal`, версия файла `2.2`):
+**Формат экспорта** (`ImportExportModal` + `features/settings/backupFile.ts`, версия файла `3.0`):
 ```json
 {
-  "version": "2.2",
+  "version": "3.0",
   "exportedAt": "2026-10-29T12:34:56.789Z",
   "theme": { "activePresetId": "...", "wallpaperUrl": null, "scrim": 0.4, "customCss": "" },
   "dashboard": {
@@ -35,6 +35,8 @@
     "layouts": { "xl": [ ... ], "lg": [ ... ], "md": [ ... ], "sm": [ ... ], "xs": [ ... ] }
   },
   "settings": { "language": "ru" },
+  "items": [ { "id": "01J…", "kind": "task", "title": "…", "status": "todo", "boardId": "01J…", "order": "a0", "tags": [], "source": { … }, "createdAt": "…", "updatedAt": "…", "version": 1 } ],
+  "boards": [ { "id": "01J…", "title": "Задачи", "columns": [ … ], "createdAt": "…", "updatedAt": "…" } ],
   "content": {
     "dashflow_widget_todo_items": [ { "id": "1", "text": "...", "completed": false, "priority": "medium" } ],
     "dashflow_widget_todo_items_todo-1": [ ... ],
@@ -45,6 +47,13 @@
 }
 ```
 **Имя файла:** `dashflow-config-<timestamp>.json`
+
+**С версии 3.0** в файле есть `items` и `boards` — содержимое рабочего пространства (`ITEMS_ARCHITECTURE.md`), без записей из корзины. Поле `content` (старые ключи виджетов) сохраняется до 3.10.0: оно нужно для привычек и для импорта файла в 3.8 при откате.
+
+**Импорт содержимого:**
+- файл 3.0 — `items`/`boards` проверяются полностью (`parseStoredItem`, `parseStoredBoard`) и пишутся одной транзакцией: при любой невалидной записи не пишется ничего; записи с тем же id заменяются, остальные данные пользователя не трогаются;
+- файл 2.x — `content` конвертируется в Item тем же кодом, что и миграция при запуске (`convertLegacyContent`), экземпляры виджетов привязываются к созданным доскам и записям (`settings.boardId` / `settings.itemId`);
+- после любого импорта ставится маркер миграции: восстановленные старые ключи не переносятся повторно.
 
 **Процесс экспорта:**
 1. Пользователь нажимает «Скачать JSON Конфигурацию» в настройках

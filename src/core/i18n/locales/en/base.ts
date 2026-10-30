@@ -122,6 +122,15 @@ export const base: LocaleShape<typeof ruBase> = {
     readError: 'Could not read the JSON',
     invalidFormat: 'Invalid JSON configuration format',
   },
+  items: {
+    legacy: {
+      tasks: 'Tasks',
+      todoColumn: 'To do',
+      doneColumn: 'Done',
+      links: 'Links',
+      note: 'Note',
+    },
+  },
   errors: {
     generic: 'An unexpected error occurred',
     quotaExceeded: 'Browser local storage quota exceeded',

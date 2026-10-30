@@ -7,6 +7,8 @@ export * from './validation';
 export * from './events';
 export * from './repository';
 export * from './useItems';
+export * from './legacy';
+export * from './migration';
 export { ITEMS_DB_NAME } from './db';
 
 /** Репозиторий приложения: база dashflow_items, уведомления всем вкладкам и воркеру */

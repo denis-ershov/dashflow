@@ -119,6 +119,15 @@ export const base = {
     successReload: 'Конфигурация импортирована. Перезагрузка...',
     readError: 'Ошибка чтения JSON',
   },
+  items: {
+    legacy: {
+      tasks: 'Задачи',
+      todoColumn: 'Сделать',
+      doneColumn: 'Готово',
+      links: 'Ссылки',
+      note: 'Заметка',
+    },
+  },
   errors: {
     generic: 'Произошла непредвиденная ошибка',
     quotaExceeded: 'Превышена квота локального хранилища браузера',

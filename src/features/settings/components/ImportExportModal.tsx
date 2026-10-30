@@ -16,6 +16,15 @@ import { Button } from '@/ui/primitives';
 import { Download, Upload, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { runLogged } from '@/core/observability';
 
+/** Хранилище Item и код файла экспорта нужны редко — загружаются по нажатию, не в главный чанк */
+const loadBackup = async () => {
+  const [{ itemRepository }, backup] = await Promise.all([
+    import('@/core/items'),
+    import('../backupFile'),
+  ]);
+  return { itemRepository, ...backup };
+};
+
 export interface ImportExportModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -39,13 +48,18 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
 
   const handleExport = async () => {
     const dashboard = pickPersistedDashboard(useDashboardStore.getState());
+    const { itemRepository, exportWorkspaceItems, EXPORT_VERSION } = await loadBackup();
+    const workspace = await exportWorkspaceItems(itemRepository);
     const data = {
-      version: '2.2',
+      version: EXPORT_VERSION,
       exportedAt: new Date().toISOString(),
       theme: { activePresetId, wallpaperUrl, scrim, customCss },
       dashboard,
       settings: { language },
-      // Задачи, привычки, заметки и быстрые ссылки — общие и копии каждого экземпляра виджета
+      // Задачи, заметки, ссылки и доски рабочего пространства (с 3.0)
+      items: workspace.items,
+      boards: workspace.boards,
+      // Старые ключи виджетов (привычки и копия для отката на 3.8) — до 3.10.0
       content: await collectUserContent((dashboard.instances ?? []).map((i) => i.instanceId)),
     };
 
@@ -79,11 +93,28 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
           parsed.layout,
       );
 
-      if (hasDashboardData) {
-        const migrated = pickPersistedDashboard(migrateDashboardState(rawDashboard));
+      const migrated = hasDashboardData
+        ? pickPersistedDashboard(migrateDashboardState(rawDashboard))
+        : null;
+      const instances = migrated?.instances ?? useDashboardStore.getState().instances;
+
+      // Записи до раскладки: файлу 2.x нужны экземпляры виджетов, чтобы привязать к ним доски
+      const { itemRepository, importWorkspaceItems, applyItemsMapping } = await loadBackup();
+      const imported = await importWorkspaceItems({
+        file: parsed,
+        repository: itemRepository,
+        instances,
+        language: useAppStore.getState().language,
+      });
+      const linkedInstances = applyItemsMapping(instances, imported.mapping);
+
+      if (migrated) {
+        const state = { ...migrated, instances: linkedInstances };
         // Пишем напрямую в формате zustand persist: перезагрузка ниже не должна обогнать асинхронный persist
-        await StorageAdapter.set(STORAGE_KEYS.DASHBOARD, { state: migrated, version: 2 });
-        useDashboardStore.setState(migrated);
+        await StorageAdapter.set(STORAGE_KEYS.DASHBOARD, { state, version: 2 });
+        useDashboardStore.setState(state);
+      } else if (Object.keys(imported.mapping).length > 0) {
+        useDashboardStore.setState({ instances: linkedInstances });
       }
 
       if (parsed.theme) {

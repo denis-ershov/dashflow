@@ -36,6 +36,16 @@ export interface ItemsDbSchema extends DBSchema {
     value: StoredChange;
     indexes: { itemId: string };
   };
+  /** Служебные записи (маркеры миграций), пишутся в одной транзакции с данными */
+  meta: {
+    key: string;
+    value: MetaRecord;
+  };
+}
+
+export interface MetaRecord {
+  key: string;
+  value: unknown;
 }
 
 export type ItemsDb = IDBPDatabase<ItemsDbSchema>;
@@ -60,6 +70,8 @@ export function openItemsDb(name: string = ITEMS_DB_NAME): Promise<ItemsDb> {
 
       const changes = db.createObjectStore('changes', { autoIncrement: true });
       changes.createIndex('itemId', 'itemId');
+
+      db.createObjectStore('meta', { keyPath: 'key' });
     },
   });
 }
