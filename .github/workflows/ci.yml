@@ -17,7 +17,8 @@ permissions:
 jobs:
   audit-and-build:
     name: Typecheck, Lint, Test, Build & E2E
-    runs-on: ubuntu-latest
+    # Образ закреплён: ubuntu-latest перешёл на 26.04, которую Playwright 1.56 не поддерживает
+    runs-on: ubuntu-24.04
 
     steps:
       # Actions закреплены по SHA коммита (в комментарии — версия), Dependabot обновляет их

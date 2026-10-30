@@ -7,6 +7,11 @@
 
 ---
 
+## [Unreleased] - 2026-10-30
+
+### Исправлено
+- CI падал на шаге установки Playwright: `ubuntu-latest` перешёл на Ubuntu 26.04, для которой Playwright 1.56.1 не ставит Chromium. Раннеры `ci.yml` и `release.yml` закреплены на `ubuntu-24.04`. Файлы: `.github/workflows/{ci,release}.yml`. Откат: `git revert`.
+
 ## [3.8.0] - 2026-10-30
 
 ### Этап 0 плана развития: готовность к публикации
