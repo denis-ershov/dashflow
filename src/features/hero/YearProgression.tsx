@@ -50,9 +50,7 @@ export const YearProgression: React.FC<YearProgressionProps> = ({ className }) =
         />
       </div>
 
-      <span className="font-mono text-fg font-semibold min-w-10 text-right">
-        {active.percent}%
-      </span>
+      <span className="font-mono text-fg font-semibold min-w-10 text-right">{active.percent}%</span>
     </button>
   );
 };

@@ -3,7 +3,8 @@
  */
 
 export type CrashLevel = 'error' | 'warning' | 'fatal';
-export type CrashContext = 'root' | 'widget' | 'network' | 'storage' | 'plugin' | 'theme' | 'general';
+export type CrashContext =
+  'root' | 'widget' | 'network' | 'storage' | 'plugin' | 'theme' | 'general';
 
 export interface CrashReport {
   id: string;

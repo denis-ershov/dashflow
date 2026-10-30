@@ -31,15 +31,18 @@ describe('Network: resilientFetch', () => {
   it('должен выбрасывать NetworkOfflineError при отсутствии сети', async () => {
     Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
 
-    await expect(
-      resilientFetch('https://api.example.com/data', { silent: true }),
-    ).rejects.toThrow(NetworkOfflineError);
+    await expect(resilientFetch('https://api.example.com/data', { silent: true })).rejects.toThrow(
+      NetworkOfflineError,
+    );
 
     Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
   });
 
   it('должен повторять запрос при ошибках сервера 500', async () => {
-    const errorResponse = new Response('Server Error', { status: 500, statusText: 'Internal Error' });
+    const errorResponse = new Response('Server Error', {
+      status: 500,
+      statusText: 'Internal Error',
+    });
     const successResponse = new Response('OK', { status: 200 });
 
     globalThis.fetch = vi

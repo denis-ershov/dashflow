@@ -44,14 +44,7 @@ export interface WidgetSize {
  * Доступные типы полей настроек виджетов
  */
 export type WidgetSettingFieldType =
-  | 'text'
-  | 'number'
-  | 'boolean'
-  | 'select'
-  | 'slider'
-  | 'color'
-  | 'multiselect'
-  | 'segmented';
+  'text' | 'number' | 'boolean' | 'select' | 'slider' | 'color' | 'multiselect' | 'segmented';
 
 export interface WidgetSettingOption<V extends string | number = string | number> {
   labelKey: string;

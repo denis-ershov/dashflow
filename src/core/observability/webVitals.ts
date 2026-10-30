@@ -23,7 +23,11 @@ class WebVitalsMonitor {
   private isInitialized = false;
 
   public init(): void {
-    if (this.isInitialized || typeof window === 'undefined' || typeof PerformanceObserver === 'undefined') {
+    if (
+      this.isInitialized ||
+      typeof window === 'undefined' ||
+      typeof PerformanceObserver === 'undefined'
+    ) {
       return;
     }
     this.isInitialized = true;

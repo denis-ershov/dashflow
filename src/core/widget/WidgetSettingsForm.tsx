@@ -11,7 +11,6 @@ export interface WidgetSettingsFormProps<S> {
   onChange: (newValues: S) => void;
 }
 
-
 const SECTION_TITLE_KEYS: Readonly<Record<string, TranslationKey>> = {
   appearance: 'widgetSettings.sections.appearance',
   behavior: 'widgetSettings.sections.behavior',
@@ -207,17 +206,13 @@ export function WidgetSettingsForm<S>({
               <input
                 type="color"
                 value={
-                  typeof rawValue === 'string'
-                    ? rawValue
-                    : String(field.defaultValue ?? '#000000')
+                  typeof rawValue === 'string' ? rawValue : String(field.defaultValue ?? '#000000')
                 }
                 onChange={(e) => updateField(key, e.target.value)}
                 className="w-11 h-11 rounded-xl border border-line cursor-pointer bg-transparent"
               />
               <Input
-                value={
-                  typeof rawValue === 'string' ? rawValue : String(field.defaultValue ?? '')
-                }
+                value={typeof rawValue === 'string' ? rawValue : String(field.defaultValue ?? '')}
                 onChange={(e) => updateField(key, e.target.value)}
               />
             </div>
@@ -232,8 +227,7 @@ export function WidgetSettingsForm<S>({
             ? (field.defaultValue as unknown[])
             : [];
         const currentArray: Array<string | number> = rawArr.filter(
-          (item): item is string | number =>
-            typeof item === 'string' || typeof item === 'number',
+          (item): item is string | number => typeof item === 'string' || typeof item === 'number',
         );
 
         control = (
@@ -278,9 +272,7 @@ export function WidgetSettingsForm<S>({
     return (
       <div key={keyStr} className="flex flex-col">
         {control}
-        {helperText && (
-          <p className="text-xs text-fg-muted mt-1 leading-relaxed">{helperText}</p>
-        )}
+        {helperText && <p className="text-xs text-fg-muted mt-1 leading-relaxed">{helperText}</p>}
       </div>
     );
   };
@@ -288,9 +280,7 @@ export function WidgetSettingsForm<S>({
   // Если секция всего одна (default), рендерим плоский список
   if (sections.length <= 1) {
     return (
-      <div className="flex flex-col gap-4">
-        {visibleSchema.map((field) => renderField(field))}
-      </div>
+      <div className="flex flex-col gap-4">{visibleSchema.map((field) => renderField(field))}</div>
     );
   }
 
@@ -301,16 +291,17 @@ export function WidgetSettingsForm<S>({
         const titleKey = SECTION_TITLE_KEYS[secKey];
         const title = titleKey ? t(titleKey) : secKey;
         return (
-          <div key={secKey} className="flex flex-col gap-3 pb-4 border-b border-line/50 last:border-b-0 last:pb-0">
+          <div
+            key={secKey}
+            className="flex flex-col gap-3 pb-4 border-b border-line/50 last:border-b-0 last:pb-0"
+          >
             {secKey !== 'default' && (
               <h4 className="text-xs font-bold text-fg tracking-wide uppercase flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-primary" />
                 {title}
               </h4>
             )}
-            <div className="flex flex-col gap-4">
-              {fields.map((field) => renderField(field))}
-            </div>
+            <div className="flex flex-col gap-4">{fields.map((field) => renderField(field))}</div>
           </div>
         );
       })}

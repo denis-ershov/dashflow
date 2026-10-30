@@ -6,7 +6,8 @@
 const USER_PATH_WIN_REGEX = /[A-Za-z]:\\Users\\[^\\]+/gi;
 const USER_PATH_POSIX_REGEX = /(?:\/home|\/Users)\/[^/]+/gi;
 const EMAIL_REGEX = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
-const TOKEN_PARAM_REGEX = /([?&](?:token|key|apikey|secret|auth|password|pwd|access_token)=)[^&]+/gi;
+const TOKEN_PARAM_REGEX =
+  /([?&](?:token|key|apikey|secret|auth|password|pwd|access_token)=)[^&]+/gi;
 
 /**
  * Очищает строку от путей файловой системы, содержащих имя пользователя,

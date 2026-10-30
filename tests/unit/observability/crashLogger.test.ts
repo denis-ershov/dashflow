@@ -13,7 +13,8 @@ describe('Observability: Sanitizer', () => {
 
   it('должен маскировать email-адреса и секретные токены в URL', () => {
     const textWithEmail = 'Sent report to admin@example.com successfully';
-    const urlWithToken = 'https://api.example.com/data?token=secret123&apiKey=supersecret456&foo=bar';
+    const urlWithToken =
+      'https://api.example.com/data?token=secret123&apiKey=supersecret456&foo=bar';
 
     expect(sanitizeString(textWithEmail)).toContain('[EMAIL_REDACTED]');
     expect(sanitizeString(urlWithToken)).toContain('token=[TOKEN_REDACTED]');

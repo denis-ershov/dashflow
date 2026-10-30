@@ -12,13 +12,10 @@ export const FEATURE_FLAG_DEFINITIONS: FeatureFlagDefinition[] = [
   },
 ];
 
-export const DEFAULT_FEATURE_FLAGS: FeatureFlags = FEATURE_FLAG_DEFINITIONS.reduce(
-  (acc, def) => {
-    acc[def.key] = def.defaultValue;
-    return acc;
-  },
-  {} as FeatureFlags,
-);
+export const DEFAULT_FEATURE_FLAGS: FeatureFlags = FEATURE_FLAG_DEFINITIONS.reduce((acc, def) => {
+  acc[def.key] = def.defaultValue;
+  return acc;
+}, {} as FeatureFlags);
 
 /** Отбрасывает переопределения удалённых флагов, сохранённые старыми версиями */
 function pickKnownFlags(stored: unknown): Partial<FeatureFlags> {
@@ -47,7 +44,10 @@ class FeatureFlagsManager {
 
   private async loadFromStorage(): Promise<void> {
     try {
-      const stored = await StorageAdapter.get<Record<string, unknown>>(STORAGE_KEYS.FEATURE_FLAGS, {});
+      const stored = await StorageAdapter.get<Record<string, unknown>>(
+        STORAGE_KEYS.FEATURE_FLAGS,
+        {},
+      );
       this.overrides = pickKnownFlags(stored);
     } catch {
       this.overrides = {};
