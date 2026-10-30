@@ -27,6 +27,14 @@ const NON_UI_FILES: ReadonlyMap<string, string> = new Map([
   ['src/core/storage/StorageAdapter.ts', 'внутренние ошибки хранилища для журнала диагностики'],
   ['src/core/storage/errors.ts', 'внутренние ошибки хранилища для журнала диагностики'],
   ['src/core/network/resilientFetch.ts', 'сетевые ошибки для журнала диагностики'],
+  [
+    'src/core/items/repository.ts',
+    'ошибки хранилища Item для разработчика; интерфейс показывает перевод по типу ошибки',
+  ],
+  [
+    'src/core/items/validation.ts',
+    'запасной текст для разработчика; пользователю показывается перевод code',
+  ],
   ['src/core/theme/applyTheme.ts', 'инварианты Theme Engine (throw при ошибке программиста)'],
   ['src/core/theme/color.ts', 'инварианты цветовой математики'],
   ['src/core/theme/tokens.ts', 'инварианты токенов'],

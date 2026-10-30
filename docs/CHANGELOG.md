@@ -9,6 +9,26 @@
 
 ## [Unreleased] - 2026-10-30
 
+### Этап 1, шаг 1.1: хранилище Item
+
+#### Добавлено
+- **Модуль `src/core/items/`** — единая модель содержимого рабочего пространства (`Item` с `kind`: task, note, link, reminder, digest, article, card) и доски:
+  - `types.ts`, `ids.ts` (ULID, дробные ключи порядка), `validation.ts` (`parseItemDraft`, `parseItemPatch`, `parseBoardDraft`, лимиты);
+  - `db.ts` — отдельная база IndexedDB `dashflow_items` (stores `items`, `boards`, `changes`, индексы по kind/status/boardId/updatedAt/remindAt/deletedAt), `navigator.storage.persist()`;
+  - `repository.ts` — CRUD, мягкое удаление и корзина на 30 дней, конфликт версий (`ItemConflictError`), запросы, журнал изменений в той же транзакции (5 000 записей), доски;
+  - `events.ts` — изменения видны всем вкладкам и сервис-воркеру (`BroadcastChannel`); `useItems.ts` — записи по запросу с автообновлением.
+- Зависимости: `fractional-indexing` (порядок, CC0, ≈2 КБ), `fake-indexeddb` (dev, тесты).
+- Тесты `tests/unit/items/` (44): покрытие модуля 93%.
+- Документы: `docs/ITEMS_ARCHITECTURE.md`, `docs/adr/ADR-017-items-indexeddb.md`, ссылка в `STORAGE_ARCHITECTURE.md`.
+
+#### Обоснование
+Основа для Inbox, досок, напоминаний, поиска, агентов и синхронизации (`IMPLEMENTATION_PLAN.md`, этап 1).
+
+#### Миграции и совместимость
+- Существующие данные пока не трогаются: виджеты переводятся на Item в шагах 1.3–1.4. База создаётся при первом обращении.
+- Откат: `git revert`; пустая база `dashflow_items` не мешает прежней версии.
+
+
 ### Этап 0.1: обновление инструментов сборки и тестов
 
 #### Изменено
