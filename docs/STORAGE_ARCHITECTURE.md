@@ -51,6 +51,12 @@ src/core/storage/
 - Состояние v2 разделяет `instances` (идентификаторы и настройки) и `layouts` (адаптивные раскладки для 5 брейкпоинтов: `xl`, `lg`, `md`, `sm`, `xs`).
 - Функция `deriveResponsiveLayouts(baseLayout, baseCols)` автоматически рассчитывает плотную адаптивную сетку для мобильных и планшетных устройств, гарантируя отсутствие горизонтального скролла (Правила 8–10).
 
+### 5.0. Содержимое виджетов (`userContent.ts`)
+
+- Задачи, привычки, заметки и быстрые ссылки живут вне стора дашборда: в общем ключе (`TODO_ITEMS`, `HABIT_ITEMS`, `NOTES_CONTENT`, `QUICK_LINKS`) и в копии экземпляра `<ключ>_<instanceId>`.
+- `collectUserContent(instanceIds)` собирает их для экспорта, `restoreUserContent(snapshot)` восстанавливает при импорте.
+- Импорт пишет только эти ключи (`contentKindOf`, id экземпляра — `[A-Za-z0-9_-]{1,100}`) и только значения, прошедшие проверку формы и лимитов `USER_CONTENT_LIMITS`. Чужие ключи (права, плагины, дашборд) и невалидные значения отбрасываются целиком — файл не может перезаписать произвольные настройки.
+
 ### 5.1. Что сохраняет `useDashboardStore`
 
 - Сохраняются только данные: `version`, `baseColumns`, `gap`, `layoutMode`, `heroSettings`, `speedDialLinks`, `instances`, `layouts` (список `PERSISTED_KEYS`, функция `pickPersistedDashboard`).

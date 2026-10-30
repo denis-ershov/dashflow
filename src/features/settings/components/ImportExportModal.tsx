@@ -5,7 +5,13 @@ import { useDashboardStore, pickPersistedDashboard } from '@/stores/useDashboard
 import { useThemeStore } from '@/core/theme/themeStore';
 import { useAppStore } from '@/stores/useAppStore';
 import { isSupportedLanguage, useTranslation } from '@/core/i18n';
-import { StorageAdapter, STORAGE_KEYS, migrateDashboardState } from '@/core/storage';
+import {
+  StorageAdapter,
+  STORAGE_KEYS,
+  collectUserContent,
+  migrateDashboardState,
+  restoreUserContent,
+} from '@/core/storage';
 import { Button } from '@/ui/primitives';
 import { Download, Upload, CheckCircle2, AlertTriangle } from 'lucide-react';
 
@@ -30,13 +36,16 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleExport = () => {
+  const handleExport = async () => {
+    const dashboard = pickPersistedDashboard(useDashboardStore.getState());
     const data = {
-      version: '2.1',
+      version: '2.2',
       exportedAt: new Date().toISOString(),
       theme: { activePresetId, wallpaperUrl, scrim, customCss },
-      dashboard: pickPersistedDashboard(useDashboardStore.getState()),
+      dashboard,
       settings: { language },
+      // Задачи, привычки, заметки и быстрые ссылки — общие и копии каждого экземпляра виджета
+      content: await collectUserContent((dashboard.instances ?? []).map((i) => i.instanceId)),
     };
 
     const jsonStr = JSON.stringify(data, null, 2);
@@ -81,6 +90,11 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
         useThemeStore.getState().initialize(parsed.theme);
       }
 
+      // Файлы до версии 2.2 содержимого не содержат — тогда ничего не трогаем
+      if (parsed.content !== undefined) {
+        await restoreUserContent(parsed.content);
+      }
+
       if (parsed.settings && typeof parsed.settings === 'object') {
         const settings = parsed.settings as Record<string, unknown>;
         if (isSupportedLanguage(settings.language)) {
@@ -107,7 +121,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
           <p className="text-xs text-fg-muted">
             {t('backup.exportDesc')}
           </p>
-          <Button size="sm" variant="primary" icon={<Download className="w-4 h-4" />} onClick={handleExport}>
+          <Button size="sm" variant="primary" icon={<Download className="w-4 h-4" />} onClick={() => void handleExport()}>
             {t('backup.download')}
           </Button>
         </div>

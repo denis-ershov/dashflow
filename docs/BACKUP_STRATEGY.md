@@ -143,10 +143,10 @@ DashFlow — это **клиентское браузерное расширен
 Settings → Data Management → Export Settings
 \\\
 
-**Формат экспорта** (`ImportExportModal`, версия файла `2.1`):
+**Формат экспорта** (`ImportExportModal`, версия файла `2.2`):
 \\\json
 {
-  "version": "2.1",
+  "version": "2.2",
   "exportedAt": "2026-10-29T12:34:56.789Z",
   "theme": { "activePresetId": "...", "wallpaperUrl": null, "scrim": 0.4, "customCss": "" },
   "dashboard": {
@@ -159,7 +159,14 @@ Settings → Data Management → Export Settings
     "instances": [ { "instanceId": "clock-1", "widgetId": "clock", "settings": { ... } } ],
     "layouts": { "xl": [ ... ], "lg": [ ... ], "md": [ ... ], "sm": [ ... ], "xs": [ ... ] }
   },
-  "settings": { "language": "ru" }
+  "settings": { "language": "ru" },
+  "content": {
+    "dashflow_widget_todo_items": [ { "id": "1", "text": "...", "completed": false, "priority": "medium" } ],
+    "dashflow_widget_todo_items_todo-1": [ ... ],
+    "dashflow_widget_habit_items": [ ... ],
+    "dashflow_widget_notes_content_notes-1": "# ...",
+    "dashflow_widget_quick_links": [ { "id": "l1", "title": "GitHub", "url": "https://github.com" } ]
+  }
 }
 \\\
 
@@ -170,9 +177,11 @@ Settings → Data Management → Export Settings
 2. DashFlow берёт сохраняемую часть стора дашборда (`pickPersistedDashboard`), тему и язык
 3. Сериализует в JSON и скачивает через `Blob` + `<a download>`
 
-**Импорт:** принимает файлы `2.0`/`2.1` и старые файлы с плоским массивом `widgets` (через `migrateDashboardState`). Язык применяется, только если он поддерживается (`isSupportedLanguage`); тема проходит `migrateThemeState` и валидацию CSS.
+**Импорт:** принимает файлы `2.0`–`2.2` и старые файлы с плоским массивом `widgets` (через `migrateDashboardState`). Язык применяется, только если он поддерживается (`isSupportedLanguage`); тема проходит `migrateThemeState` и валидацию CSS.
 
-**Ограничение:** содержимое виджетов, которое хранится в отдельных ключах `dashflow_{widget}_{instanceId}` (заметки, задачи, быстрые ссылки), в файл экспорта **не входит**.
+**Содержимое виджетов** (с версии `2.2`): задачи, привычки, заметки и быстрые ссылки — общие ключи и копии каждого экземпляра `<ключ>_<instanceId>` (`collectUserContent`). При импорте `restoreUserContent` пишет только эти ключи и только значения, прошедшие проверку формы и лимитов (до 1000 элементов, 2000 символов на поле, 100 000 на заметку, ссылки только http/https); остальное отбрасывается. Файлы без поля `content` содержимое не трогают.
+
+**Не входят:** установленные плагины и их данные (восстановление из файла обошло бы окно согласия на права), журнал сбоев, кэш погоды, флаги функций.
 
 **Важно:**
 - ✅ Экспорт не содержит секретов или токенов (их нет)
