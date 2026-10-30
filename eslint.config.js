@@ -56,6 +56,8 @@ export default tseslint.config(
       // В тестах намеренно подаются некорректные значения, чтобы проверить отказ.
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
+      // Тестовые двойники реализуют async-контракты синхронно
+      '@typescript-eslint/require-await': 'off',
     },
   },
   prettier,

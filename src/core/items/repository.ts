@@ -164,8 +164,9 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
       if (expectedVersion !== undefined && current.version !== expectedVersion) {
         throw new ItemConflictError(current);
       }
-      if (Object.keys(patch).length === 0) return current;
       const next = applyPatch(current, patch);
+      // Изменение без фактических правок не создаёт версию, запись журнала и событие
+      if (JSON.stringify(next) === JSON.stringify(current)) return current;
       next.updatedAt = now();
       next.version = current.version + 1;
       return writeItem(next, 'update', source);
@@ -284,6 +285,19 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
       if (!current) throw new ItemNotFoundError(id);
       const draft = parseBoardDraft({ title: current.title, ...draftInput });
       const board: Board = { ...current, ...draft, updatedAt: now() };
+      await database.put('boards', board);
+      notify({ type: 'items-changed', itemIds: [], boards: true });
+      return board;
+    },
+
+    /** Архивирует доску или возвращает из архива (записи доски не трогаются) */
+    async setBoardArchived(id: string, archived: boolean): Promise<Board> {
+      const database = await db();
+      const current = await database.get('boards', id);
+      if (!current) throw new ItemNotFoundError(id);
+      const board: Board = { ...current, updatedAt: now() };
+      if (archived) board.archivedAt = board.updatedAt;
+      else delete board.archivedAt;
       await database.put('boards', board);
       notify({ type: 'items-changed', itemIds: [], boards: true });
       return board;

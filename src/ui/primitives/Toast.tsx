@@ -12,6 +12,13 @@ export interface ToastMessage {
   message: string;
   type?: ToastType;
   duration?: number;
+  /** Кнопка действия в тосте (например, «Отменить»); после нажатия тост закрывается */
+  action?: ToastAction;
+}
+
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
 }
 
 interface ToastStore {
@@ -93,6 +100,18 @@ export const ToastContainer: React.FC = () => {
               )}
               <div className="text-xs text-fg-muted leading-relaxed mt-1">{item.message}</div>
             </div>
+            {item.action && (
+              <button
+                type="button"
+                onClick={() => {
+                  item.action?.onClick();
+                  removeToast(item.id);
+                }}
+                className="shrink-0 self-center px-3 min-h-9 text-xs font-semibold rounded-lg text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+              >
+                {item.action.label}
+              </button>
+            )}
             <button
               onClick={() => removeToast(item.id)}
               aria-label={t('feedback.closeNotification')}

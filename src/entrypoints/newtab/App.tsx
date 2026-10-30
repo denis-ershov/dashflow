@@ -19,6 +19,7 @@ import { useThemeStore } from '@/core/theme/themeStore';
 import { Spinner, RootErrorBoundary } from '@/ui/feedback';
 import { ToastContainer } from '@/ui/primitives/Toast';
 import { crashLogger } from '@/core/observability';
+import { useUndoHotkey } from '@/features/commands/useUndoHotkey';
 
 /** Модалки, у которых есть своя кнопка в доке */
 const DOCK_PANELS: ReadonlyArray<DockPanel> = ['addWidget', 'marketplace', 'appearance', 'settings'];
@@ -63,6 +64,9 @@ function DashboardContent() {
 
   const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
   const [isAudioDrawerOpen, setIsAudioDrawerOpen] = useState(false);
+
+  // Ctrl+Z / Cmd+Z вне полей ввода — отмена последнего действия с данными
+  useUndoHotkey();
 
   useEffect(() => {
     // Стор запускается на значениях по умолчанию даже при ошибке чтения — её только журналируем
