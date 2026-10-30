@@ -9,6 +9,30 @@
 
 ## [Unreleased] - 2026-10-30
 
+### Этап 0.1: обновление инструментов сборки и тестов
+
+#### Изменено
+- **Dev-зависимости:** `wxt` 0.19 → 0.21, `vite` 5 → 7, `vitest` и `@vitest/coverage-v8` 2 → 5, `jsdom` 25 → 30, `@playwright/test` 1.56 → 1.64, добавлен `@types/chrome`. `npm audit` — 0 уязвимостей (было 3 critical и 1 high в dev-зависимостях). Vite 7, а не 8: встроенный в `@wxt-dev/module-react` `@vitejs/plugin-react` 4 не поддерживает Vite 8.
+- **Строже типизация.** Базовый tsconfig WXT 0.21 включает `noUncheckedIndexedAccess`, `verbatimModuleSyntax`, `noImplicitOverride` — код и тесты приведены к ним (≈200 мест: группы регулярных выражений, `arr[i]`, `override`). ESLint требует `import type` (`consistent-type-imports`).
+- `defineBackground` импортируется из `wxt/utils/define-background` (модуль `wxt/sandbox` удалён в WXT 0.20).
+- `publicDir: 'src/public'` в `wxt.config.ts`: с WXT 0.20 папка `public` по умолчанию в корне, и без этой настройки сборка теряла иконки и `_locales` — Chrome отказывался загружать расширение (поймал E2E).
+- Firefox: `data_collection_permissions.required: ["locationInfo"]` — обязательное для новых дополнений AMO поле; погодный виджет отправляет координаты в Open-Meteo и геокодеры.
+- Пороги покрытия пересчитаны под Vitest 5 (v8 считает по AST, цифры ниже при тех же тестах): 65/58/56/66; покрытие считается только по `src/**/*.{ts,tsx}`.
+- Новые помощники: `toLocalDateKey` (`core/datetime`), `displayHost` (`core/network/url.ts`, заменил 6 копий одного выражения), тестовый `tests/helpers/at.ts`.
+
+- Скриншоты листинга 1280×800 (ru/en) генерируются из собранного расширения: `npm run screenshots`, `scripts/store-screenshots.mjs` → `docs/store/`.
+
+#### Исправлено
+- В английском интерфейсе город погоды по умолчанию (и другие города справочника) подписывался по-русски: справочник `cities.ts` хранит названия на обоих языках (`findKnownCity`, `defaultCityCoordinates`), язык входит в ключ запроса погоды.
+- Командная палитра показывала темы техническими id (`neutral-dark`) вместо названий.
+- Привычки отмечались по дате UTC (`toISOString`): в Москве до 03:00 отметка попадала во вчерашний день. Теперь — локальная дата (`toLocalDateKey`).
+- Направление ветра при отрицательных градусах давало неизвестный румб.
+- Виджет цитат с пустой коллекцией падал; теперь не рендерится.
+
+#### Миграции и совместимость
+- Данные не меняются. Отметки привычек, поставленные ночью до этой версии, остаются на прежней (UTC) дате.
+- Откат: `git revert`, затем `npm ci`.
+
 ### Этап 0.1: ESLint на весь код
 
 #### Изменено

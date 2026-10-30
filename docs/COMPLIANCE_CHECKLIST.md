@@ -24,6 +24,7 @@
 | Требование | Статус | Как реализовано в DashFlow |
 |---|---|---|
 | **Source Code Submission** | ✅ Соответствует | При сборке релиза автоматически формируется архив исходного кода `.output/dashflow-{version}-sources.zip`. |
+| **Data collection (с 03.11.2025)** | ✅ Соответствует (с 3.8.0) | `browser_specific_settings.gecko.data_collection_permissions.required: ["locationInfo"]`: виджет погоды отправляет координаты в Open-Meteo и геокодеры (BigDataCloud, Nominatim). Другие данные с устройства не уходят. |
 | **Gecko ID** | ✅ Соответствует | `wxt.config.ts` содержит корректную секцию `browser_specific_settings.gecko` с ID `dashflow@addon` и `strict_min_version: 109.0`. |
 | **No Obfuscated Code** | ✅ Соответствует | Исходный код открыт (GPL-3.0), минификация Vite выполняется стандартными средствами без кастомной обфускации. |
 

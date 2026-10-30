@@ -85,17 +85,19 @@ DashFlow превращает новую вкладку в настраивае�
 | Asset | Dimensions | Status | Filename |
 |-------|-----------|--------|----------|
 | Store Icon | 128×128 PNG | ✅ Ready | `src/public/icons/icon-128.png` |
-| Screenshot 1 — дашборд с обоями | 1280×800 | 🟡 Needs update | `docs/screenshots/dashflow_wallpaper_active.png` (2560×1271, нужно пересохранить в 1280×800) |
-| Screenshot 2 — закладки и вкладки | 1280×800 | 🟡 Needs update | `docs/screenshots/dashflow_bookmarks_tabs.png` (2560×1271) |
-| Screenshot 3 — свободная сетка | 1280×800 | 🟡 Needs update | `docs/screenshots/dashflow_free_canvas.png` (2560×1271) |
-| Screenshot 4 — командная палитра | 1280×800 | ⬜ Not created | |
-| Screenshot 5 — настройки темы | 1280×800 | ⬜ Not created | |
+| Screenshot 1 — дашборд | 1280×800 | ✅ Ready | `docs/store/en-1-dashboard.png` (ru: `ru-1-dashboard.png`) |
+| Screenshot 2 — командная палитра | 1280×800 | ✅ Ready | `docs/store/en-2-command-palette.png` (ru: `ru-2-…`) |
+| Screenshot 3 — темы оформления | 1280×800 | ✅ Ready | `docs/store/en-3-appearance.png` (ru: `ru-3-…`) |
+| Screenshot 4 | 1280×800 | ⬜ Not created | |
+| Screenshot 5 | 1280×800 | ⬜ Not created | |
 | Small Promo Tile | 440×280 | ⬜ Not created | |
 | Marquee Promo Tile | 1400×560 | ⬜ Not created | |
 
 ### Screenshot Notes
-Снимать собранное расширение (`.output/chrome-mv3`) после редизайна этапа D, без личных данных
-в задачах и заметках. Скриншоты 1–3 устарели по размеру и по интерфейсу (доки, сетка на всю ширину).
+Генерируются скриптом: `npm run build:chrome && npm run screenshots` (`scripts/store-screenshots.mjs`).
+Стартовая раскладка без личных данных, тёмная тема; ответ Open-Meteo подставляется примером, чтобы
+снимки не зависели от сети и погоды. Перед релизом с изменениями интерфейса — переснять.
+Виджет «Закладки» в кадр не попадает: без выданного права он показывает запрос доступа.
 
 ## Permissions Justification
 
@@ -168,7 +170,7 @@ DashFlow превращает новую вкладку в настраивае�
 ### Known Issues / Limitations
 - При первом открытии виджета RSS с лентами по умолчанию показывается запрос доступа к их сайтам — это ожидаемо.
 - Автоопределение города использует стандартный запрос браузера; при отказе виджет предлагает выбрать город вручную.
-- Firefox (AMO): пакет MV2, те же права; хосты лент входят в `optional_permissions`.
+- Firefox (AMO): пакет MV2, те же права; хосты лент входят в `optional_permissions`. Объявлено `data_collection_permissions.required: ["locationInfo"]` — погода отправляет координаты в Open-Meteo и геокодеры.
 
 ### Rejection History
 Нет.
