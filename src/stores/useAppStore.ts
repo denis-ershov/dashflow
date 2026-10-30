@@ -23,11 +23,17 @@ export const useAppStore = create<AppState>()(
 
     initialize: async () => {
       const i18nLang = useI18nStore.getState().language;
-      const savedLang = await StorageAdapter.get<SupportedLanguage>(
-        'app_language',
-        i18nLang || detectBrowserLanguage(),
-      );
-      const savedAnim = await StorageAdapter.get<boolean>('app_animations', true);
+      const fallbackLang = i18nLang || detectBrowserLanguage();
+      let savedLang: SupportedLanguage = fallbackLang;
+      let savedAnim = true;
+      let readError: unknown = null;
+      try {
+        savedLang = await StorageAdapter.get<SupportedLanguage>('app_language', fallbackLang);
+        savedAnim = await StorageAdapter.get<boolean>('app_animations', true);
+      } catch (error) {
+        // Интерфейс всё равно запускается на значениях по умолчанию, ошибку получит вызывающий
+        readError = error;
+      }
 
       set((state) => {
         state.language = savedLang;
@@ -40,6 +46,7 @@ export const useAppStore = create<AppState>()(
       if (useI18nStore.getState().language !== savedLang) {
         useI18nStore.getState().setLanguage(savedLang);
       }
+      if (readError) throw readError;
     },
 
     setLanguage: async (lang) => {

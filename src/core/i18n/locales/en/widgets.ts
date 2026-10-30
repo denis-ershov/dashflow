@@ -193,11 +193,30 @@ export const widgets: LocaleShape<typeof ruWidgets> = {
     noRecent: 'No recent tabs',
     noRecentHint: 'Recently closed Chrome pages appear here',
     restoreTab: 'Restore tab',
+    permission: {
+      grant: 'Allow access',
+      bookmarksTitle: 'Bookmark access needed',
+      bookmarksDesc:
+        'Allow DashFlow to read and edit your browser bookmarks. Or switch the widget to your own links in its settings — those need no access.',
+      tabsTitle: 'Tab access needed',
+      tabsDesc: 'DashFlow needs browser permission to show the titles and addresses of open tabs.',
+      recentTitle: 'Tab history access needed',
+      recentDesc: 'DashFlow needs browser permission to show and restore recently closed tabs.',
+    },
   },
   rss: {
     defaultFolder: 'General',
     allTopics: 'All topics',
     loadError: "Couldn't load RSS feeds. Check your network connection.",
+    permissionTitle: 'Access to feed sites needed',
+    permissionDesc: {
+      one: 'Allow DashFlow to load news from {{count}} site. Access covers only your feed addresses.',
+      few: 'Allow DashFlow to load news from {{count}} sites. Access covers only your feed addresses.',
+      many: 'Allow DashFlow to load news from {{count}} sites. Access covers only your feed addresses.',
+      other:
+        'Allow DashFlow to load news from {{count}} sites. Access covers only your feed addresses.',
+    },
+    permissionGrant: 'Allow access',
     unifiedHint: 'One chronological stream',
     tabsHint: 'Read each source separately',
     foldersHint: 'Group by topics and folders',

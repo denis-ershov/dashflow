@@ -1,4 +1,5 @@
 import type { RssFeedConfig, RssItem } from './types';
+import type { FetchRssFeedRequest, FetchRssFeedResponse } from '@/core/network/feedProxy';
 import { isSafeHttpUrl } from '@/core/network';
 import { t, useI18nStore, type SupportedLanguage } from '@/core/i18n';
 import { DEFAULT_FOLDER } from './presets';
@@ -71,21 +72,30 @@ export async function fetchAndParseFeed(
   limit = 15,
 ): Promise<RssItem[]> {
   let xmlText = '';
+  let forbidden = false;
 
   // 1. Попытка запроса через Background Service Worker (обход CORS)
   if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
     try {
-      const response = await new Promise<{ success?: boolean; xml?: string }>((resolve) => {
-        chrome.runtime.sendMessage({ type: 'FETCH_RSS_FEED', url: feed.url }, (res) => {
-          resolve(res || {});
+      const request: FetchRssFeedRequest = { type: 'FETCH_RSS_FEED', url: feed.url };
+      const response = await new Promise<FetchRssFeedResponse | undefined>((resolve) => {
+        chrome.runtime.sendMessage(request, (res?: FetchRssFeedResponse) => {
+          resolve(res);
         });
       });
-      if (response && response.success && response.xml) {
+      if (response?.success) {
         xmlText = response.xml;
+      } else if (response?.error === 'FORBIDDEN_URL') {
+        forbidden = true;
       }
     } catch {
       // Игнорируем и переходим к прямому fetch
     }
+  }
+
+  // Воркер отклонил приватный адрес — прямым запросом его тоже не загружаем
+  if (forbidden) {
+    throw new Error('Forbidden feed address');
   }
 
   // 2. Фолбэк на прямой fetch

@@ -43,7 +43,10 @@ describe('App Root Layout', () => {
   });
 
   it('должен показывать индикатор загрузки, пока приложение не инициализировано', () => {
-    useAppStore.setState({ isInitialized: false, initialize: vi.fn() });
+    useAppStore.setState({
+      isInitialized: false,
+      initialize: vi.fn().mockResolvedValue(undefined),
+    });
 
     render(<App />);
 

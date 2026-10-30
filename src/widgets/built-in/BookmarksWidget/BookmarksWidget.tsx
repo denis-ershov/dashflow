@@ -1,5 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from '@/core/i18n';
+import {
+  useBrowserPermissions,
+  type OptionalApiPermission,
+} from '@/core/permissions/browserPermissions';
 import {
   Folder,
   Search,
@@ -22,6 +26,7 @@ import {
   ArrowLeft,
   X,
   ExternalLink,
+  ShieldCheck,
 } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { SingleBookmarkTile } from './SingleBookmarkTile';
@@ -146,6 +151,25 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
   const { tree, loadTree, createBookmark, deleteBookmark, createFolder } =
     useChromeBookmarksStore();
 
+  // Необязательные права браузера под активную вкладку виджета
+  const requiredPermissions = useMemo<OptionalApiPermission[]>(() => {
+    if (activeSubTab === 'openTabs') return ['tabs'];
+    if (activeSubTab === 'recent') return ['sessions', 'tabs'];
+    return folderSource === 'chrome' ? ['bookmarks'] : [];
+  }, [activeSubTab, folderSource]);
+  const { granted: hasAccess, request: requestAccess } = useBrowserPermissions({
+    permissions: requiredPermissions,
+  });
+  const permissionCopy =
+    activeSubTab === 'openTabs'
+      ? { title: t('bookmarks.permission.tabsTitle'), desc: t('bookmarks.permission.tabsDesc') }
+      : activeSubTab === 'recent'
+        ? { title: t('bookmarks.permission.recentTitle'), desc: t('bookmarks.permission.recentDesc') }
+        : {
+            title: t('bookmarks.permission.bookmarksTitle'),
+            desc: t('bookmarks.permission.bookmarksDesc'),
+          };
+
   const [currentFolderId, setCurrentFolderId] = useState<string>(initialFolderId);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingItem, setIsAddingItem] = useState(false);
@@ -178,10 +202,10 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
   }, [isFolderMenuOpen, isStyleMenuOpen]);
 
   useEffect(() => {
-    if (folderSource === 'chrome') {
+    if (folderSource === 'chrome' && hasAccess) {
       loadTree();
     }
-  }, [folderSource, loadTree]);
+  }, [folderSource, loadTree, hasAccess]);
 
   useEffect(() => {
     setCurrentFolderId(settings?.selectedFolderId || 'all');
@@ -262,9 +286,10 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
   };
 
   useEffect(() => {
+    if (!hasAccess) return;
     if (activeSubTab === 'openTabs') loadOpenTabs();
     if (activeSubTab === 'recent') loadRecentlyClosed();
-  }, [activeSubTab]);
+  }, [activeSubTab, hasAccess]);
 
   // Если режим Одиночный сайт — рендерим SingleBookmarkTile
   if (mode === 'single') {
@@ -895,7 +920,19 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
       )}
 
       {/* === ОСНОВНОЙ КОНТЕНТ ЗАКЛАДОК И ВКЛАДОК === */}
-      {activeSubTab === 'bookmarks' && (
+      {hasAccess === false && (
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1 flex">
+          <EmptyState
+            className="p-4 m-auto"
+            icon={<ShieldCheck className="w-6 h-6" />}
+            title={permissionCopy.title}
+            description={permissionCopy.desc}
+            action={{ label: t('bookmarks.permission.grant'), onClick: () => void requestAccess() }}
+          />
+        </div>
+      )}
+
+      {hasAccess !== false && activeSubTab === 'bookmarks' && (
         <div className="flex-1 min-h-0 overflow-y-auto pr-1">
           {items.length === 0 ? (
             <EmptyState
@@ -1055,7 +1092,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
       )}
 
       {/* Открытые вкладки браузера */}
-      {activeSubTab === 'openTabs' && (
+      {hasAccess !== false && activeSubTab === 'openTabs' && (
         <div className="flex-1 min-h-0 overflow-y-auto pr-1">
           {filteredOpenTabs.length === 0 ? (
             <EmptyState
@@ -1131,7 +1168,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
       )}
 
       {/* Недавно закрытые вкладки */}
-      {activeSubTab === 'recent' && (
+      {hasAccess !== false && activeSubTab === 'recent' && (
         <div className="flex-1 min-h-0 overflow-y-auto pr-1">
           {filteredRecent.length === 0 ? (
             <EmptyState

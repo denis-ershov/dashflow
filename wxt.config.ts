@@ -8,22 +8,29 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: (env) => {
     const isDev = env.mode === 'development';
+    // Сайты RSS-лент: доступ запрашивается по клику только к адресам лент пользователя
+    const optionalHosts = ['https://*/*', 'http://*/*'];
+    // Закладки, вкладки и недавно закрытые вкладки — тоже по запросу (browserPermissions.ts).
+    // Геолокация в манифест не входит: она не может быть необязательной в Chrome,
+    // а navigator.geolocation на странице расширения сам спрашивает пользователя.
+    const optionalApis = ['bookmarks', 'tabs', 'sessions'];
 
     return {
-      name: 'DashFlow — Personal Start Page',
-      description: 'Персональное рабочее пространство и Dashboard в новой вкладке браузера.',
+      name: '__MSG_extensionName__',
+      description: '__MSG_extensionDescription__',
       version: pkg.version,
-      default_locale: 'ru',
-      permissions: ['storage', 'bookmarks', 'geolocation'],
+      default_locale: 'en',
+      permissions: ['storage'],
       host_permissions: [
         'https://api.open-meteo.com/*',
         'https://geocoding-api.open-meteo.com/*',
         'https://api.bigdatacloud.net/*',
         'https://nominatim.openstreetmap.org/*',
-        'https://images.unsplash.com/*',
-        'https://*/*',
-        'http://*/*',
       ],
+      // В MV2 (Firefox) отдельного optional_host_permissions нет — хосты входят в optional_permissions
+      optional_permissions:
+        env.manifestVersion === 2 ? [...optionalApis, ...optionalHosts] : optionalApis,
+      ...(env.manifestVersion === 3 ? { optional_host_permissions: optionalHosts } : {}),
       content_security_policy: {
         extension_pages: isDev
           ? "script-src 'self' 'wasm-unsafe-eval' http://localhost:* http://127.0.0.1:*; object-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src https: 'self';"

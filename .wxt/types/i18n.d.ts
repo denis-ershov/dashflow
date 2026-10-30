@@ -73,9 +73,9 @@ declare module "wxt/browser" {
       options?: GetMessageOptions,
     ): string;
     /**
-     * Название расширения
+     * Extension name
      *
-     * "DashFlow — Персональный Dashboard"
+     * "DashFlow — Personal Start Page"
      */
     getMessage(
       messageName: "extensionName",
@@ -83,9 +83,9 @@ declare module "wxt/browser" {
       options?: GetMessageOptions,
     ): string;
     /**
-     * Описание расширения
+     * Extension description
      *
-     * "Персональное рабочее пространство и Dashboard в новой вкладке Chrome."
+     * "Personal customizable dashboard and productivity new tab page for your browser."
      */
     getMessage(
       messageName: "extensionDescription",

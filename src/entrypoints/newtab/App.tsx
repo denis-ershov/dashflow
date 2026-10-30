@@ -18,6 +18,7 @@ import { useFeatureFlags } from '@/core/featureFlags';
 import { useThemeStore } from '@/core/theme/themeStore';
 import { Spinner, RootErrorBoundary } from '@/ui/feedback';
 import { ToastContainer } from '@/ui/primitives/Toast';
+import { crashLogger } from '@/core/observability';
 
 /** Модалки, у которых есть своя кнопка в доке */
 const DOCK_PANELS: ReadonlyArray<DockPanel> = ['addWidget', 'marketplace', 'appearance', 'settings'];
@@ -64,7 +65,8 @@ function DashboardContent() {
   const [isAudioDrawerOpen, setIsAudioDrawerOpen] = useState(false);
 
   useEffect(() => {
-    initApp();
+    // Стор запускается на значениях по умолчанию даже при ошибке чтения — её только журналируем
+    initApp().catch((error: unknown) => crashLogger.logError(error, 'general', { stage: 'initApp' }));
     initializeTheme();
   }, [initApp, initializeTheme]);
 

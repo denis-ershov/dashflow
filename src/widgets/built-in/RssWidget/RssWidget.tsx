@@ -11,6 +11,7 @@ import {
   Rss,
   Folder,
   ChevronDown,
+  ShieldCheck,
 } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { Skeleton } from '@/ui/feedback/Skeleton';
@@ -28,6 +29,7 @@ import { DEFAULT_FEEDS } from './presets';
 import { fetchAndParseFeed, formatRssTimeAgo } from './rssParser';
 import { ALL_FOLDERS, DEFAULT_FOLDER, isAllFolders } from './presets';
 import { useTranslation } from '@/core/i18n';
+import { originPatternsFor, useBrowserPermissions } from '@/core/permissions/browserPermissions';
 import { getRssCardClasses } from './rssStyles';
 import { RssFeedManagerModal } from './RssFeedManagerModal';
 
@@ -36,7 +38,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
   settings,
 }) => {
   const updateWidgetSettings = useDashboardStore((s) => s.updateWidgetSettings);
-  const { t, language } = useTranslation();
+  const { t, tp, language } = useTranslation();
   const folderLabel = (folder: string) =>
     folder === DEFAULT_FOLDER ? t('rss.defaultFolder') : folder;
 
@@ -116,6 +118,12 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
   // Активные (включенные) ленты
   const activeFeeds = useMemo(() => feeds.filter((f) => f.enabled !== false), [feeds]);
 
+  // Доступ выдаётся только к сайтам включённых лент (optional_host_permissions)
+  const feedOrigins = useMemo(() => originPatternsFor(activeFeeds.map((f) => f.url)), [activeFeeds]);
+  const { granted: hasFeedAccess, request: requestFeedAccess } = useBrowserPermissions({
+    origins: feedOrigins,
+  });
+
   // Список всех уникальных папок
   const allFolders = useMemo(() => {
     const set = new Set<string>();
@@ -133,6 +141,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
 
   // Загрузка новостей
   const loadFeeds = useCallback(async () => {
+    if (hasFeedAccess !== true) return;
     if (activeFeeds.length === 0) {
       setItems([]);
       setLoading(false);
@@ -164,7 +173,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
       setLoading(false);
       setIsRefreshing(false);
     }
-  }, [activeFeeds, itemCount]);
+  }, [activeFeeds, itemCount, hasFeedAccess]);
 
   useEffect(() => {
     loadFeeds();
@@ -387,7 +396,20 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
 
       {/* 3. Содержимое: Список новостей или состояния */}
       <div className="flex-1 overflow-y-auto min-h-0 pr-0.5 space-y-2">
-        {loading && items.length === 0 ? (
+        {hasFeedAccess === false && activeFeeds.length > 0 ? (
+          <div className="p-1 min-h-full flex">
+            <EmptyState
+              className="p-4 m-auto"
+              icon={<ShieldCheck className="w-6 h-6" />}
+              title={t('rss.permissionTitle')}
+              description={tp('rss.permissionDesc', feedOrigins.length)}
+              action={{
+                label: t('rss.permissionGrant'),
+                onClick: () => void requestFeedAccess(),
+              }}
+            />
+          </div>
+        ) : loading && items.length === 0 ? (
           <div className="space-y-2 p-1">
             <Skeleton className="w-full h-16 rounded-xl" />
             <Skeleton className="w-full h-16 rounded-xl" />

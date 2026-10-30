@@ -72,14 +72,34 @@ interface ChromeBookmarksState {
   createFolder: (parentId: string, title: string) => Promise<void>;
 }
 
+const isExtensionRuntime = () => typeof chrome !== 'undefined' && Boolean(chrome.runtime?.id);
+
 export const useChromeBookmarksStore = create<ChromeBookmarksState>()((set) => {
+  let listenersAttached = false;
+
+  // Право bookmarks необязательное: API появляется только после выдачи, поэтому
+  // подписки на события регистрируются при первой успешной загрузке, а не при создании стора
+  const attachListeners = () => {
+    if (listenersAttached || !chrome.bookmarks) return;
+    listenersAttached = true;
+    chrome.bookmarks.onCreated.addListener(() => loadTree());
+    chrome.bookmarks.onRemoved.addListener(() => loadTree());
+    chrome.bookmarks.onChanged.addListener(() => loadTree());
+    chrome.bookmarks.onMoved.addListener(() => loadTree());
+    chrome.bookmarks.onChildrenReordered?.addListener(() => loadTree());
+  };
+
   const loadTree = () => {
     if (typeof chrome !== 'undefined' && chrome.bookmarks?.getTree) {
+      attachListeners();
       chrome.bookmarks.getTree((nodes) => {
         if (nodes && nodes[0] && nodes[0].children) {
           set({ tree: nodes[0].children, isLoaded: true });
         }
       });
+    } else if (isExtensionRuntime()) {
+      // В расширении без права bookmarks дерево пустое — виджет покажет запрос доступа
+      set({ tree: [], isLoaded: true });
     } else {
       // Имитация дерева закладок для Dev-режима без ошибок
       set({
@@ -115,15 +135,6 @@ export const useChromeBookmarksStore = create<ChromeBookmarksState>()((set) => {
       });
     }
   };
-
-  // Регистрация подписок на события Chrome Bookmarks API для реального 2-way sync
-  if (typeof chrome !== 'undefined' && chrome.bookmarks) {
-    chrome.bookmarks.onCreated.addListener(() => loadTree());
-    chrome.bookmarks.onRemoved.addListener(() => loadTree());
-    chrome.bookmarks.onChanged.addListener(() => loadTree());
-    chrome.bookmarks.onMoved.addListener(() => loadTree());
-    chrome.bookmarks.onChildrenReordered?.addListener(() => loadTree());
-  }
 
   return {
     tree: [],
