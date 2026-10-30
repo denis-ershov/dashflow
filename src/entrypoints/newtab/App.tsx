@@ -119,7 +119,7 @@ function DashboardContent() {
 
         {/* Модульная сетка виджетов (режимы Modular и Pure Canvas) */}
         {showGrid && (
-          <main className="flex-1 w-full max-w-screen-2xl mx-auto px-3 sm:px-6 py-4">
+          <main className="flex-1 w-full px-3 sm:px-6 py-4">
             <GridEngine />
           </main>
         )}
