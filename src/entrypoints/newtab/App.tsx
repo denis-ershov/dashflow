@@ -74,6 +74,26 @@ function DashboardContent() {
     initializeTheme();
   }, [initApp, initializeTheme]);
 
+  // Перенос данных 3.8 в Item — в фоне после первого кадра, даже если на дашборде нет
+  // виджетов задач, заметок и ссылок (их содержимое уйдёт в архив, а не потеряется)
+  useEffect(() => {
+    const start = () => {
+      const bootstrap = async () => {
+        const { ensureWorkspaceReady } = await import('@/features/workspace/bindings');
+        await ensureWorkspaceReady();
+      };
+      bootstrap().catch((error: unknown) =>
+        crashLogger.logError(error, 'storage', { stage: 'items-migration' }),
+      );
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+      const handle = window.requestIdleCallback(start, { timeout: 3000 });
+      return () => window.cancelIdleCallback(handle);
+    }
+    const timer = setTimeout(start, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Выключение флага ambientAudio должно глушить уже играющие треки
   useEffect(() => {
     if (!isAudioEnabled) stopAllAudio();

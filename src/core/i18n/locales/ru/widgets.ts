@@ -353,6 +353,8 @@ export const widgets = {
     add: 'Добавить',
     allDone: 'Всё сделано!',
     allDoneHint: 'Нет задач в выбранной категории',
+    loadErrorTitle: 'Задачи не загрузились',
+    loadError: 'Не удалось прочитать задачи из хранилища браузера.',
     toggleTask: 'Отметить задачу: {{text}}',
     deleteTask: 'Удалить задачу: {{text}}',
     filters: {
@@ -407,6 +409,8 @@ export const widgets = {
     preview: 'Просмотр',
     saved: 'Сохранено',
     saving: 'Сохранение...',
+    loadErrorTitle: 'Заметка не загрузилась',
+    loadError: 'Не удалось прочитать заметку из хранилища браузера.',
     text: 'Текст заметки',
     placeholder: 'Напишите здесь что-нибудь...',
     words: {
@@ -460,6 +464,8 @@ export const widgets = {
     cancel: 'Отмена',
     save: 'Сохранить',
     remove: 'Удалить ссылку',
+    loadErrorTitle: 'Ссылки не загрузились',
+    loadError: 'Не удалось прочитать ссылки из хранилища браузера.',
     addLabel: 'Добавить ссылку',
     add: 'Добавить',
   },

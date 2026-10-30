@@ -9,6 +9,7 @@ const test = base.extend<{ context: BrowserContext; extensionId: string }>({
   context: async ({}, provide) => {
     const context = await chromium.launchPersistentContext('', {
       channel: 'chromium',
+      locale: 'en-US',
       args: [`--disable-extensions-except=${EXTENSION_PATH}`, `--load-extension=${EXTENSION_PATH}`],
     });
     await provide(context);
@@ -60,4 +61,52 @@ test('манифест запрашивает при установке толь
   expect(manifest.optional_permissions).toEqual(['bookmarks', 'tabs', 'sessions']);
   // Название берётся из _locales по языку браузера, а не остаётся ключом __MSG_
   expect(manifest.name).toMatch(/^DashFlow — /);
+});
+
+test('задачи 3.8 переносятся в новое хранилище при первом запуске', async ({
+  context,
+  extensionId,
+}) => {
+  // Профиль «до обновления»: задачи лежат в старом ключе chrome.storage.local
+  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+  await worker.evaluate(() =>
+    chrome.storage.local.set({
+      dashflow_widget_todo_items: [
+        { id: '1', text: 'Legacy task from 3.8', completed: false, priority: 'high' },
+      ],
+    }),
+  );
+
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${extensionId}/newtab.html`);
+  await expect(page.getByText('Legacy task from 3.8')).toBeVisible();
+
+  // После перезагрузки задача читается уже из IndexedDB, перенос не повторяется
+  await page.reload();
+  await expect(page.getByText('Legacy task from 3.8')).toHaveCount(1);
+});
+
+test('задача добавляется, переживает перезагрузку, удаление отменяется Ctrl+Z', async ({
+  context,
+  extensionId,
+}) => {
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${extensionId}/newtab.html`);
+
+  const input = page.getByRole('textbox', { name: 'New task' });
+  await input.fill('E2E task');
+  await input.press('Enter');
+  await expect(page.getByText('E2E task', { exact: true })).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByText('E2E task', { exact: true })).toBeVisible();
+
+  await page.getByText('E2E task', { exact: true }).hover();
+  await page.getByRole('button', { name: 'Delete task: E2E task' }).click();
+  await expect(page.getByText('E2E task', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible();
+
+  await page.locator('body').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press('Control+z');
+  await expect(page.getByText('E2E task', { exact: true })).toBeVisible();
 });

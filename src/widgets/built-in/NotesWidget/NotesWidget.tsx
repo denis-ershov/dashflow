@@ -1,12 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from '@/core/i18n';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { t as translate, useI18nStore, useTranslation } from '@/core/i18n';
 import { Eye, Edit3, Check } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
-import { StorageAdapter } from '@/core/storage/StorageAdapter';
-import { STORAGE_KEYS } from '@/core/storage/keys';
 import { cn } from '@/ui/lib/cn';
+import { ErrorState, Skeleton } from '@/ui/feedback';
 import type { NotesSettings } from './types';
 import { runLogged } from '@/core/observability';
+import { NOTE_STATUS, itemRepository, noteTitleFrom, useItem } from '@/core/items';
+import { commandBus } from '@/core/commands';
+import { isFirstUseOf, useInstanceTarget, SEED_SOURCE } from '@/features/workspace/bindings';
+
+/**
+ * Текст заметки — Item (kind: 'note') экземпляра виджета. Правки сохраняются командой
+ * item.update с дебаунсом; серия правок — один шаг отмены (coalesceKey).
+ */
+
+const SAVE_DELAY_MS = 300;
+
+/** Новая заметка экземпляра; в новом профиле — с приветственным текстом */
+async function createNote(): Promise<string> {
+  const lang = useI18nStore.getState().language;
+  const fallback = translate('items.legacy.note', undefined, lang);
+  const body = (await isFirstUseOf('note')) ? translate('notes.seed', undefined, lang) : '';
+  const note = await itemRepository.create(
+    { kind: 'note', title: noteTitleFrom(body, fallback), body, status: NOTE_STATUS },
+    SEED_SOURCE,
+  );
+  return note.id;
+}
 
 export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
   instanceId,
@@ -33,7 +54,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
   const wrapClass = lineWrapping ? 'whitespace-pre-wrap' : 'whitespace-pre overflow-x-auto';
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const storageKey = instanceId ? `${STORAGE_KEYS.NOTES_CONTENT}_${instanceId}` : STORAGE_KEYS.NOTES_CONTENT;
+  const pendingRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (settings?.defaultMode) {
@@ -41,51 +62,54 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
     }
   }, [settings?.defaultMode]);
 
-  // Стартовая заметка становится данными пользователя — на языке интерфейса в момент создания.
-  // Язык читается один раз при загрузке, поэтому t намеренно не в зависимостях эффекта
-  const seedNote = useRef(t('notes.seed'));
+  const target = useInstanceTarget(instanceId, 'itemId', createNote);
+  const note = useItem(itemRepository, target.id);
+  const noteId = target.id;
 
+  // Текст из хранилища (в том числе правка из другой вкладки) — если здесь нет несохранённого ввода
   useEffect(() => {
-    let cancelled = false;
-    const loadNote = async () => {
-      const saved = await StorageAdapter.get<string>(storageKey, '');
-      const value =
-        saved || (await StorageAdapter.get<string>(STORAGE_KEYS.NOTES_CONTENT, seedNote.current));
-      if (!cancelled) setContent(value);
-    };
-    runLogged(loadNote(), 'storage', { widget: 'notes' });
-    return () => {
-      cancelled = true;
-    };
-  }, [storageKey]);
+    if (note.item && pendingRef.current === null) setContent(note.item.body ?? '');
+  }, [note.item]);
+
+  const save = useCallback(
+    (body: string) => {
+      if (!noteId) return;
+      const fallback = translate('items.legacy.note', undefined, useI18nStore.getState().language);
+      const persist = async () => {
+        await commandBus.dispatch(
+          'item.update',
+          { id: noteId, patch: { body, title: noteTitleFrom(body, fallback) } },
+          { coalesceKey: `note-${noteId}` },
+        );
+        if (pendingRef.current === body) {
+          pendingRef.current = null;
+          setIsSaved(true);
+        }
+      };
+      runLogged(persist(), 'storage', { widget: 'notes' });
+    },
+    [noteId],
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
     setContent(val);
     setIsSaved(false);
+    pendingRef.current = val;
 
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
     }
-
-    saveTimerRef.current = setTimeout(() => {
-      const persist = async () => {
-        await StorageAdapter.set(storageKey, val);
-        // Для обратной совместимости с тестами и v1
-        await StorageAdapter.set(STORAGE_KEYS.NOTES_CONTENT, val);
-        setIsSaved(true);
-      };
-      runLogged(persist(), 'storage', { widget: 'notes' });
-    }, 300);
+    saveTimerRef.current = setTimeout(() => save(val), SAVE_DELAY_MS);
   };
 
+  // Закрытие виджета или вкладки в пределах дебаунса не должно терять последнюю правку
   useEffect(() => {
     return () => {
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-      }
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      if (pendingRef.current !== null) save(pendingRef.current);
     };
-  }, []);
+  }, [save]);
 
   const charCount = content.length;
   const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
@@ -194,7 +218,21 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
       </div>
 
       {/* Контент: Редактор или Просмотр */}
-      {mode === 'edit' ? (
+      {target.error || note.error ? (
+        <div className="flex-1 min-h-0 flex">
+          <ErrorState
+            className="m-auto"
+            title={t('notes.loadErrorTitle')}
+            message={t('notes.loadError')}
+          />
+        </div>
+      ) : !note.item ? (
+        <div className="flex-1 min-h-0 space-y-2" aria-busy="true">
+          <Skeleton className="w-3/4 h-4 rounded-md" />
+          <Skeleton className="w-full h-4 rounded-md" />
+          <Skeleton className="w-2/3 h-4 rounded-md" />
+        </div>
+      ) : mode === 'edit' ? (
         <textarea
           aria-label={t('notes.text')}
           value={content}

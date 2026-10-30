@@ -1,110 +1,108 @@
 import React from 'react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { TodoWidget } from '@/widgets/built-in/TodoWidget/TodoWidget';
 import { todoManifest } from '@/widgets/built-in/TodoWidget/manifest';
-import { StorageAdapter } from '@/core/storage/StorageAdapter';
+import { STORAGE_KEYS } from '@/core/storage/keys';
+import { itemRepository } from '@/core/items';
+import { useToastStore } from '@/ui/primitives/Toast';
+import { instanceSettings, resetWorkspace, seedLegacyKey } from '../../helpers/workspace';
 
-describe('TodoWidget Component & Manifest', () => {
-  beforeEach(() => {
-    vi.restoreAllMocks();
+const instance = { instanceId: 'todo-1', widgetId: 'todo', settings: { filter: 'all' } };
+
+const renderWidget = () => render(<TodoWidget instanceId="todo-1" settings={{ filter: 'all' }} />);
+
+describe('TodoWidget', () => {
+  beforeEach(async () => {
+    await resetWorkspace([instance]);
+    useToastStore.setState({ toasts: [] });
   });
 
-  it('манифест должен быть строго типизирован и содержать surface=panel', () => {
+  it('манифест строго типизирован и содержит surface=panel', () => {
     expect(todoManifest.id).toBe('todo');
     expect(todoManifest.surface).toBe('panel');
     expect(todoManifest.nameKey).toBe('widgets.todo');
     expect(todoManifest.permissions).toContain('storage');
   });
 
-  it('должен отображать задачи из хранилища', async () => {
-    vi.spyOn(StorageAdapter, 'get').mockImplementation((key) => {
-      if (key === 'dashflow_widget_todo_items') {
-        return Promise.resolve([
-          { id: '1', text: 'Первая задача', completed: false, priority: 'high' },
-        ]);
-      }
-      return Promise.resolve([]);
-    });
+  it('переносит задачи 3.8 и привязывает экземпляр к доске', async () => {
+    seedLegacyKey(STORAGE_KEYS.TODO_ITEMS, [
+      { id: '1', text: 'Первая задача', completed: false, priority: 'high' },
+    ]);
+    renderWidget();
 
-    render(<TodoWidget instanceId="todo-1" settings={{ filter: 'all' }} />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Первая задача')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Первая задача')).toBeInTheDocument();
+    const boardId = instanceSettings('todo-1')?.boardId;
+    expect(typeof boardId).toBe('string');
+    expect(
+      (await itemRepository.query({ boardId: boardId as string })).map((i) => i.title),
+    ).toEqual(['Первая задача']);
   });
 
-  it('должен добавлять новую задачу и сохранять в StorageAdapter', async () => {
-    vi.spyOn(StorageAdapter, 'get').mockResolvedValue([]);
-    const setSpy = vi.spyOn(StorageAdapter, 'set').mockResolvedValue();
+  it('в новом профиле показывает стартовые задачи', async () => {
+    renderWidget();
+    expect(await screen.findByText('Установить расширение DashFlow')).toBeInTheDocument();
+    expect(screen.getByText('Настроить сетку и виджеты')).toBeInTheDocument();
+  });
 
-    render(<TodoWidget instanceId="todo-1" settings={{ filter: 'all' }} />);
+  it('добавляет задачу через команду', async () => {
+    renderWidget();
+    await screen.findByText('Настроить сетку и виджеты');
 
-    const input = screen.getByRole('textbox', { name: /новая задача/i });
-    fireEvent.change(input, { target: { value: 'Купить молоко' } });
-
-    const addBtn = screen.getByRole('button', { name: /добавить/i });
-    fireEvent.click(addBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText('Купить молоко')).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('textbox', { name: /новая задача/i }), {
+      target: { value: 'Купить молоко' },
     });
+    fireEvent.click(screen.getByRole('button', { name: /добавить/i }));
 
-    expect(setSpy).toHaveBeenCalledWith(
-      'dashflow_widget_todo_items',
-      expect.arrayContaining([
-        expect.objectContaining({ text: 'Купить молоко', completed: false }),
-      ]),
+    expect(await screen.findByText('Купить молоко')).toBeInTheDocument();
+    const created = (await itemRepository.query({ kind: 'task' })).find(
+      (item) => item.title === 'Купить молоко',
     );
+    expect(created).toMatchObject({ status: 'todo', priority: 'medium', source: { type: 'user' } });
   });
 
-  it('должен переключать статус выполнения задачи', async () => {
-    vi.spyOn(StorageAdapter, 'get').mockImplementation((key) => {
-      if (key === 'dashflow_widget_todo_items') {
-        return Promise.resolve([
-          { id: '1', text: 'Сделать рефакторинг', completed: false, priority: 'medium' },
-        ]);
-      }
-      return Promise.resolve([]);
+  it('отмечает задачу выполненной', async () => {
+    renderWidget();
+    fireEvent.click(await screen.findByText('Настроить сетку и виджеты'));
+
+    await waitFor(async () => {
+      const task = (await itemRepository.query({ kind: 'task' })).find(
+        (item) => item.title === 'Настроить сетку и виджеты',
+      );
+      expect(task?.status).toBe('done');
     });
-    const setSpy = vi.spyOn(StorageAdapter, 'set').mockResolvedValue();
+  });
 
-    render(<TodoWidget instanceId="todo-1" settings={{ filter: 'all' }} />);
+  it('удаление показывает тост, «Отменить» возвращает задачу', async () => {
+    renderWidget();
+    await screen.findByText('Настроить сетку и виджеты');
 
-    await waitFor(() => {
-      expect(screen.getByText('Сделать рефакторинг')).toBeInTheDocument();
-    });
-
-    const item = screen.getByText('Сделать рефакторинг');
-    fireEvent.click(item);
-
-    expect(setSpy).toHaveBeenCalledWith(
-      'dashflow_widget_todo_items',
-      expect.arrayContaining([expect.objectContaining({ id: '1', completed: true })]),
+    fireEvent.click(
+      screen.getByRole('button', { name: /удалить задачу: настроить сетку и виджеты/i }),
     );
+    await waitFor(() => expect(screen.queryByText('Настроить сетку и виджеты')).toBeNull());
+
+    const toast = useToastStore.getState().toasts.at(-1);
+    expect(toast?.action?.label).toBe('Отменить');
+    await act(async () => {
+      toast?.action?.onClick();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(await screen.findByText('Настроить сетку и виджеты')).toBeInTheDocument();
   });
 
-  it('должен переключаться на вкладку привычек и отмечать день', async () => {
-    vi.spyOn(StorageAdapter, 'get').mockImplementation((key) => {
-      if (key === 'dashflow_widget_habit_items') {
-        return Promise.resolve([{ id: 'h1', title: 'Пить воду', history: {} }]);
-      }
-      return Promise.resolve([]);
-    });
-    const setSpy = vi.spyOn(StorageAdapter, 'set').mockResolvedValue();
-
+  it('привычки работают в прежнем формате', async () => {
+    seedLegacyKey(STORAGE_KEYS.HABIT_ITEMS, [{ id: 'h1', title: 'Пить воду', history: {} }]);
     render(<TodoWidget instanceId="todo-1" settings={{ defaultTab: 'habits' }} />);
 
+    expect(await screen.findByText('Пить воду')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /отметить пн для пить воду/i }));
+
     await waitFor(() => {
-      expect(screen.getByText('Пить воду')).toBeInTheDocument();
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.HABIT_ITEMS) ?? '[]') as {
+        history: Record<string, boolean>;
+      }[];
+      expect(Object.keys(saved[0]?.history ?? {})).toHaveLength(1);
     });
-
-    const dayBtn = screen.getByRole('button', { name: /отметить пн для пить воду/i });
-    fireEvent.click(dayBtn);
-
-    expect(setSpy).toHaveBeenCalledWith(
-      'dashflow_widget_habit_items',
-      expect.arrayContaining([expect.objectContaining({ id: 'h1' })]),
-    );
   });
 });

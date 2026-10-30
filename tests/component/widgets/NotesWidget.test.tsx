@@ -1,54 +1,67 @@
 import React from 'react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { NotesWidget } from '@/widgets/built-in/NotesWidget/NotesWidget';
 import { notesManifest } from '@/widgets/built-in/NotesWidget/manifest';
-import { StorageAdapter } from '@/core/storage/StorageAdapter';
 import { STORAGE_KEYS } from '@/core/storage/keys';
+import { itemRepository } from '@/core/items';
+import { instanceSettings, resetWorkspace, seedLegacyKey } from '../../helpers/workspace';
 
-describe('NotesWidget Component & Manifest', () => {
-  beforeEach(() => {
-    vi.restoreAllMocks();
+const instance = { instanceId: 'notes-1', widgetId: 'notes', settings: {} };
+
+const noteText = () => screen.findByRole('textbox', { name: /заметки/i });
+
+describe('NotesWidget', () => {
+  beforeEach(async () => {
+    await resetWorkspace([instance]);
   });
 
-  it('манифест должен быть строго типизирован и содержать surface=panel', () => {
+  it('манифест строго типизирован и содержит surface=panel', () => {
     expect(notesManifest.id).toBe('notes');
     expect(notesManifest.surface).toBe('panel');
     expect(notesManifest.nameKey).toBe('widgets.notes');
     expect(notesManifest.permissions).toContain('storage');
   });
 
-  it('должен загружать заметки из StorageAdapter', async () => {
-    vi.spyOn(StorageAdapter, 'get').mockResolvedValue('Моя сохраненная заметка');
-
+  it('переносит заметку 3.8 экземпляра и привязывает к ней виджет', async () => {
+    seedLegacyKey(`${STORAGE_KEYS.NOTES_CONTENT}_notes-1`, 'Моя сохранённая заметка');
     render(<NotesWidget instanceId="notes-1" settings={{ fontSize: 14 }} />);
 
-    await waitFor(() => {
-      const textarea = screen.getByRole('textbox', { name: /заметки/i });
-      expect(textarea).toHaveValue('Моя сохраненная заметка');
-    });
+    await waitFor(async () => expect(await noteText()).toHaveValue('Моя сохранённая заметка'));
+    const itemId = instanceSettings('notes-1')?.itemId as string;
+    expect((await itemRepository.get(itemId))?.title).toBe('Моя сохранённая заметка');
   });
 
-  it('должен сохранять текст в StorageAdapter при изменении', async () => {
-    vi.useFakeTimers();
-    vi.spyOn(StorageAdapter, 'get').mockResolvedValue('');
-    const setSpy = vi.spyOn(StorageAdapter, 'set').mockResolvedValue();
-
+  it('сохраняет правку в Item и обновляет заголовок', async () => {
     render(<NotesWidget instanceId="notes-1" settings={{ fontSize: 14 }} />);
+    const textarea = await noteText();
+    await waitFor(() => expect(textarea).not.toHaveValue(''));
 
-    await act(async () => {
-      await Promise.resolve();
+    fireEvent.change(textarea, { target: { value: '# Новая важная мысль\nдетали' } });
+
+    await waitFor(
+      async () => {
+        const itemId = instanceSettings('notes-1')?.itemId as string;
+        expect(await itemRepository.get(itemId)).toMatchObject({
+          body: '# Новая важная мысль\nдетали',
+          title: 'Новая важная мысль',
+        });
+      },
+      { timeout: 2000 },
+    );
+  });
+
+  it('правка в пределах дебаунса сохраняется при закрытии виджета', async () => {
+    const { unmount } = render(<NotesWidget instanceId="notes-1" settings={{}} />);
+    const textarea = await noteText();
+    await waitFor(() => expect(textarea).not.toHaveValue(''));
+
+    fireEvent.change(textarea, { target: { value: 'Успел написать' } });
+    unmount();
+
+    await waitFor(async () => {
+      const itemId = instanceSettings('notes-1')?.itemId as string;
+      expect((await itemRepository.get(itemId))?.body).toBe('Успел написать');
     });
-
-    const textarea = screen.getByRole('textbox', { name: /заметки/i });
-    await act(async () => {
-      fireEvent.change(textarea, { target: { value: 'Новая важная мысль' } });
-      vi.advanceTimersByTime(400);
-      await Promise.resolve();
-    });
-
-    expect(setSpy).toHaveBeenCalledWith(STORAGE_KEYS.NOTES_CONTENT, 'Новая важная мысль');
-
-    vi.useRealTimers();
   });
 });

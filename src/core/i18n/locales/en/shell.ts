@@ -161,6 +161,12 @@ export const shell: LocaleShape<typeof ruShell> = {
     moved: 'Moved “{{title}}”',
     archived: 'Archived “{{title}}”',
     deleted: 'Deleted “{{title}}”',
+    deletedMany: {
+      one: 'Deleted {{count}} item',
+      few: 'Deleted {{count}} items',
+      many: 'Deleted {{count}} items',
+      other: 'Deleted {{count}} items',
+    },
     restored: 'Restored “{{title}}”',
     boardCreated: 'Board “{{title}}” created',
     boardUpdated: 'Board “{{title}}” updated',

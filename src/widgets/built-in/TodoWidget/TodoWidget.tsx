@@ -1,24 +1,55 @@
-import React, { useState, useEffect, useId } from 'react';
+import React, { useState, useEffect, useId, useMemo, useCallback } from 'react';
 import { t, useI18nStore, useTranslation, type SupportedLanguage } from '@/core/i18n';
 import { Plus, Trash2, CheckCircle2, Circle, CheckCheck, Flame, Calendar, CheckSquare } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { StorageAdapter } from '@/core/storage/StorageAdapter';
 import { STORAGE_KEYS } from '@/core/storage/keys';
 import { Button, Badge } from '@/ui/primitives';
-import { EmptyState } from '@/ui/feedback';
+import { EmptyState, ErrorState, Skeleton } from '@/ui/feedback';
 import { cn } from '@/ui/lib/cn';
 import type { TodoItem, TodoPriority, TodoFilter, TodoSettings, HabitItem, TodoTab } from './types';
 import { runLogged } from '@/core/observability';
 import { toLocalDateKey } from '@/core/datetime';
+import { itemRepository, useItems, type ItemDraft, type Item } from '@/core/items';
+import { commandBus } from '@/core/commands';
+import { deleteManyWithUndo, dispatchWithUndoToast } from '@/features/commands/undo';
+import { legacyLabels } from '@/features/settings/backupFile';
+import { createSeeds, isFirstUseOf, useInstanceTarget } from '@/features/workspace/bindings';
 
 /**
- * Стартовые задачи и привычки становятся данными пользователя при первом запуске,
- * поэтому создаются на языке интерфейса в этот момент.
+ * Задачи хранятся как Item (kind: 'task') на доске экземпляра виджета, изменения идут через
+ * команды (отмена, журнал). Привычки — в прежнем формате: у них своя модель «история по дням».
  */
-const createDefaultTodos = (lang: SupportedLanguage): TodoItem[] => [
-  { id: '1', text: t('todo.seed.install', undefined, lang), completed: true, priority: 'high' },
-  { id: '2', text: t('todo.seed.setup', undefined, lang), completed: false, priority: 'medium' },
+
+/** Стартовые задачи — только в новом профиле, на языке интерфейса в момент создания */
+const seedTasks = (lang: SupportedLanguage, boardId: string): ItemDraft[] => [
+  { kind: 'task', title: t('todo.seed.install', undefined, lang), status: 'done', priority: 'high', boardId },
+  { kind: 'task', title: t('todo.seed.setup', undefined, lang), status: 'todo', priority: 'medium', boardId },
 ];
+
+/** Новая доска задач экземпляра; в новом профиле — со стартовыми задачами */
+async function createTaskBoard(): Promise<string> {
+  const lang = useI18nStore.getState().language;
+  const labels = legacyLabels(lang);
+  const firstUse = await isFirstUseOf('task');
+  const board = await itemRepository.createBoard({
+    title: labels.tasks,
+    columns: [
+      { id: 'todo', title: labels.todoColumn },
+      { id: 'done', title: labels.doneColumn },
+    ],
+  });
+  if (firstUse) await createSeeds(seedTasks(lang, board.id));
+  return board.id;
+}
+
+const toTodo = (item: Item): TodoItem => ({
+  id: item.id,
+  text: item.title,
+  completed: item.status === 'done',
+  priority: item.priority ?? 'medium',
+  createdAt: Date.parse(item.createdAt),
+});
 
 const createDefaultHabits = (lang: SupportedLanguage): HabitItem[] => [
   { id: '1', title: t('todo.seed.water', undefined, lang), history: {} },
@@ -80,7 +111,6 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
   onUpdateSettings,
 }) => {
   const [activeTab, setActiveTab] = useState<TodoTab>(settings?.defaultTab || 'todos');
-  const [todos, setTodos] = useState<TodoItem[]>([]);
   const [habits, setHabits] = useState<HabitItem[]>([]);
   const [input, setInput] = useState('');
   const [priority, setPriority] = useState<TodoPriority>(settings?.defaultPriority || 'medium');
@@ -109,52 +139,47 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
     }
   }, [settings?.filter]);
 
-  const todoKey = instanceId ? `${STORAGE_KEYS.TODO_ITEMS}_${instanceId}` : STORAGE_KEYS.TODO_ITEMS;
   const habitKey = instanceId ? `${STORAGE_KEYS.HABIT_ITEMS}_${instanceId}` : STORAGE_KEYS.HABIT_ITEMS;
+
+  // Задачи: доска экземпляра → записи доски (обновляются из любой вкладки)
+  const board = useInstanceTarget(instanceId, 'boardId', createTaskBoard);
+  const taskQuery = useMemo(() => ({ boardId: board.id ?? '', kind: 'task' as const }), [board.id]);
+  const tasks = useItems(itemRepository, taskQuery, { enabled: board.id !== null });
+  const todos = useMemo(() => tasks.items.map(toTodo), [tasks.items]);
 
   useEffect(() => {
     let cancelled = false;
     const language = useI18nStore.getState().language;
 
     // Копия экземпляра важнее общего ключа: общий — запасной вариант для нового виджета
-    const loadItems = async () => {
-      const [baseTodos, baseHabits] = await Promise.all([
-        StorageAdapter.get<TodoItem[]>(STORAGE_KEYS.TODO_ITEMS, createDefaultTodos(language)),
-        StorageAdapter.get<HabitItem[]>(STORAGE_KEYS.HABIT_ITEMS, createDefaultHabits(language)),
-      ]);
-      const [scopedTodos, scopedHabits] = await Promise.all([
-        todoKey !== STORAGE_KEYS.TODO_ITEMS ? StorageAdapter.get<TodoItem[]>(todoKey, []) : [],
-        habitKey !== STORAGE_KEYS.HABIT_ITEMS ? StorageAdapter.get<HabitItem[]>(habitKey, []) : [],
-      ]);
-      if (cancelled) return;
-      setTodos(scopedTodos.length > 0 ? scopedTodos : baseTodos);
-      setHabits(scopedHabits.length > 0 ? scopedHabits : baseHabits);
+    const loadHabits = async () => {
+      const baseHabits = await StorageAdapter.get<HabitItem[]>(
+        STORAGE_KEYS.HABIT_ITEMS,
+        createDefaultHabits(language),
+      );
+      const scopedHabits =
+        habitKey !== STORAGE_KEYS.HABIT_ITEMS ? await StorageAdapter.get<HabitItem[]>(habitKey, []) : [];
+      if (!cancelled) setHabits(scopedHabits.length > 0 ? scopedHabits : baseHabits);
     };
-    runLogged(loadItems(), 'storage', { widget: 'todo' });
+    runLogged(loadHabits(), 'storage', { widget: 'todo' });
 
     return () => {
       cancelled = true;
     };
-  }, [todoKey, habitKey]);
-
-  const persist = async (baseKey: string, scopedKey: string, value: unknown) => {
-    await StorageAdapter.set(baseKey, value);
-    if (scopedKey !== baseKey) {
-      await StorageAdapter.set(scopedKey, value);
-    }
-  };
-
-  const saveTodos = (newTodos: TodoItem[]) => {
-    setTodos(newTodos);
-    runLogged(persist(STORAGE_KEYS.TODO_ITEMS, todoKey, newTodos), 'storage', { widget: 'todo' });
-  };
+  }, [habitKey]);
 
   const saveHabits = (newHabits: HabitItem[]) => {
     setHabits(newHabits);
-    runLogged(persist(STORAGE_KEYS.HABIT_ITEMS, habitKey, newHabits), 'storage', {
-      widget: 'todo',
-    });
+    const persist = async () => {
+      await StorageAdapter.set(STORAGE_KEYS.HABIT_ITEMS, newHabits);
+      if (habitKey !== STORAGE_KEYS.HABIT_ITEMS) await StorageAdapter.set(habitKey, newHabits);
+    };
+    runLogged(persist(), 'storage', { widget: 'todo' });
   };
+
+  const run = useCallback((task: Promise<unknown>) => {
+    runLogged(task, 'storage', { widget: 'todo' });
+  }, []);
 
   const addTodo = (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,14 +187,16 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
     if (!trimmed) return;
 
     if (activeTab === 'todos') {
-      const newItem: TodoItem = {
-        id: Date.now().toString(),
-        text: trimmed,
-        completed: false,
-        priority,
-        createdAt: Date.now(),
-      };
-      saveTodos([newItem, ...todos]);
+      if (!board.id) return;
+      run(
+        commandBus.dispatch('item.create', {
+          kind: 'task',
+          title: trimmed,
+          priority,
+          status: 'todo',
+          boardId: board.id,
+        }),
+      );
     } else {
       const newHabit: HabitItem = {
         id: Date.now().toString(),
@@ -182,10 +209,8 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
     setInput('');
   };
 
-  const toggleTodo = (id: string) => {
-    saveTodos(
-      todos.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
-    );
+  const toggleTodo = (todo: TodoItem) => {
+    run(commandBus.dispatch('item.complete', { id: todo.id, done: !todo.completed }));
   };
 
   const toggleHabitDay = (habitId: string, dateStr: string) => {
@@ -204,7 +229,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
   };
 
   const deleteTodo = (id: string) => {
-    saveTodos(todos.filter((t) => t.id !== id));
+    run(dispatchWithUndoToast('item.delete', { id }));
   };
 
   const deleteHabit = (id: string) => {
@@ -212,7 +237,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
   };
 
   const clearCompleted = () => {
-    saveTodos(todos.filter((t) => !t.completed));
+    run(deleteManyWithUndo(todos.filter((todo) => todo.completed).map((todo) => todo.id)));
   };
 
   const completedCount = todos.filter((t) => t.completed).length;
@@ -328,6 +353,8 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
           aria-label={activeTab === 'todos' ? tr('todo.newTask') : tr('todo.newHabit')}
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          // Пока доска экземпляра создаётся или переносится, задачу некуда добавить
+          disabled={activeTab === 'todos' && board.id === null}
           placeholder={
             activeTab === 'todos' ? tr('todo.newTaskPlaceholder') : tr('todo.newHabitPlaceholder')
           }
@@ -355,7 +382,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
           variant="primary"
           type="submit"
           aria-label={tr('todo.add')}
-          disabled={!input.trim()}
+          disabled={!input.trim() || (activeTab === 'todos' && board.id === null)}
           icon={<Plus className="w-4 h-4" />}
           className="min-h-9.5 min-w-9.5"
         />
@@ -365,7 +392,18 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
       {activeTab === 'todos' ? (
         <>
           <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-2">
-            {filteredTodos.length === 0 ? (
+            {board.error || tasks.error ? (
+              <ErrorState
+                title={tr('todo.loadErrorTitle')}
+                message={tr('todo.loadError')}
+                onRetry={tasks.reload}
+              />
+            ) : board.id === null || tasks.loading ? (
+              <div className="space-y-2" aria-busy="true">
+                <Skeleton className="w-full h-10 rounded-xl" />
+                <Skeleton className="w-full h-10 rounded-xl" />
+              </div>
+            ) : filteredTodos.length === 0 ? (
               <EmptyState
                 title={tr('todo.allDone')}
                 description={tr('todo.allDoneHint')}
@@ -381,7 +419,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
                 >
                   <button
                     type="button"
-                    onClick={() => toggleTodo(todo.id)}
+                    onClick={() => toggleTodo(todo)}
                     aria-label={tr('todo.toggleTask', { text: todo.text })}
                     className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer"
                   >

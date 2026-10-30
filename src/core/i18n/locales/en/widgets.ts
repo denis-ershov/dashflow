@@ -353,6 +353,8 @@ export const widgets: LocaleShape<typeof ruWidgets> = {
     add: 'Add',
     allDone: 'All done!',
     allDoneHint: 'No tasks in this category',
+    loadErrorTitle: "Tasks didn't load",
+    loadError: "Couldn't read tasks from browser storage.",
     toggleTask: 'Toggle task: {{text}}',
     deleteTask: 'Delete task: {{text}}',
     filters: {
@@ -407,6 +409,8 @@ export const widgets: LocaleShape<typeof ruWidgets> = {
     preview: 'Preview',
     saved: 'Saved',
     saving: 'Saving...',
+    loadErrorTitle: "Note didn't load",
+    loadError: "Couldn't read the note from browser storage.",
     text: 'Note text',
     placeholder: 'Write something here...',
     words: {
@@ -460,6 +464,8 @@ export const widgets: LocaleShape<typeof ruWidgets> = {
     cancel: 'Cancel',
     save: 'Save',
     remove: 'Remove link',
+    loadErrorTitle: "Links didn't load",
+    loadError: "Couldn't read links from browser storage.",
     addLabel: 'Add link',
     add: 'Add',
   },

@@ -1,19 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import { useTranslation } from '@/core/i18n';
+import React, { useMemo, useState } from 'react';
+import { useI18nStore, useTranslation } from '@/core/i18n';
 import { Plus, X, Globe } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
-import { StorageAdapter } from '@/core/storage/StorageAdapter';
-import { STORAGE_KEYS } from '@/core/storage/keys';
 import { Button } from '@/ui/primitives';
+import { ErrorState, Skeleton } from '@/ui/feedback';
 import { cn } from '@/ui/lib/cn';
-import type { QuickLinkItem, QuickLinksSettings } from './types';
+import type { QuickLinksSettings } from './types';
 import { runLogged } from '@/core/observability';
+import { LINK_STATUS, itemRepository, useItems, type ItemDraft } from '@/core/items';
+import { isSafeHttpUrl } from '@/core/network';
+import { commandBus } from '@/core/commands';
+import { dispatchWithUndoToast } from '@/features/commands/undo';
+import { legacyLabels } from '@/features/settings/backupFile';
+import { createSeeds, isFirstUseOf, useInstanceTarget } from '@/features/workspace/bindings';
 
-const DEFAULT_LINKS: QuickLinkItem[] = [
-  { id: '1', title: 'GitHub', url: 'https://github.com' },
-  { id: '2', title: 'Google', url: 'https://google.com' },
-  { id: '3', title: 'YouTube', url: 'https://youtube.com' },
+/**
+ * Ссылки — Item (kind: 'link') на доске экземпляра виджета; добавление и удаление — команды
+ * (удаление отменяется из тоста).
+ */
+
+const DEFAULT_LINKS = [
+  { title: 'GitHub', url: 'https://github.com' },
+  { title: 'Google', url: 'https://google.com' },
+  { title: 'YouTube', url: 'https://youtube.com' },
 ];
+
+/** Новая доска ссылок экземпляра; в новом профиле — со стартовыми ссылками */
+async function createLinksBoard(): Promise<string> {
+  const labels = legacyLabels(useI18nStore.getState().language);
+  const firstUse = await isFirstUseOf('link');
+  const board = await itemRepository.createBoard({
+    title: labels.links,
+    columns: [{ id: LINK_STATUS, title: labels.links }],
+  });
+  if (firstUse) {
+    const seeds: ItemDraft[] = DEFAULT_LINKS.map((link) => ({
+      kind: 'link',
+      ...link,
+      status: LINK_STATUS,
+      boardId: board.id,
+    }));
+    await createSeeds(seeds);
+  }
+  return board.id;
+}
 
 export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
   instanceId,
@@ -26,7 +56,6 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
   const columns = settings?.columns || 4;
   const showDomain = Boolean(settings?.showDomain);
 
-  const [links, setLinks] = useState<QuickLinkItem[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
@@ -53,32 +82,14 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
     }
   };
 
-  const storageKey = instanceId ? `${STORAGE_KEYS.QUICK_LINKS}_${instanceId}` : STORAGE_KEYS.QUICK_LINKS;
+  const board = useInstanceTarget(instanceId, 'boardId', createLinksBoard);
+  const linkQuery = useMemo(() => ({ boardId: board.id ?? '', kind: 'link' as const }), [board.id]);
+  const linkItems = useItems(itemRepository, linkQuery, { enabled: board.id !== null });
+  const links = linkItems.items.flatMap((item) =>
+    item.url ? [{ id: item.id, title: item.title, url: item.url }] : [],
+  );
 
-  useEffect(() => {
-    let cancelled = false;
-    const loadLinks = async () => {
-      const saved = await StorageAdapter.get<QuickLinkItem[]>(storageKey, []);
-      const value =
-        saved.length > 0
-          ? saved
-          : await StorageAdapter.get<QuickLinkItem[]>(STORAGE_KEYS.QUICK_LINKS, DEFAULT_LINKS);
-      if (!cancelled) setLinks(value);
-    };
-    runLogged(loadLinks(), 'storage', { widget: 'quickLinks' });
-    return () => {
-      cancelled = true;
-    };
-  }, [storageKey]);
-
-  const saveLinks = (newLinks: QuickLinkItem[]) => {
-    setLinks(newLinks);
-    const persist = async () => {
-      await StorageAdapter.set(storageKey, newLinks);
-      await StorageAdapter.set(STORAGE_KEYS.QUICK_LINKS, newLinks);
-    };
-    runLogged(persist(), 'storage', { widget: 'quickLinks' });
-  };
+  const run = (task: Promise<unknown>) => runLogged(task, 'storage', { widget: 'quickLinks' });
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,34 +97,25 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
     const cleanUrl = url.trim();
     if (!cleanTitle || !cleanUrl) return;
 
-    let formattedUrl = cleanUrl;
-    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-      formattedUrl = `https://${formattedUrl}`;
-    }
+    const formattedUrl = /^https?:\/\//i.test(cleanUrl) ? cleanUrl : `https://${cleanUrl}`;
+    if (!isSafeHttpUrl(formattedUrl) || !board.id) return;
 
-    try {
-      const parsed = new URL(formattedUrl);
-      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-        return;
-      }
-    } catch {
-      return;
-    }
-
-    const newItem: QuickLinkItem = {
-      id: Date.now().toString(),
-      title: cleanTitle,
-      url: formattedUrl,
-    };
-
-    saveLinks([...links, newItem]);
+    run(
+      commandBus.dispatch('item.create', {
+        kind: 'link',
+        title: cleanTitle,
+        url: formattedUrl,
+        status: LINK_STATUS,
+        boardId: board.id,
+      }),
+    );
     setTitle('');
     setUrl('');
     setIsAdding(false);
   };
 
   const removeLink = (id: string) => {
-    saveLinks(links.filter((l) => l.id !== id));
+    run(dispatchWithUndoToast('item.delete', { id }));
   };
 
   const getFaviconUrl = (siteUrl: string) => {
@@ -159,6 +161,21 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
             </Button>
           </div>
         </form>
+      ) : board.error || linkItems.error ? (
+        <div className="flex-1 min-h-0 flex">
+          <ErrorState
+            className="m-auto"
+            title={t('quickLinks.loadErrorTitle')}
+            message={t('quickLinks.loadError')}
+            onRetry={linkItems.reload}
+          />
+        </div>
+      ) : board.id === null || linkItems.loading ? (
+        <div className={cn('grid gap-2 flex-1 min-h-0 p-1', colClass)} aria-busy="true">
+          <Skeleton className="h-16 rounded-xl" />
+          <Skeleton className="h-16 rounded-xl" />
+          <Skeleton className="h-16 rounded-xl" />
+        </div>
       ) : (
         <div className={cn('grid gap-2 overflow-y-auto flex-1 min-h-0 p-1', colClass)}>
           {links.map((link) => (

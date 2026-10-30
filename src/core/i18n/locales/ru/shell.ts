@@ -159,6 +159,12 @@ export const shell = {
     moved: 'Перемещено: «{{title}}»',
     archived: 'В архиве: «{{title}}»',
     deleted: 'Удалено: «{{title}}»',
+    deletedMany: {
+      one: 'Удалена {{count}} запись',
+      few: 'Удалено {{count}} записи',
+      many: 'Удалено {{count}} записей',
+      other: 'Удалено {{count}} записи',
+    },
     restored: 'Восстановлено: «{{title}}»',
     boardCreated: 'Создана доска «{{title}}»',
     boardUpdated: 'Доска «{{title}}» изменена',

@@ -5,7 +5,7 @@ import {
   type DispatchOptions,
   type Dispatcher,
 } from '@/core/commands';
-import { t, useI18nStore, type InterpolationParams, type TranslationKey } from '@/core/i18n';
+import { t, tp, useI18nStore, type InterpolationParams, type TranslationKey } from '@/core/i18n';
 import { crashLogger } from '@/core/observability';
 import { toast, useToastStore } from '@/ui/primitives/Toast';
 
@@ -53,4 +53,30 @@ export async function dispatchWithUndoToast<R>(
     });
   }
   return outcome;
+}
+
+/** Тост «Отменить» для серии действий, склеенной в истории в один шаг (coalesceKey) */
+export function showUndoToast(message: string, dispatcher: Dispatcher = commandBus): void {
+  useToastStore.getState().addToast({
+    message,
+    type: 'success',
+    duration: 6000,
+    action: { label: tr('commands.undo'), onClick: () => void undoLast(dispatcher) },
+  });
+}
+
+/**
+ * Удаляет несколько записей одним шагом отмены: «Очистить выполненные» отменяется целиком.
+ */
+export async function deleteManyWithUndo(
+  ids: readonly string[],
+  dispatcher: Dispatcher = commandBus,
+): Promise<void> {
+  if (ids.length === 0) return;
+  const coalesceKey = `delete-many-${Date.now()}`;
+  for (const id of ids) await dispatcher.dispatch('item.delete', { id }, { coalesceKey });
+  showUndoToast(
+    tp('commands.deletedMany', ids.length, undefined, useI18nStore.getState().language),
+    dispatcher,
+  );
 }
