@@ -14,5 +14,18 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/**/*.test.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**'],
+      reporter: ['text-summary', 'html'],
+      // Базовая линия 2026-10-30 минус ~2 п.п.: порог не даёт покрытию тихо падать.
+      // Поднимать вместе с ростом тестов, не опускать.
+      thresholds: {
+        statements: 78,
+        branches: 69,
+        functions: 58,
+        lines: 78,
+      },
+    },
   },
 });

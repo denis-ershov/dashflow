@@ -1,0 +1,17 @@
+# Еженедельные обновления зависимостей и GitHub Actions (actions закреплены по SHA)
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Мелкие обновления одним PR, мажорные — отдельными (требуют проверки)
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -1,6 +1,6 @@
 {
   "name": "dashflow",
-  "version": "3.7.3",
+  "version": "3.8.0",
   "description": "Современный, адаптивный и расширяемый дашборд новой вкладки для браузера (React 19, Tailwind CSS 4, WXT, Manifest V3)",
   "private": true,
   "type": "module",
@@ -33,6 +33,8 @@
     "format:check": "prettier --check \"{src,tests}/**/*.{ts,tsx,css}\"",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
@@ -50,6 +52,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/vite": "^4.0.7",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

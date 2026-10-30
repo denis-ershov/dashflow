@@ -10,17 +10,11 @@ export default tseslint.config(
       '.wxt/',
       '.output/',
       'node_modules/',
-      // Каталоги, которые переезжают в этапах 2-6. Список сокращается в каждом
-      // этапе и к концу этапа 6 обязан остаться без строк ниже этой.
-      'src/components/',
-      'src/entrypoints/',
+      // Каталоги, ещё не приведённые к правилам (≈225 замечаний на 2026-10-30: no-unsafe-*,
+      // плавающие промисы, a11y). Список сокращается по мере очистки — см. ROADMAP, этап 0.
       'src/features/dashboard/',
       'src/features/marketplace/',
       'src/features/settings/',
-      'src/features/themes/',
-      'src/plugins/',
-      'src/sdk/',
-      'src/services/',
       'src/stores/',
       'src/widgets/',
     ],
