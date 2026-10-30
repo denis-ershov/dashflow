@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '@/core/i18n';
 import {
   List,
   Layers,
@@ -28,6 +29,7 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
   settings = {},
   onChange,
 }) => {
+  const { t } = useTranslation();
   const updateSetting = <K extends keyof RssSettings>(key: K, value: RssSettings[K]) => {
     onChange({
       ...settings,
@@ -45,7 +47,7 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
       {/* 1. Режим чтения */}
       <div className="space-y-2">
         <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider block">
-          Режим чтения новостей
+          {t('rss.form.readingTitle')}
         </label>
         <div className="grid grid-cols-3 gap-1.5 p-1 bg-surface-hover/60 rounded-xl border border-line">
           <button
@@ -59,7 +61,7 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
             )}
           >
             <List className="w-4 h-4" />
-            <span>Единая лента</span>
+            <span>{t('rss.form.unified')}</span>
           </button>
 
           <button
@@ -73,7 +75,7 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
             )}
           >
             <Layers className="w-4 h-4" />
-            <span>По источникам</span>
+            <span>{t('rss.form.bySource')}</span>
           </button>
 
           <button
@@ -87,7 +89,7 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
             )}
           >
             <FolderTree className="w-4 h-4" />
-            <span>По папкам</span>
+            <span>{t('rss.form.byFolder')}</span>
           </button>
         </div>
       </div>
@@ -95,7 +97,7 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
       {/* 2. Стиль макета (вид ленты) */}
       <div className="space-y-2">
         <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider block">
-          Макет карточек новостей
+          {t('rss.form.layoutTitle')}
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <button
@@ -109,7 +111,7 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
             )}
           >
             <ImageIcon className="w-4 h-4 shrink-0" />
-            <span>Миниатюры</span>
+            <span>{t('rss.form.thumbnails')}</span>
           </button>
 
           <button
@@ -123,7 +125,7 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
             )}
           >
             <AlignLeft className="w-4 h-4 shrink-0" />
-            <span>Компактный</span>
+            <span>{t('rss.form.compact')}</span>
           </button>
 
           <button
@@ -137,7 +139,7 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
             )}
           >
             <FileText className="w-4 h-4 shrink-0" />
-            <span>Карточки</span>
+            <span>{t('rss.form.cards')}</span>
           </button>
 
           <button
@@ -151,7 +153,7 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
             )}
           >
             <LayoutGrid className="w-4 h-4 shrink-0" />
-            <span>Сетка (2 кол.)</span>
+            <span>{t('rss.form.grid')}</span>
           </button>
 
           <button
@@ -165,7 +167,7 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
             )}
           >
             <Sliders className="w-4 h-4 shrink-0" />
-            <span>Журнальный</span>
+            <span>{t('rss.form.magazine')}</span>
           </button>
         </div>
       </div>
@@ -173,29 +175,29 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
       {/* 3. Стиль оформления карточек */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-fg-muted block">Стиль подложки</label>
+          <label className="text-xs font-semibold text-fg-muted block">{t('rss.form.cardStyle')}</label>
           <Select
             value={cardStyle}
             onChange={(e) => updateSetting('cardStyle', e.target.value as RssCardStyle)}
             options={[
-              { label: 'Стекло (Glass)', value: 'glass' },
-              { label: 'Сплошная (Solid)', value: 'solid' },
-              { label: 'Контур (Outline)', value: 'outline' },
-              { label: 'Прозрачная', value: 'transparent' },
+              { label: t('rss.form.glass'), value: 'glass' },
+              { label: t('rss.form.solid'), value: 'solid' },
+              { label: t('rss.form.outline'), value: 'outline' },
+              { label: t('rss.form.transparent'), value: 'transparent' },
             ]}
           />
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-fg-muted block">Скругление</label>
+          <label className="text-xs font-semibold text-fg-muted block">{t('rss.form.radius')}</label>
           <Select
             value={borderRadius}
             onChange={(e) => updateSetting('borderRadius', e.target.value as RssBorderRadius)}
             options={[
-              { label: 'Без скругления', value: 'none' },
-              { label: 'Малое (SM)', value: 'sm' },
-              { label: 'Среднее (MD)', value: 'md' },
-              { label: 'Большое (LG)', value: 'lg' },
+              { label: t('rss.form.radiusNone'), value: 'none' },
+              { label: t('rss.form.radiusSm'), value: 'sm' },
+              { label: t('rss.form.radiusMd'), value: 'md' },
+              { label: t('rss.form.radiusLg'), value: 'lg' },
             ]}
           />
         </div>
@@ -204,7 +206,7 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
       {/* 4. Лимит новостей и автообновление */}
       <div className="space-y-3 pt-2">
         <Slider
-          label="Количество новостей на ленту"
+          label={t('rss.form.itemCount')}
           value={settings.itemCount ?? 12}
           min={3}
           max={50}
@@ -213,16 +215,16 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
         />
 
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-fg-muted block">Автообновление</label>
+          <label className="text-xs font-semibold text-fg-muted block">{t('rss.form.autoRefresh')}</label>
           <Select
             value={String(settings.refreshInterval ?? 30)}
             onChange={(e) => updateSetting('refreshInterval', Number(e.target.value))}
             options={[
-              { label: 'Только вручную', value: '0' },
-              { label: 'Каждые 15 минут', value: '15' },
-              { label: 'Каждые 30 минут', value: '30' },
-              { label: 'Каждый час', value: '60' },
-              { label: 'Каждые 6 часов', value: '360' },
+              { label: t('rss.form.manual'), value: '0' },
+              { label: t('rss.form.every15'), value: '15' },
+              { label: t('rss.form.every30'), value: '30' },
+              { label: t('rss.form.everyHour'), value: '60' },
+              { label: t('rss.form.every6h'), value: '360' },
             ]}
           />
         </div>
@@ -231,41 +233,41 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
       {/* 5. Элементы отображения */}
       <div className="space-y-2 pt-2 border-t border-line">
         <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider block">
-          Отображение элементов
+          {t('rss.form.elements')}
         </label>
 
         <Switch
-          label="Показывать миниатюры (картинки)"
+          label={t('rss.form.showThumbnails')}
           checked={settings.showThumbnails !== false}
           onChange={(val) => updateSetting('showThumbnails', val)}
         />
 
         <Switch
-          label="Показывать краткое описание"
+          label={t('rss.form.showDescription')}
           checked={settings.showDescription !== false}
           onChange={(val) => updateSetting('showDescription', val)}
         />
 
         <Switch
-          label="Показывать источник (название ленты)"
+          label={t('rss.form.showSource')}
           checked={settings.showSource !== false}
           onChange={(val) => updateSetting('showSource', val)}
         />
 
         <Switch
-          label="Показывать время публикации"
+          label={t('rss.form.showTime')}
           checked={settings.showDate !== false}
           onChange={(val) => updateSetting('showDate', val)}
         />
 
         <Switch
-          label="Показывать строку быстрого поиска"
+          label={t('rss.form.showSearch')}
           checked={settings.showSearch !== false}
           onChange={(val) => updateSetting('showSearch', val)}
         />
 
         <Switch
-          label="Открывать новость в новой вкладке"
+          label={t('rss.form.openInNewTab')}
           checked={settings.openInNewTab !== false}
           onChange={(val) => updateSetting('openInNewTab', val)}
         />

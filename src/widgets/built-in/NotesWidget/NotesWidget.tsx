@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from '@/core/i18n';
 import { Eye, Edit3, Check } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { StorageAdapter } from '@/core/storage/StorageAdapter';
@@ -6,13 +7,12 @@ import { STORAGE_KEYS } from '@/core/storage/keys';
 import { cn } from '@/ui/lib/cn';
 import type { NotesSettings } from './types';
 
-const DEFAULT_NOTE = '# Заметки DashFlow\n- [x] Опробовать новую дизайн-систему\n- [ ] Настроить звуки природы\n\nСоздавайте быстрые списки и форматируйте текст с помощью **Markdown**!';
-
 export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
   instanceId,
   settings,
   onUpdateSettings,
 }) => {
+  const { t, tp } = useTranslation();
   const [content, setContent] = useState('');
   const [mode, setMode] = useState<'edit' | 'preview'>(settings?.defaultMode || 'edit');
   const [isSaved, setIsSaved] = useState(true);
@@ -45,7 +45,8 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
       if (saved) {
         setContent(saved);
       } else {
-        StorageAdapter.get<string>(STORAGE_KEYS.NOTES_CONTENT, DEFAULT_NOTE).then(setContent);
+        // Стартовая заметка становится данными пользователя — на языке интерфейса в момент создания
+        StorageAdapter.get<string>(STORAGE_KEYS.NOTES_CONTENT, t('notes.seed')).then(setContent);
       }
     });
   }, [storageKey]);
@@ -137,7 +138,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
               setMode('edit');
               onUpdateSettings?.({ defaultMode: 'edit' });
             }}
-            aria-label="Режим редактирования"
+            aria-label={t('notes.editMode')}
             className={cn(
               'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer',
               mode === 'edit'
@@ -146,7 +147,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
             )}
           >
             <Edit3 className="w-3.5 h-3.5" />
-            <span>Правка</span>
+            <span>{t('notes.edit')}</span>
           </button>
 
           <button
@@ -155,7 +156,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
               setMode('preview');
               onUpdateSettings?.({ defaultMode: 'preview' });
             }}
-            aria-label="Режим предпросмотра"
+            aria-label={t('notes.previewMode')}
             className={cn(
               'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer',
               mode === 'preview'
@@ -164,7 +165,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
             )}
           >
             <Eye className="w-3.5 h-3.5" />
-            <span>Просмотр</span>
+            <span>{t('notes.preview')}</span>
           </button>
         </div>
 
@@ -172,10 +173,10 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
           <div className="flex items-center gap-1 text-2xs text-fg-dim font-medium">
             {isSaved ? (
               <span className="flex items-center gap-1 text-success">
-                <Check className="w-3.5 h-3.5" /> Сохранено
+                <Check className="w-3.5 h-3.5" /> {t('notes.saved')}
               </span>
             ) : (
-              <span>Сохранение...</span>
+              <span>{t('notes.saving')}</span>
             )}
           </div>
         )}
@@ -184,11 +185,11 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
       {/* Контент: Редактор или Просмотр */}
       {mode === 'edit' ? (
         <textarea
-          aria-label="Текст заметки"
+          aria-label={t('notes.text')}
           value={content}
           onChange={handleChange}
           style={{ fontSize: `${fontSize}px` }}
-          placeholder={settings?.placeholder || 'Напишите здесь что-нибудь...'}
+          placeholder={settings?.placeholder || t('notes.placeholder')}
           className={cn(
             'w-full flex-1 min-h-0 bg-transparent placeholder:text-fg-muted resize-none focus-visible:outline-none leading-relaxed',
             fontClass,
@@ -204,8 +205,8 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
       {/* Футер: счетчики слов и символов */}
       {showWordCount && (
         <div className="flex items-center justify-between pt-2 border-t border-line text-2xs text-fg-muted select-none mt-auto">
-          <span>{wordCount} слов</span>
-          {showCharCount && <span>{charCount} знаков</span>}
+          <span>{tp('notes.words', wordCount)}</span>
+          {showCharCount && <span>{tp('notes.chars', charCount)}</span>}
         </div>
       )}
     </div>

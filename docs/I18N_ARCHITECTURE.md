@@ -16,6 +16,8 @@ src/core/i18n/
 │   │   ├── base.ts    #   общие разделы: app, common, settings, widgets, errors, permissions…
 │   │   ├── shell.ts   #   оболочка: dock, grid, widgetShell, hero, search, speedDial, feedback…
 │   │   ├── panels.ts  #   панели: layoutSettings, diagnostics, marketplace, wallpaper, audio…
+│   │   ├── widgetFields.ts # подписи настроек виджетов: widgetFields.<виджет>.<поле>.label|help|placeholder|options
+│   │   ├── widgets.ts #   интерфейс виджетов: weather, bookmarks, rss, todo, notes, pomodoro…
 │   │   └── index.ts   #   сборка: { ...base, ...shell, ...panels } as const
 │   └── en/            # Английский словарь — те же модули с типом LocaleShape<ru-модуля>
 ├── i18n.ts            # Чистые функции t(), tp() (множественное число), интерполяции и форматирования
@@ -49,6 +51,14 @@ src/core/i18n/
 - Всё, что видит или слышит пользователь: текст, `placeholder`, `title`, `aria-label`, подсказки, названия звуков, тем, обоев, флагов, секций форм.
 - Данные-справочники хранят **ключ или id**, а не текст: `AMBIENT_SOUNDS` → `audio.sounds.<id>.*`, `FEATURE_FLAG_DEFINITIONS` → `featureFlags.<key>.*`, `PRESET_META` → `themeDescriptions.<id>`, поисковики → `placeholderKey`/`nameKey`.
 - Ошибки, которые показываются пользователю, хранятся **ключом** (`AddLinkModal`, `LazyWidgetRenderer`) или **кодом** (`CustomCssEditor` показывает `cssEditor.errors.<code>` из `validateCustomCss`), и переводятся при отрисовке — тогда смена языка меняет и уже показанную ошибку.
+
+### 4.1.1. Виджеты
+- Манифесты хранят в `labelKey`, `helperText`, `placeholder`, `unit`, `options[].labelKey` ключи `widgetFields.*`; `WidgetSettingsForm` переводит их реактивно. Текст, не являющийся ключом (сторонние плагины), показывается как есть.
+- Сервисы с форматированием (`weatherService`, `rssParser`) принимают параметр `lang` (по умолчанию `ru`), компоненты передают `language` из `useTranslation`. Относительное время RSS — `Intl.RelativeTimeFormat`, дни недели — `Intl.DateTimeFormat`.
+- В кэш не сохраняются локализованные строки: «Сейчас», названия дней прогноза и описания погоды вычисляются при отрисовке.
+- Стартовый контент (задачи, привычки, заметка) создаётся на языке интерфейса в момент первого запуска и дальше является данными пользователя — при смене языка не переводится (правило 43.9).
+- Контент с переводами хранится отдельно от словаря: цитаты — `QuotesWidget/quotes.ts` (`{ ru, en }` на каждую цитату).
+- Значения, сохранённые в настройках пользователя, не переводятся, а отображаются через перевод: папка RSS по умолчанию (`DEFAULT_FOLDER`), старый фильтр «Все темы» читается как `ALL_FOLDERS`.
 
 ### 4.2. Что не переводится
 Список с причинами — `NON_UI_FILES` в `tests/unit/i18n/noHardcodedStrings.test.ts`: логи service worker, ответы RPC песочнице, диагностика манифеста для авторов плагинов, внутренние ошибки хранилища и сети для журнала диагностики, инварианты Theme Engine, а также данные (названия реальных русскоязычных RSS-лент). Аргументы `console.*` не проверяются нигде. Названия языков (`languages.ru = 'Русский'`) одинаковы во всех словарях.

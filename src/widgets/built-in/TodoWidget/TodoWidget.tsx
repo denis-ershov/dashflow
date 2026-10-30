@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useId } from 'react';
+import { t, useI18nStore, useTranslation, type SupportedLanguage } from '@/core/i18n';
 import { Plus, Trash2, CheckCircle2, Circle, CheckCheck, Flame, Calendar, CheckSquare } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { StorageAdapter } from '@/core/storage/StorageAdapter';
@@ -8,18 +9,22 @@ import { EmptyState } from '@/ui/feedback';
 import { cn } from '@/ui/lib/cn';
 import type { TodoItem, TodoPriority, TodoFilter, TodoSettings, HabitItem, TodoTab } from './types';
 
-const DEFAULT_TODOS: TodoItem[] = [
-  { id: '1', text: 'Установить DashFlow расширение', completed: true, priority: 'high' },
-  { id: '2', text: 'Настроить сетку и виджеты', completed: false, priority: 'medium' },
+/**
+ * Стартовые задачи и привычки становятся данными пользователя при первом запуске,
+ * поэтому создаются на языке интерфейса в этот момент.
+ */
+const createDefaultTodos = (lang: SupportedLanguage): TodoItem[] => [
+  { id: '1', text: t('todo.seed.install', undefined, lang), completed: true, priority: 'high' },
+  { id: '2', text: t('todo.seed.setup', undefined, lang), completed: false, priority: 'medium' },
 ];
 
-const DEFAULT_HABITS: HabitItem[] = [
-  { id: '1', title: 'Пить 2л воды', history: {} },
-  { id: '2', title: 'Чтение 20 минут', history: {} },
-  { id: '3', title: 'Утренняя зарядка', history: {} },
+const createDefaultHabits = (lang: SupportedLanguage): HabitItem[] => [
+  { id: '1', title: t('todo.seed.water', undefined, lang), history: {} },
+  { id: '2', title: t('todo.seed.reading', undefined, lang), history: {} },
+  { id: '3', title: t('todo.seed.exercise', undefined, lang), history: {} },
 ];
 
-const getDaysOfWeek = () => {
+const getDaysOfWeek = (lang: SupportedLanguage) => {
   const now = new Date();
   const currentDay = now.getDay();
   const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
@@ -27,7 +32,7 @@ const getDaysOfWeek = () => {
   monday.setDate(now.getDate() + distanceToMonday);
 
   const days: { dateStr: string; label: string; isToday: boolean }[] = [];
-  const dayLabels = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  const weekdayFormat = new Intl.DateTimeFormat(lang === 'ru' ? 'ru-RU' : 'en-US', { weekday: 'short' });
   const todayStr = now.toISOString().split('T')[0];
 
   for (let i = 0; i < 7; i++) {
@@ -36,7 +41,7 @@ const getDaysOfWeek = () => {
     const dateStr = d.toISOString().split('T')[0];
     days.push({
       dateStr,
-      label: dayLabels[i],
+      label: weekdayFormat.format(d),
       isToday: dateStr === todayStr,
     });
   }
@@ -81,7 +86,8 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
   const showProgress = settings?.showProgress !== false;
   const prioritySelectId = useId();
 
-  const weekDays = getDaysOfWeek();
+  const { t: tr, tp, language } = useTranslation();
+  const weekDays = getDaysOfWeek(language);
 
   useEffect(() => {
     if (settings?.defaultTab) {
@@ -105,7 +111,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
   const habitKey = instanceId ? `${STORAGE_KEYS.HABIT_ITEMS}_${instanceId}` : STORAGE_KEYS.HABIT_ITEMS;
 
   useEffect(() => {
-    StorageAdapter.get<TodoItem[]>(STORAGE_KEYS.TODO_ITEMS, DEFAULT_TODOS).then((baseTodos) => {
+    StorageAdapter.get<TodoItem[]>(STORAGE_KEYS.TODO_ITEMS, createDefaultTodos(useI18nStore.getState().language)).then((baseTodos) => {
       if (instanceId && todoKey !== STORAGE_KEYS.TODO_ITEMS) {
         StorageAdapter.get<TodoItem[]>(todoKey, []).then((scoped) => {
           if (scoped && scoped.length > 0) {
@@ -119,7 +125,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
       }
     });
 
-    StorageAdapter.get<HabitItem[]>(STORAGE_KEYS.HABIT_ITEMS, DEFAULT_HABITS).then((baseHabits) => {
+    StorageAdapter.get<HabitItem[]>(STORAGE_KEYS.HABIT_ITEMS, createDefaultHabits(useI18nStore.getState().language)).then((baseHabits) => {
       if (instanceId && habitKey !== STORAGE_KEYS.HABIT_ITEMS) {
         StorageAdapter.get<HabitItem[]>(habitKey, []).then((scoped) => {
           if (scoped && scoped.length > 0) {
@@ -258,7 +264,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
             )}
           >
             <CheckSquare className="w-4 h-4" />
-            <span>Задачи</span>
+            <span>{tr('todo.tabs.todos')}</span>
             <Badge variant="glass" className="ml-1 text-2xs">
               {todos.length}
             </Badge>
@@ -278,7 +284,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
             )}
           >
             <Calendar className="w-4 h-4" />
-            <span>Привычки</span>
+            <span>{tr('todo.tabs.habits')}</span>
             <Badge variant="glass" className="ml-1 text-2xs">
               {habits.length}
             </Badge>
@@ -294,8 +300,8 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
               <button
                 type="button"
                 onClick={clearCompleted}
-                title="Очистить завершенные"
-                aria-label="Очистить завершенные задачи"
+                title={tr('todo.clearCompleted')}
+                aria-label={tr('todo.clearCompletedLabel')}
                 className="text-xs text-fg-dim hover:text-danger transition-colors cursor-pointer p-1"
               >
                 <CheckCheck className="w-4 h-4" />
@@ -319,25 +325,27 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
       <form onSubmit={addTodo} className="flex items-center gap-2">
         <input
           type="text"
-          aria-label={activeTab === 'todos' ? 'Новая задача' : 'Новая привычка'}
+          aria-label={activeTab === 'todos' ? tr('todo.newTask') : tr('todo.newHabit')}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={activeTab === 'todos' ? 'Новая задача...' : 'Новая привычка (напр. Чтение 20 мин)...'}
+          placeholder={
+            activeTab === 'todos' ? tr('todo.newTaskPlaceholder') : tr('todo.newHabitPlaceholder')
+          }
           className="flex-1 bg-surface text-xs placeholder:text-fg-muted border border-line rounded-xl px-3 py-2 min-h-9.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         />
 
         {activeTab === 'todos' && (
           <>
-            <label htmlFor={prioritySelectId} className="sr-only">Приоритет задачи</label>
+            <label htmlFor={prioritySelectId} className="sr-only">{tr('todo.priority')}</label>
             <select
               id={prioritySelectId}
               value={priority}
               onChange={(e) => setPriority(e.target.value as TodoPriority)}
               className="bg-surface text-xs border border-line rounded-xl px-2 py-2 min-h-9.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer"
             >
-              <option value="low">Низкий</option>
-              <option value="medium">Средний</option>
-              <option value="high">Высокий</option>
+              <option value="low">{tr('todo.priorities.low')}</option>
+              <option value="medium">{tr('todo.priorities.medium')}</option>
+              <option value="high">{tr('todo.priorities.high')}</option>
             </select>
           </>
         )}
@@ -346,7 +354,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
           size="sm"
           variant="primary"
           type="submit"
-          aria-label="Добавить"
+          aria-label={tr('todo.add')}
           disabled={!input.trim()}
           icon={<Plus className="w-4 h-4" />}
           className="min-h-9.5 min-w-9.5"
@@ -359,8 +367,8 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
           <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-2">
             {filteredTodos.length === 0 ? (
               <EmptyState
-                title="Все сделано!"
-                description="Нет задач в выбранной категории"
+                title={tr('todo.allDone')}
+                description={tr('todo.allDoneHint')}
               />
             ) : (
               filteredTodos.map((todo) => (
@@ -374,7 +382,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
                   <button
                     type="button"
                     onClick={() => toggleTodo(todo.id)}
-                    aria-label={`Отметить задачу: ${todo.text}`}
+                    aria-label={tr('todo.toggleTask', { text: todo.text })}
                     className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer"
                   >
                     {todo.completed ? (
@@ -394,7 +402,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
 
                   <button
                     type="button"
-                    aria-label={`Удалить задачу: ${todo.text}`}
+                    aria-label={tr('todo.deleteTask', { text: todo.text })}
                     onClick={() => deleteTodo(todo.id)}
                     className="opacity-0 group-hover:opacity-100 p-1 text-fg-dim hover:text-danger rounded transition-opacity cursor-pointer"
                   >
@@ -422,9 +430,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
                     : 'text-fg-muted hover:text-fg',
                 )}
               >
-                {filterKey === 'all' && 'Все'}
-                {filterKey === 'active' && 'Активные'}
-                {filterKey === 'completed' && 'Завершенные'}
+                {tr(`todo.filters.${filterKey}`)}
               </button>
             ))}
           </div>
@@ -434,8 +440,8 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
         <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-2">
           {habits.length === 0 ? (
             <EmptyState
-              title="Нет привычек"
-              description="Добавьте полезную привычку, чтобы отслеживать стрик"
+              title={tr('todo.noHabits')}
+              description={tr('todo.noHabitsHint')}
             />
           ) : (
             habits.map((habit) => {
@@ -453,14 +459,14 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
                       {streak > 0 && (
                         <span className="flex items-center gap-1 text-2xs font-bold text-warning bg-warning/10 px-2 py-0.5 rounded-md">
                           <Flame className="w-3 h-3 text-warning shrink-0" />
-                          {streak} дн
+                          {tp('todo.streak', streak)}
                         </span>
                       )}
                     </div>
 
                     <button
                       type="button"
-                      aria-label={`Удалить привычку: ${habit.title}`}
+                      aria-label={tr('todo.deleteHabit', { title: habit.title })}
                       onClick={() => deleteHabit(habit.id)}
                       className="opacity-0 group-hover:opacity-100 p-1 text-fg-dim hover:text-danger rounded transition-opacity cursor-pointer"
                     >
@@ -478,7 +484,7 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
                           type="button"
                           onClick={() => toggleHabitDay(habit.id, day.dateStr)}
                           title={`${day.label} (${day.dateStr})`}
-                          aria-label={`Отметить ${day.label} для ${habit.title}`}
+                          aria-label={tr('todo.markDay', { day: day.label, title: habit.title })}
                           className={cn(
                             'flex flex-col items-center justify-center py-1 rounded-lg text-2xs font-semibold transition-all cursor-pointer border',
                             isDone

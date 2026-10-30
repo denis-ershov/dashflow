@@ -18,7 +18,7 @@ describe('QuotesWidget Component & Manifest', () => {
   it('должен отображать текст и автора начальной цитаты', () => {
     render(<QuotesWidget instanceId="quote-1" settings={{ category: 'all' }} />);
 
-    expect(screen.getByText(/простота — необходимое условие надежности/i)).toBeInTheDocument();
+    expect(screen.getByText(/простота — необходимое условие надёжности/i)).toBeInTheDocument();
     expect(screen.getByText(/эдсгер дейкстра/i)).toBeInTheDocument();
   });
 
@@ -44,7 +44,7 @@ describe('QuotesWidget Component & Manifest', () => {
 
     await waitFor(() => {
       expect(clipboardSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Простота — необходимое условие надежности.'),
+        expect.stringContaining('Простота — необходимое условие надёжности.'),
       );
     });
   });

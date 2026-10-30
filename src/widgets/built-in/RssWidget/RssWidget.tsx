@@ -26,6 +26,8 @@ import type {
 } from './types';
 import { DEFAULT_FEEDS } from './presets';
 import { fetchAndParseFeed, formatRssTimeAgo } from './rssParser';
+import { ALL_FOLDERS, DEFAULT_FOLDER, isAllFolders } from './presets';
+import { useTranslation } from '@/core/i18n';
 import { getRssCardClasses } from './rssStyles';
 import { RssFeedManagerModal } from './RssFeedManagerModal';
 
@@ -34,6 +36,9 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
   settings,
 }) => {
   const updateWidgetSettings = useDashboardStore((s) => s.updateWidgetSettings);
+  const { t, language } = useTranslation();
+  const folderLabel = (folder: string) =>
+    folder === DEFAULT_FOLDER ? t('rss.defaultFolder') : folder;
 
   // Инициализация лент с поддержкой обратной совместимости
   const initialFeeds: RssFeedConfig[] = useMemo(() => {
@@ -46,7 +51,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
         name: url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0],
         url,
         enabled: true,
-        folder: 'Общие',
+        folder: DEFAULT_FOLDER,
       }));
     }
     if (settings?.feedUrl) {
@@ -56,7 +61,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
           name: settings.feedUrl.replace(/^https?:\/\/(www\.)?/, '').split('/')[0],
           url: settings.feedUrl,
           enabled: true,
-          folder: 'Общие',
+          folder: DEFAULT_FOLDER,
         },
       ];
     }
@@ -103,7 +108,9 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
     settings?.activeFeedId || feeds[0]?.id || '',
   );
   const [activeFolder, setActiveFolder] = useState<string>(
-    settings?.activeFolder || 'Все темы',
+    settings?.activeFolder && !isAllFolders(settings.activeFolder)
+      ? settings.activeFolder
+      : ALL_FOLDERS,
   );
 
   // Активные (включенные) ленты
@@ -152,7 +159,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
 
       setItems(combined);
     } catch {
-      setError('Не удалось загрузить RSS-ленты. Проверьте подключение к сети.');
+      setError(t('rss.loadError'));
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -202,7 +209,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
     // 1. Фильтрация по режиму
     if (readingMode === 'feed-tabs' && activeFeedId) {
       list = list.filter((item) => item.feedId === activeFeedId);
-    } else if (readingMode === 'folders' && activeFolder && activeFolder !== 'Все темы') {
+    } else if (readingMode === 'folders' && !isAllFolders(activeFolder)) {
       list = list.filter((item) => item.folder === activeFolder);
     }
 
@@ -236,7 +243,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
                   ? 'bg-surface text-primary shadow-xs font-semibold'
                   : 'text-fg-muted hover:text-fg',
               )}
-              title="Единый хронологический поток"
+              title={t('rss.unifiedHint')}
             >
               <List className="w-3.5 h-3.5" />
             </button>
@@ -249,7 +256,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
                   ? 'bg-surface text-primary shadow-xs font-semibold'
                   : 'text-fg-muted hover:text-fg',
               )}
-              title="Чтение по отдельным источникам"
+              title={t('rss.tabsHint')}
             >
               <Layers className="w-3.5 h-3.5" />
             </button>
@@ -262,7 +269,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
                   ? 'bg-surface text-primary shadow-xs font-semibold'
                   : 'text-fg-muted hover:text-fg',
               )}
-              title="Группировка по темам и папкам"
+              title={t('rss.foldersHint')}
             >
               <FolderTree className="w-3.5 h-3.5" />
             </button>
@@ -274,7 +281,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-fg-muted pointer-events-none" />
               <input
                 type="text"
-                placeholder="Поиск новостей..."
+                placeholder={t('rss.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-7 pr-6 py-1 text-xs rounded-lg bg-surface border border-line placeholder:text-fg-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
@@ -295,24 +302,24 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
           <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
-              aria-label="Обновить ленты"
+              aria-label={t('rss.refresh')}
               onClick={loadFeeds}
               disabled={isRefreshing}
               className="p-1.5 text-fg-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-              title="Обновить новости"
+              title={t('rss.refreshHint')}
             >
               <RefreshCw className={cn('w-3.5 h-3.5', isRefreshing && 'animate-spin text-primary')} />
             </button>
 
             <button
               type="button"
-              aria-label="Управление лентами"
+              aria-label={t('rss.manage')}
               onClick={() => setIsFeedManagerOpen(true)}
               className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-fg-muted hover:text-fg hover:bg-surface-hover border border-line/60 rounded-lg transition-colors cursor-pointer"
-              title="Настроить ленты и папки"
+              title={t('rss.manageHint')}
             >
               <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
-              <span className="hidden sm:inline">Ленты</span>
+              <span className="hidden sm:inline">{t('rss.feeds')}</span>
             </button>
           </div>
         </div>
@@ -346,16 +353,16 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
           <div className="flex items-center gap-1 overflow-x-auto pb-1 select-none scrollbar-none">
             <button
               type="button"
-              onClick={() => setActiveFolder('Все темы')}
+              onClick={() => setActiveFolder(ALL_FOLDERS)}
               className={cn(
                 'flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg shrink-0 transition-all border cursor-pointer',
-                activeFolder === 'Все темы'
+                isAllFolders(activeFolder)
                   ? 'bg-surface text-primary border-primary/50 shadow-xs font-bold'
                   : 'bg-surface/50 text-fg-muted border-line/40 hover:bg-surface hover:text-fg',
               )}
             >
               <Rss className="w-3 h-3 text-primary" />
-              <span>Все темы</span>
+              <span>{t('rss.allTopics')}</span>
             </button>
 
             {allFolders.map((folder) => (
@@ -371,7 +378,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
                 )}
               >
                 <Folder className="w-3 h-3 text-primary" />
-                <span className="truncate max-w-30">{folder}</span>
+                <span className="truncate max-w-30">{folderLabel(folder)}</span>
               </button>
             ))}
           </div>
@@ -389,30 +396,28 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
           </div>
         ) : error && items.length === 0 ? (
           <div className="p-4 h-full flex flex-col items-center justify-center">
-            <ErrorState title="Ошибка загрузки RSS" message={error} onRetry={loadFeeds} />
+            <ErrorState title={t('rss.errorTitle')} message={error} onRetry={loadFeeds} />
           </div>
         ) : activeFeeds.length === 0 ? (
           <div className="p-4 h-full flex flex-col items-center justify-center">
             <EmptyState
-              title="Нет активных лент"
-              description="Включите одну или несколько RSS-лент в менеджере подписок"
+              title={t('rss.noActiveTitle')}
+              description={t('rss.noActiveHint')}
             />
             <button
               type="button"
               onClick={() => setIsFeedManagerOpen(true)}
               className="mt-3 px-3 py-1.5 text-xs font-semibold rounded-lg bg-primary text-primary-fg hover:opacity-90 transition-opacity cursor-pointer"
             >
-              Настроить ленты
+              {t('rss.configure')}
             </button>
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="p-4 h-full flex flex-col items-center justify-center">
             <EmptyState
-              title={searchQuery ? 'Ничего не найдено' : 'Нет публикаций'}
+              title={searchQuery ? t('rss.nothingFound') : t('rss.noPosts')}
               description={
-                searchQuery
-                  ? `По запросу «${searchQuery}» публикации не найдены`
-                  : 'В выбранных источниках пока нет доступных новостей'
+                searchQuery ? t('rss.noResults', { query: searchQuery }) : t('rss.emptySources')
               }
             />
           </div>
@@ -498,7 +503,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
                           )}
                           {showDate && (
                             <span className="font-mono ml-auto">
-                              {formatRssTimeAgo(item.timestamp, item.pubDate)}
+                              {formatRssTimeAgo(item.timestamp, item.pubDate, language)}
                             </span>
                           )}
                         </div>
@@ -531,7 +536,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
                         )}
                         {showDate && (
                           <span className="font-mono">
-                            {formatRssTimeAgo(item.timestamp, item.pubDate)}
+                            {formatRssTimeAgo(item.timestamp, item.pubDate, language)}
                           </span>
                         )}
                         <ExternalLink className="w-3.5 h-3.5 text-fg-muted opacity-0 group-hover/item:opacity-100 transition-opacity" />
@@ -570,7 +575,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
                         )}
                         {showDate && (
                           <span className="font-mono ml-auto">
-                            {formatRssTimeAgo(item.timestamp, item.pubDate)}
+                            {formatRssTimeAgo(item.timestamp, item.pubDate, language)}
                           </span>
                         )}
                       </div>

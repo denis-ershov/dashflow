@@ -41,7 +41,6 @@ export interface HourlyForecastItem {
 
 export interface DailyForecastItem {
   date: string; // "2026-08-28"
-  dayName: string; // "Сегодня", "Завтра", "Сб", "Вс"
   minTemp: number;
   maxTemp: number;
   code: number;

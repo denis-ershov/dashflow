@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from '@/core/i18n';
 import { Play, Pause, RotateCcw, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { Button } from '@/ui/primitives';
@@ -7,6 +8,7 @@ import { cn } from '@/ui/lib/cn';
 import type { PomodoroSettings } from './types';
 
 export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settings }) => {
+  const { t } = useTranslation();
   const workDuration = (settings?.workTime || 25) * 60;
   const breakDuration = (settings?.breakTime || 5) * 60;
   const longBreakDuration = (settings?.longBreakTime || 15) * 60;
@@ -191,9 +193,9 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
   };
 
   const getModeTitle = () => {
-    if (mode === 'work') return 'Спринт фокуса';
-    if (mode === 'longBreak') return 'Длинный отдых';
-    return 'Короткий отдых';
+    if (mode === 'work') return t('pomodoro.focus');
+    if (mode === 'longBreak') return t('pomodoro.longBreak');
+    return t('pomodoro.shortBreak');
   };
 
   return (
@@ -237,7 +239,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
             {formatTime(timeLeft)}
           </span>
           <span className="text-2xs text-fg-muted mt-1 font-medium">
-            Сессия {cycle + 1} из 4
+            {t('pomodoro.session', { current: cycle + 1, total: 4 })}
           </span>
         </div>
       ) : (
@@ -293,7 +295,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
         <Button
           size="sm"
           variant={isRunning ? 'secondary' : 'primary'}
-          aria-label={isRunning ? 'Пауза' : 'Запустить таймер'}
+          aria-label={isRunning ? t('pomodoro.pause') : t('pomodoro.start')}
           onClick={() => setIsRunning(!isRunning)}
           className="min-h-11 min-w-11"
         >
@@ -303,7 +305,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
         <Button
           size="sm"
           variant="ghost"
-          aria-label="Сброс таймера"
+          aria-label={t('pomodoro.reset')}
           onClick={reset}
           className="min-h-11 min-w-11"
         >
@@ -313,7 +315,7 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
         <Button
           size="sm"
           variant={soundActive ? 'secondary' : 'ghost'}
-          aria-label={soundActive ? 'Выключить белый шум' : 'Включить белый шум'}
+          aria-label={soundActive ? t('pomodoro.noiseOff') : t('pomodoro.noiseOn')}
           onClick={toggleSound}
           className={cn('min-h-11 min-w-11', soundActive && 'text-primary')}
         >

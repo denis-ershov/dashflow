@@ -1,5 +1,10 @@
 import type { RssFeedConfig, RssItem } from './types';
 import { isSafeHttpUrl } from '@/core/network';
+import { t, useI18nStore, type SupportedLanguage } from '@/core/i18n';
+import { DEFAULT_FOLDER } from './presets';
+
+/** Подписи по умолчанию попадают в данные ленты — берутся на языке интерфейса в момент разбора */
+const currentLanguage = () => useI18nStore.getState().language;
 
 /**
  * Извлечение первого валидного URL изображения из HTML-текста описания
@@ -34,35 +39,28 @@ export function cleanHtmlText(text?: string, maxLen = 160): string {
 }
 
 /**
- * Форматирование относительного времени публикации новости на русском языке
+ * Относительное время публикации: «5 мин. назад», «вчера», дальше — дата.
+ * Склонения и формы даёт Intl.RelativeTimeFormat на языке интерфейса.
  */
-export function formatRssTimeAgo(timestamp?: number, pubDateStr?: string): string {
+export function formatRssTimeAgo(
+  timestamp?: number,
+  pubDateStr?: string,
+  lang: SupportedLanguage = 'ru',
+): string {
   const time = timestamp || (pubDateStr ? Date.parse(pubDateStr) : 0);
   if (!time || isNaN(time)) return pubDateStr || '';
 
-  const now = Date.now();
-  const diffMs = now - time;
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
+  const locale = lang === 'ru' ? 'ru-RU' : 'en-US';
+  const diffMin = Math.floor((Date.now() - time) / 60_000);
   const diffHours = Math.floor(diffMin / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffSec < 60) return 'только что';
-  if (diffMin < 60) {
-    if (diffMin % 10 === 1 && diffMin !== 11) return `${diffMin} мин назад`;
-    if ([2, 3, 4].includes(diffMin % 10) && ![12, 13, 14].includes(diffMin)) return `${diffMin} мин назад`;
-    return `${diffMin} мин назад`;
-  }
-  if (diffHours < 24) {
-    if (diffHours === 1 || diffHours === 21) return `${diffHours} час назад`;
-    if ([2, 3, 4, 22, 23, 24].includes(diffHours)) return `${diffHours} часа назад`;
-    return `${diffHours} часов назад`;
-  }
-  if (diffDays === 1) return 'вчера';
-  if (diffDays < 7) return `${diffDays} дн назад`;
-
-  const dateObj = new Date(time);
-  return dateObj.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+  if (diffMin < 1) return t('rss.justNow', undefined, lang);
+  const relative = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'short' });
+  if (diffMin < 60) return relative.format(-diffMin, 'minute');
+  if (diffHours < 24) return relative.format(-diffHours, 'hour');
+  if (diffDays < 7) return relative.format(-diffDays, 'day');
+  return new Date(time).toLocaleDateString(locale, { month: 'short', day: 'numeric' });
 }
 
 /**
@@ -130,7 +128,7 @@ export function parseRssXml(
     rssItems.forEach((node, idx) => {
       if (idx >= limit) return;
 
-      const title = node.querySelector('title')?.textContent?.trim() || 'Без названия';
+      const title = node.querySelector('title')?.textContent?.trim() || t('rss.untitled', undefined, currentLanguage());
       const rawLink =
         node.querySelector('link')?.textContent?.trim() ||
         node.querySelector('guid')?.textContent?.trim() ||
@@ -209,7 +207,7 @@ export function parseRssXml(
     atomEntries.forEach((node, idx) => {
       if (idx >= limit) return;
 
-      const title = node.querySelector('title')?.textContent?.trim() || 'Без названия';
+      const title = node.querySelector('title')?.textContent?.trim() || t('rss.untitled', undefined, currentLanguage());
 
       // Ссылка в Atom часто хранится как <link href="..." rel="alternate" />
       let rawLink = '';
@@ -275,7 +273,7 @@ export function exportFeedsToOpml(feeds: RssFeedConfig[]): string {
   const foldersMap = new Map<string, RssFeedConfig[]>();
 
   feeds.forEach((feed) => {
-    const folder = feed.folder || 'Общие';
+    const folder = feed.folder || DEFAULT_FOLDER;
     if (!foldersMap.has(folder)) {
       foldersMap.set(folder, []);
     }
@@ -317,7 +315,7 @@ export function parseOpml(opmlText: string): RssFeedConfig[] {
       const name =
         outline.getAttribute('text') ||
         outline.getAttribute('title') ||
-        'RSS Лента';
+        t('rss.defaultFeedName', undefined, currentLanguage());
 
       // Если родительский узел — тоже outline, это папка
       const parentOutline = outline.parentElement?.closest('outline');

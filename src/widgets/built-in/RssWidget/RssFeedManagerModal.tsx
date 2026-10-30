@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useTranslation } from '@/core/i18n';
+import { DEFAULT_FOLDER } from './presets';
 import {
   Plus,
   Trash2,
@@ -48,12 +50,13 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
   feeds,
   onSaveFeeds,
 }) => {
+  const { t, tp } = useTranslation();
   const [activeTab, setActiveTab] = useState<'my-feeds' | 'presets' | 'add' | 'opml'>('my-feeds');
 
   // Form states for manual add
   const [feedName, setFeedName] = useState('');
   const [feedUrl, setFeedUrl] = useState('');
-  const [feedFolder, setFeedFolder] = useState('Общие');
+  const [feedFolder, setFeedFolder] = useState(DEFAULT_FOLDER);
   const [feedColor, setFeedColor] = useState(FEED_COLORS[0]);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -78,12 +81,12 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
     const trimmedName = feedName.trim();
 
     if (!trimmedUrl || !isSafeHttpUrl(trimmedUrl)) {
-      setFormError('Введите корректный URL адрес (начинающийся с https:// или http://)');
+      setFormError(t('rss.manager.errors.invalidUrl'));
       return;
     }
 
     if (feeds.some((f) => f.url.toLowerCase() === trimmedUrl.toLowerCase())) {
-      setFormError('Лента с таким URL адресом уже добавлена');
+      setFormError(t('rss.manager.errors.duplicate'));
       return;
     }
 
@@ -91,7 +94,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
       id: `feed-custom-${Date.now()}`,
       name: trimmedName || trimmedUrl.replace(/^https?:\/\/(www\.)?/, '').split('/')[0],
       url: trimmedUrl,
-      folder: feedFolder.trim() || 'Общие',
+      folder: feedFolder.trim() || DEFAULT_FOLDER,
       enabled: true,
       color: feedColor,
     };
@@ -131,17 +134,17 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
         try {
           const imported = parseOpml(content);
           if (imported.length === 0) {
-            alert('В выбранном файле не найдено RSS-лент.');
+            alert(t('rss.manager.errors.noFeedsInFile'));
             return;
           }
           // Объединяем, исключая дубликаты по URL
           const existingUrls = new Set(feeds.map((f) => f.url.toLowerCase()));
           const newUnique = imported.filter((f) => !existingUrls.has(f.url.toLowerCase()));
           onSaveFeeds([...feeds, ...newUnique]);
-          alert(`Успешно импортировано ${newUnique.length} новых RSS-лент!`);
+          alert(tp('rss.manager.imported', newUnique.length));
           setActiveTab('my-feeds');
         } catch {
-          alert('Ошибка при разборе OPML-файла');
+          alert(t('rss.manager.errors.opml'));
         }
       }
     };
@@ -161,7 +164,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
         if (!matches) return;
       }
 
-      const folder = feed.folder || 'Общие';
+      const folder = feed.folder || DEFAULT_FOLDER;
       if (!map.has(folder)) map.set(folder, []);
       map.get(folder)!.push(feed);
     });
@@ -172,7 +175,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Управление RSS-лентами"
+      title={t('rss.manager.title')}
       maxWidth="xl"
       className="max-h-[85vh] flex flex-col"
     >
@@ -189,7 +192,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
           )}
         >
           <Rss className="w-3.5 h-3.5" />
-          Мои ленты ({feeds.length})
+          {t('rss.manager.myFeeds', { count: feeds.length })}
         </button>
 
         <button
@@ -203,7 +206,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
           )}
         >
           <Sparkles className="w-3.5 h-3.5 text-warning" />
-          Каталог источников
+          {t('rss.manager.catalog')}
         </button>
 
         <button
@@ -217,7 +220,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
           )}
         >
           <Plus className="w-3.5 h-3.5" />
-          Добавить ссылку
+          {t('rss.manager.addLink')}
         </button>
 
         <button
@@ -231,7 +234,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
           )}
         >
           <Download className="w-3.5 h-3.5" />
-          OPML Экспорт/Импорт
+          {t('rss.manager.opml')}
         </button>
       </div>
 
@@ -242,7 +245,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
             {/* Поиск по лентам */}
             <div className="flex items-center justify-between gap-3">
               <Input
-                placeholder="Поиск по названию, URL или папке..."
+                placeholder={t('rss.manager.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full text-xs"
@@ -254,26 +257,26 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
                 className="shrink-0 gap-1"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Добавить
+                {t('rss.manager.add')}
               </Button>
             </div>
 
             {feeds.length === 0 ? (
               <div className="text-center py-10 space-y-3">
                 <Rss className="w-10 h-10 text-fg-muted/40 mx-auto" />
-                <p className="text-sm font-medium text-fg">У вас пока нет добавленных RSS-лент</p>
+                <p className="text-sm font-medium text-fg">{t('rss.manager.emptyTitle')}</p>
                 <p className="text-xs text-fg-muted">
-                  Выберите источники из каталога или введите произвольную ссылку
+                  {t('rss.manager.emptyHint')}
                 </p>
                 <Button variant="primary" size="sm" onClick={() => setActiveTab('presets')}>
-                  Выбрать из каталога
+                  {t('rss.manager.pickFromCatalog')}
                 </Button>
               </div>
             ) : Array.from(foldersMap.entries()).map(([folderName, folderFeeds]) => (
               <div key={folderName} className="space-y-2">
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-fg-muted px-1">
                   <Folder className="w-3.5 h-3.5 text-primary" />
-                  <span>{folderName}</span>
+                  <span>{folderName === DEFAULT_FOLDER ? t('rss.defaultFolder') : folderName}</span>
                   <span className="text-2xs text-fg-muted/70">({folderFeeds.length})</span>
                 </div>
 
@@ -303,11 +306,11 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
                         <Switch
                           checked={feed.enabled !== false}
                           onChange={() => toggleFeedEnabled(feed.id)}
-                          aria-label={`Включить или отключить ${feed.name}`}
+                          aria-label={t('rss.manager.toggle', { name: feed.name })}
                         />
                         <button
                           type="button"
-                          aria-label={`Удалить ${feed.name}`}
+                          aria-label={t('rss.manager.remove', { name: feed.name })}
                           onClick={() => deleteFeed(feed.id)}
                           className="p-1.5 text-fg-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
                         >
@@ -326,8 +329,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
         {activeTab === 'presets' && (
           <div className="space-y-5">
             <p className="text-xs text-fg-muted">
-              Популярные русскоязычные и мировые новостные каналы. Нажмите кнопку, чтобы добавить в
-              свою ленту:
+              {t('rss.manager.catalogIntro')}
             </p>
 
             {RSS_PRESET_CATEGORIES.map((category) => (
@@ -366,7 +368,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
                         {isAdded ? (
                           <span className="flex items-center gap-1 text-2xs font-medium text-primary shrink-0 px-2 py-0.5 rounded-md bg-primary/10">
                             <Check className="w-3 h-3" />
-                            Добавлено
+                            {t('rss.manager.added')}
                           </span>
                         ) : (
                           <Button
@@ -376,7 +378,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
                             className="shrink-0 h-7 text-2xs px-2.5 gap-1"
                           >
                             <Plus className="w-3 h-3" />
-                            Добавить
+                            {t('rss.manager.add')}
                           </Button>
                         )}
                       </div>
@@ -394,7 +396,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
             <div className="space-y-1">
               <label className="text-xs font-semibold text-fg flex items-center gap-1">
                 <Globe className="w-3.5 h-3.5 text-primary" />
-                URL адрес RSS / Atom ленты <span className="text-danger">*</span>
+                {t('rss.manager.urlLabel')} <span className="text-danger">*</span>
               </label>
               <Input
                 placeholder="https://example.com/rss.xml"
@@ -408,10 +410,10 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
             <div className="space-y-1">
               <label className="text-xs font-semibold text-fg flex items-center gap-1">
                 <Tag className="w-3.5 h-3.5 text-primary" />
-                Название ленты (необязательно)
+                {t('rss.manager.nameLabel')}
               </label>
               <Input
-                placeholder="Например: Мой любимый блог"
+                placeholder={t('rss.manager.namePlaceholder')}
                 value={feedName}
                 onChange={(e) => setFeedName(e.target.value)}
                 className="text-xs"
@@ -421,10 +423,10 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
             <div className="space-y-1">
               <label className="text-xs font-semibold text-fg flex items-center gap-1">
                 <Folder className="w-3.5 h-3.5 text-primary" />
-                Папка / Тема
+                {t('rss.manager.folderLabel')}
               </label>
               <Input
-                placeholder="Например: IT, Новости, Игры"
+                placeholder={t('rss.manager.folderPlaceholder')}
                 value={feedFolder}
                 onChange={(e) => setFeedFolder(e.target.value)}
                 className="text-xs"
@@ -434,7 +436,7 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-fg flex items-center gap-1">
                 <Palette className="w-3.5 h-3.5 text-primary" />
-                Цветовой маркер
+                {t('rss.manager.color')}
               </label>
               <div className="flex items-center gap-2 flex-wrap">
                 {FEED_COLORS.map((c) => (
@@ -460,11 +462,11 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
 
             <div className="pt-2 flex justify-end gap-2">
               <Button type="button" variant="ghost" size="sm" onClick={() => setActiveTab('my-feeds')}>
-                Отмена
+                {t('rss.manager.cancel')}
               </Button>
               <Button type="submit" variant="primary" size="sm" className="gap-1">
                 <Plus className="w-3.5 h-3.5" />
-                Добавить ленту
+                {t('rss.manager.addFeed')}
               </Button>
             </div>
           </form>
@@ -476,11 +478,10 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
             <div className="p-4 rounded-xl bg-surface border border-line space-y-3">
               <div className="flex items-center gap-2 text-sm font-bold text-fg">
                 <Download className="w-4 h-4 text-primary" />
-                Экспорт подписок (OPML)
+                {t('rss.manager.exportTitle')}
               </div>
               <p className="text-xs text-fg-muted">
-                Сохраните все ваши настроенные ленты в стандартный файл .opml для резервного копирования
-                или переноса в Feedly, Inoreader, NetNewsWire и другие RSS-читалки.
+                {t('rss.manager.exportHint')}
               </p>
               <Button
                 variant="primary"
@@ -490,22 +491,21 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
                 className="gap-1.5"
               >
                 <Download className="w-3.5 h-3.5" />
-                Экспортировать {feeds.length} лент в .opml
+                {tp('rss.manager.exportAction', feeds.length)}
               </Button>
             </div>
 
             <div className="p-4 rounded-xl bg-surface border border-line space-y-3">
               <div className="flex items-center gap-2 text-sm font-bold text-fg">
                 <Upload className="w-4 h-4 text-primary" />
-                Импорт подписок (OPML)
+                {t('rss.manager.importTitle')}
               </div>
               <p className="text-xs text-fg-muted">
-                Загрузите файл экспорта .opml или .xml из другого RSS-ридера. Новые ленты будут
-                автоматически добавлены в ваш список.
+                {t('rss.manager.importHint')}
               </p>
               <label className="inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold bg-surface-hover hover:bg-surface border border-line rounded-lg cursor-pointer transition-colors text-fg">
                 <Upload className="w-3.5 h-3.5 text-primary" />
-                Выбрать OPML файл
+                {t('rss.manager.pickFile')}
                 <input
                   type="file"
                   accept=".opml,.xml"
@@ -521,10 +521,13 @@ export const RssFeedManagerModal: React.FC<RssFeedManagerModalProps> = ({
       {/* Footer */}
       <div className="border-t border-line p-3 flex justify-between items-center bg-surface shrink-0">
         <span className="text-2xs text-fg-muted">
-          Активно лент: {feeds.filter((f) => f.enabled !== false).length} из {feeds.length}
+          {t('rss.manager.activeCount', {
+            active: feeds.filter((f) => f.enabled !== false).length,
+            total: feeds.length,
+          })}
         </span>
         <Button variant="primary" size="sm" onClick={onClose}>
-          Готово
+          {t('rss.manager.done')}
         </Button>
       </div>
     </Modal>

@@ -35,10 +35,16 @@ const NON_UI_FILES: ReadonlyMap<string, string> = new Map([
     'запасной текст для разработчика; пользователю показывается перевод code',
   ],
   ['src/widgets/built-in/RssWidget/presets.ts', 'данные: реальные названия русскоязычных RSS-лент'],
+  [
+    'src/widgets/built-in/BookmarksWidget/ChromeBookmarksSync.ts',
+    'демо-дерево закладок для среды разработки без chrome.bookmarks',
+  ],
+  ['src/widgets/built-in/QuotesWidget/quotes.ts', 'контент: цитаты на каждом поддерживаемом языке'],
+  [
+    'src/widgets/built-in/WeatherWidget/cities.ts',
+    'данные: справочник городов для разбора ввода и город по умолчанию',
+  ],
 ]);
-
-/** Временная граница этапа E: виджеты переводятся вторым шагом */
-const PENDING_DIRS = ['src/widgets/built-in/'];
 
 function listFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -91,8 +97,7 @@ describe('Локализация: нет захардкоженных строк
     .filter((f) => /\.tsx?$/.test(f) && !f.endsWith('.d.ts'))
     .map((f) => ({ abs: f, rel: relative(ROOT, f).replace(/\\/g, '/') }))
     .filter(({ rel }) => !rel.startsWith('src/core/i18n/locales/'))
-    .filter(({ rel }) => !NON_UI_FILES.has(rel))
-    .filter(({ rel }) => !PENDING_DIRS.some((dir) => rel.startsWith(dir)));
+    .filter(({ rel }) => !NON_UI_FILES.has(rel));
 
   it('кириллица в литералах и JSX есть только в словарях и в файлах-исключениях', () => {
     const hits = files.flatMap(({ abs }) => findHardcodedStrings(abs));

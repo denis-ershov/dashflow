@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from '@/core/i18n';
 import { ShieldAlert, RotateCcw, ExternalLink, Globe } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { EmptyState } from '@/ui/feedback';
@@ -7,6 +8,7 @@ import { isSafeHttpUrl } from '@/core/network';
 import type { IframeSettings } from './types';
 
 export const IframeWidget: React.FC<WidgetProps<IframeSettings>> = ({ settings }) => {
+  const { t } = useTranslation();
   const rawUrl = settings?.url?.trim() || 'https://wxt.dev';
   const zoom = settings?.zoom || 100;
   const title = settings?.title?.trim();
@@ -19,8 +21,8 @@ export const IframeWidget: React.FC<WidgetProps<IframeSettings>> = ({ settings }
     return (
       <div className="flex flex-col items-center justify-center h-full p-4">
         <EmptyState
-          title="URL не указан"
-          description="Укажите URL сайта в настройках виджета для отображения страницы"
+          title={t('iframe.noUrl')}
+          description={t('iframe.noUrlHint')}
         />
       </div>
     );
@@ -31,10 +33,10 @@ export const IframeWidget: React.FC<WidgetProps<IframeSettings>> = ({ settings }
       <div className="flex flex-col items-center justify-center h-full p-4 text-center">
         <ShieldAlert className="w-8 h-8 text-danger mb-2" />
         <h4 className="text-xs font-semibold text-fg mb-1">
-          Недопустимый или небезопасный URL
+          {t('iframe.unsafe')}
         </h4>
         <p className="text-2xs text-fg-muted max-w-xs">
-          Разрешены только безопасные веб-адреса с протоколом HTTPS или HTTP
+          {t('iframe.unsafeHint')}
         </p>
       </div>
     );
@@ -59,7 +61,7 @@ export const IframeWidget: React.FC<WidgetProps<IframeSettings>> = ({ settings }
             <button
               type="button"
               onClick={() => setReloadKey((k) => k + 1)}
-              aria-label="Перезагрузить фрейм"
+              aria-label={t('iframe.reload')}
               className="p-1 rounded-md text-fg-muted hover:text-fg hover:bg-surface transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -67,7 +69,7 @@ export const IframeWidget: React.FC<WidgetProps<IframeSettings>> = ({ settings }
             <button
               type="button"
               onClick={handleOpenExternal}
-              aria-label="Открыть в новой вкладке"
+              aria-label={t('iframe.openInTab')}
               className="p-1 rounded-md text-fg-muted hover:text-fg hover:bg-surface transition-colors cursor-pointer"
             >
               <ExternalLink className="w-3.5 h-3.5" />

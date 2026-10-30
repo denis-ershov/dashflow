@@ -5,41 +5,44 @@ import { Select } from '@/ui/primitives/Select';
 import { cn } from '@/ui/lib/cn';
 import type { CitySearchResult, WeatherSettings, WeatherViewMode } from './types';
 import { detectUserLocation, searchCities } from './weatherService';
+import { DEFAULT_CITY } from './cities';
+import { useTranslation, type TranslationKey } from '@/core/i18n';
 
 interface WeatherSettingsFormProps {
   settings: WeatherSettings;
   onChange: (newSettings: WeatherSettings) => void;
 }
 
-const VIEW_MODES: { id: WeatherViewMode; title: string; desc: string; icon: React.ReactNode }[] = [
+const VIEW_MODES: { id: WeatherViewMode; title: TranslationKey; desc: TranslationKey; icon: React.ReactNode }[] = [
   {
     id: 'dashboard',
-    title: 'Метеостанция',
-    desc: 'Полный обзор: текущая, 24ч таймлайн, 7 дней и метрики',
+    title: 'weather.form.views.dashboard',
+    desc: 'weather.form.views.dashboardHint',
     icon: <LayoutDashboard className="w-4 h-4 text-primary" />,
   },
   {
     id: 'compact',
-    title: 'Компактный',
-    desc: 'Плотный карточный вид для небольших ячеек',
+    title: 'weather.form.views.compact',
+    desc: 'weather.form.views.compactHint',
     icon: <Minimize2 className="w-4 h-4 text-secondary" />,
   },
   {
     id: 'hourly',
-    title: 'По часам',
-    desc: 'Акцент на подробный поминутный прогноз суток',
+    title: 'weather.form.views.hourly',
+    desc: 'weather.form.views.hourlyHint',
     icon: <Clock className="w-4 h-4 text-accent" />,
   },
   {
     id: 'weekly',
-    title: 'На 7 дней',
-    desc: 'Расширенный недельный график с термо-барами',
+    title: 'weather.form.views.weekly',
+    desc: 'weather.form.views.weeklyHint',
     icon: <Calendar className="w-4 h-4 text-warning" />,
   },
 ];
 
 export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settings, onChange }) => {
-  const [cityInput, setCityInput] = useState(settings.city || 'Москва');
+  const { t, language } = useTranslation();
+  const [cityInput, setCityInput] = useState(settings.city || DEFAULT_CITY);
   const [isUserEditing, setIsUserEditing] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -51,7 +54,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
   const searchWrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setCityInput(settings.city || 'Москва');
+    setCityInput(settings.city || DEFAULT_CITY);
     setIsUserEditing(false);
   }, [settings.city]);
 
@@ -94,17 +97,17 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
     setIsUserEditing(false);
     setShowSuggestions(false);
     try {
-      const coords = await detectUserLocation();
+      const coords = await detectUserLocation(language);
       onChange({
         ...settings,
-        city: coords.name || 'Моё местоположение',
+        city: coords.name || t('weather.myLocation'),
         autoLocation: true,
         coords,
       });
-      setCityInput(coords.name || 'Моё местоположение');
+      setCityInput(coords.name || t('weather.myLocation'));
       setShowSuggestions(false);
-    } catch (err: any) {
-      setLocationError(err.message || 'Ошибка определения геолокации');
+    } catch (err: unknown) {
+      setLocationError(err instanceof Error && err.message ? err.message : t('weather.geo.error'));
     } finally {
       setIsDetectingLocation(false);
     }
@@ -133,7 +136,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
-            Местоположение
+            {t('weather.form.location')}
           </label>
           <button
             type="button"
@@ -146,7 +149,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
             ) : (
               <MapPin className="w-3.5 h-3.5" />
             )}
-            <span>Определить геопозицию</span>
+            <span>{t('weather.form.detect')}</span>
           </button>
         </div>
 
@@ -167,7 +170,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
               onFocus={() => {
                 if (isUserEditing && suggestions.length > 0) setShowSuggestions(true);
               }}
-              placeholder="Введите город (напр. Москва, Сочи, Лондон)..."
+              placeholder={t('weather.form.cityPlaceholder')}
               className="w-full bg-surface border border-line rounded-xl pl-9 pr-8 py-2 text-sm placeholder:text-fg-muted focus:ring-2 focus:ring-primary/40 outline-none transition-all"
             />
             {isSearching && (
@@ -179,7 +182,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
           {showSuggestions && suggestions.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-[#161922] border border-line rounded-xl shadow-3 overflow-hidden p-1 backdrop-blur-xl animate-fade-in">
               <div className="text-2xs font-semibold text-fg-dim px-2.5 py-1 uppercase tracking-wider">
-                Найденные города
+                {t('weather.form.foundCities')}
               </div>
               <div className="max-h-48 overflow-y-auto space-y-0.5">
                 {suggestions.map((item) => (
@@ -213,8 +216,8 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
 
         <div className="flex items-center justify-between pt-1">
           <div className="space-y-0.5">
-            <span className="text-xs font-medium text-fg">Авто-обновление гео</span>
-            <p className="text-2xs text-fg-muted">Определять текущее положение браузера при открытии</p>
+            <span className="text-xs font-medium text-fg">{t('weather.form.autoGeo')}</span>
+            <p className="text-2xs text-fg-muted">{t('weather.form.autoGeoHint')}</p>
           </div>
           <Switch
             checked={settings.autoLocation || false}
@@ -234,7 +237,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
       {/* 2. Выбор стиля макета */}
       <div className="space-y-2.5">
         <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
-          Стиль отображения виджета
+          {t('weather.form.viewStyle')}
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {VIEW_MODES.map((mode) => {
@@ -254,11 +257,11 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
                 <div className="shrink-0 mt-0.5 p-1 rounded-lg bg-canvas/80">{mode.icon}</div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-fg">{mode.title}</span>
+                    <span className="text-xs font-bold text-fg">{t(mode.title)}</span>
                     {isSelected && <Check className="w-3.5 h-3.5 text-primary stroke-3" />}
                   </div>
                   <p className="text-2xs text-fg-muted mt-0.5 line-clamp-2 leading-tight">
-                    {mode.desc}
+                    {t(mode.desc)}
                   </p>
                 </div>
               </button>
@@ -272,35 +275,35 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
       {/* 3. Единицы измерения */}
       <div className="space-y-3">
         <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
-          Единицы измерения
+          {t('weather.form.units')}
         </label>
         <div className="grid grid-cols-3 gap-2">
           <Select
-            label="Температура"
+            label={t('weather.form.temperature')}
             value={settings.tempUnit || 'celsius'}
             onChange={(e) => onChange({ ...settings, tempUnit: e.target.value as any })}
             options={[
-              { value: 'celsius', label: '°C (Цельсий)' },
-              { value: 'fahrenheit', label: '°F (Фаренгейт)' },
+              { value: 'celsius', label: t('weather.form.celsius') },
+              { value: 'fahrenheit', label: t('weather.form.fahrenheit') },
             ]}
           />
           <Select
-            label="Скорость ветра"
+            label={t('weather.form.windSpeed')}
             value={settings.windSpeedUnit || 'ms'}
             onChange={(e) => onChange({ ...settings, windSpeedUnit: e.target.value as any })}
             options={[
-              { value: 'ms', label: 'м/с' },
-              { value: 'kmh', label: 'км/ч' },
-              { value: 'mph', label: 'миль/ч' },
+              { value: 'ms', label: t('weather.form.ms') },
+              { value: 'kmh', label: t('weather.form.kmh') },
+              { value: 'mph', label: t('weather.form.mph') },
             ]}
           />
           <Select
-            label="Давление"
+            label={t('weather.form.pressure')}
             value={settings.pressureUnit || 'mmhg'}
             onChange={(e) => onChange({ ...settings, pressureUnit: e.target.value as any })}
             options={[
-              { value: 'mmhg', label: 'мм рт. ст.' },
-              { value: 'hpa', label: 'гПа (hPa)' },
+              { value: 'mmhg', label: t('weather.form.mmhg') },
+              { value: 'hpa', label: t('weather.form.hpa') },
             ]}
           />
         </div>
@@ -311,12 +314,12 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
       {/* 4. Тумблеры информационных секций */}
       <div className="space-y-3">
         <label className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
-          Отображение секций и параметров
+          {t('weather.form.sections')}
         </label>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-fg">Почасовой таймлайн (24 часа)</span>
+            <span className="text-xs font-medium text-fg">{t('weather.form.showHourly')}</span>
             <Switch
               checked={settings.showHourly !== false}
               onChange={(checked) => onChange({ ...settings, showHourly: checked })}
@@ -324,7 +327,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-fg">Прогноз на 7 дней (термо-бары)</span>
+            <span className="text-xs font-medium text-fg">{t('weather.form.showDaily')}</span>
             <Switch
               checked={settings.showDaily !== false}
               onChange={(checked) => onChange({ ...settings, showDaily: checked })}
@@ -332,7 +335,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-fg">Сетка атмосферных параметров</span>
+            <span className="text-xs font-medium text-fg">{t('weather.form.showMetrics')}</span>
             <Switch
               checked={settings.showMetrics !== false}
               onChange={(checked) => onChange({ ...settings, showMetrics: checked })}
@@ -340,7 +343,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-fg">УФ-индекс безопасности</span>
+            <span className="text-xs font-medium text-fg">{t('weather.form.showUv')}</span>
             <Switch
               checked={settings.showUv !== false}
               onChange={(checked) => onChange({ ...settings, showUv: checked })}
@@ -348,7 +351,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-fg">Восход и закат солнца</span>
+            <span className="text-xs font-medium text-fg">{t('weather.form.showSunTimes')}</span>
             <Switch
               checked={settings.showSunTimes !== false}
               onChange={(checked) => onChange({ ...settings, showSunTimes: checked })}
@@ -356,7 +359,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-fg">«Ощущается как» температура</span>
+            <span className="text-xs font-medium text-fg">{t('weather.form.showFeelsLike')}</span>
             <Switch
               checked={settings.showFeelsLike !== false}
               onChange={(checked) => onChange({ ...settings, showFeelsLike: checked })}

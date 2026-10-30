@@ -1,6 +1,10 @@
 import { StorageAdapter } from '@/core/storage/StorageAdapter';
 import { STORAGE_KEYS } from '@/core/storage/keys';
 import { resilientFetch } from '@/core/network';
+import { t, type SupportedLanguage, type TranslationKey } from '@/core/i18n';
+import { DEFAULT_CITY, POPULAR_CITIES } from './cities';
+
+export { DEFAULT_CITY, POPULAR_CITIES };
 import type {
   CitySearchResult,
   DailyForecastItem,
@@ -13,27 +17,7 @@ import type {
   WindSpeedUnit,
 } from './types';
 
-// Быстрый кэш координат популярных городов
-export const POPULAR_CITIES: Record<string, WeatherCoordinates> = {
-  москва: { lat: 55.7558, lon: 37.6173, name: 'Москва', country: 'Россия' },
-  moscow: { lat: 55.7558, lon: 37.6173, name: 'Москва', country: 'Россия' },
-  'санкт-петербург': { lat: 59.9343, lon: 30.3351, name: 'Санкт-Петербург', country: 'Россия' },
-  spb: { lat: 59.9343, lon: 30.3351, name: 'Санкт-Петербург', country: 'Россия' },
-  лондон: { lat: 51.5074, lon: -0.1278, name: 'Лондон', country: 'Великобритания' },
-  london: { lat: 51.5074, lon: -0.1278, name: 'London', country: 'United Kingdom' },
-  'нью-йорк': { lat: 40.7128, lon: -74.006, name: 'Нью-Йорк', country: 'США' },
-  'new york': { lat: 40.7128, lon: -74.006, name: 'New York', country: 'United States' },
-  токио: { lat: 35.6762, lon: 139.6503, name: 'Токио', country: 'Япония' },
-  tokyo: { lat: 35.6762, lon: 139.6503, name: 'Tokyo', country: 'Japan' },
-  берлин: { lat: 52.52, lon: 13.405, name: 'Берлин', country: 'Германия' },
-  париж: { lat: 48.8566, lon: 2.3522, name: 'Париж', country: 'Франция' },
-  дубай: { lat: 25.2048, lon: 55.2708, name: 'Дубай', country: 'ОАЭ' },
-  ереван: { lat: 40.1872, lon: 44.5152, name: 'Ереван', country: 'Армения' },
-  тбилиси: { lat: 41.7151, lon: 44.8271, name: 'Тбилиси', country: 'Грузия' },
-  алматы: { lat: 43.222, lon: 76.8512, name: 'Алматы', country: 'Казахстан' },
-  астана: { lat: 51.1694, lon: 71.4491, name: 'Астана', country: 'Казахстан' },
-  минск: { lat: 53.9045, lon: 27.5615, name: 'Минск', country: 'Беларусь' },
-};
+
 
 /**
  * Живой поиск городов по API Open-Meteo Geocoding
@@ -113,15 +97,15 @@ export async function reverseGeocode(lat: number, lon: number): Promise<{ name: 
     // Игнорируем
   }
 
-  return { name: 'Моё местоположение' };
+  return { name: t('weather.myLocation') };
 }
 
 /**
  * Запрос геолокации браузера пользователя
  */
-export async function detectUserLocation(): Promise<WeatherCoordinates> {
+export async function detectUserLocation(lang: SupportedLanguage = 'ru'): Promise<WeatherCoordinates> {
   if (typeof navigator === 'undefined' || !navigator.geolocation) {
-    throw new Error('Геолокация не поддерживается вашим браузером');
+    throw new Error(t('weather.geo.unsupported', undefined, lang));
   }
 
   return new Promise((resolve, reject) => {
@@ -138,15 +122,16 @@ export async function detectUserLocation(): Promise<WeatherCoordinates> {
             country: geoInfo.country,
           });
         } catch {
-          resolve({ lat, lon, name: 'Моё местоположение' });
+          resolve({ lat, lon, name: t('weather.myLocation', undefined, lang) });
         }
       },
       (err) => {
-        let msg = 'Не удалось получить геолокацию';
-        if (err.code === 1) msg = 'Доступ к геолокации запрещен пользователем';
-        if (err.code === 2) msg = 'Местоположение недоступно';
-        if (err.code === 3) msg = 'Превышено время ожидания геолокации';
-        reject(new Error(msg));
+        const reasons: Record<number, TranslationKey> = {
+          1: 'weather.geo.denied',
+          2: 'weather.geo.unavailable',
+          3: 'weather.geo.timeout',
+        };
+        reject(new Error(t(reasons[err.code] ?? 'weather.geo.failed', undefined, lang)));
       },
       { timeout: 10000, enableHighAccuracy: false, maximumAge: 600000 },
     );
@@ -181,7 +166,7 @@ export async function fetchFullWeatherData(params: {
 
   // 3. Поиск по имени города
   if (!activeCoords) {
-    const rawCity = params.city || 'Москва';
+    const rawCity = params.city || DEFAULT_CITY;
     const norm = rawCity.trim().toLowerCase();
     if (POPULAR_CITIES[norm]) {
       activeCoords = POPULAR_CITIES[norm];
@@ -195,7 +180,7 @@ export async function fetchFullWeatherData(params: {
           country: results[0].country,
         };
       } else {
-        activeCoords = POPULAR_CITIES['москва'];
+        activeCoords = POPULAR_CITIES[DEFAULT_CITY.toLowerCase()];
       }
     }
   }
@@ -257,7 +242,7 @@ export async function fetchFullWeatherData(params: {
         });
 
         hourlyList.push({
-          time: i === 0 ? 'Сейчас' : timeFormatted,
+          time: timeFormatted,
           fullTime: rawTime,
           temp: Math.round(hourly.temperature_2m[idx] ?? currentTemp),
           code: hourly.weather_code?.[idx] ?? code,
@@ -276,7 +261,6 @@ export async function fetchFullWeatherData(params: {
         const dateStr = daily.time[i];
         dailyList.push({
           date: dateStr,
-          dayName: getDayName(dateStr, i),
           minTemp: Math.round(daily.temperature_2m_min?.[i] ?? currentTemp - 3),
           maxTemp: Math.round(daily.temperature_2m_max?.[i] ?? currentTemp + 3),
           code: daily.weather_code?.[i] ?? code,
@@ -310,7 +294,7 @@ export async function fetchFullWeatherData(params: {
     const result: WeatherData = {
       temperature: currentTemp,
       weathercode: code,
-      city: activeCoords.name || params.city || 'Москва',
+      city: activeCoords.name || params.city || DEFAULT_CITY,
       country: activeCoords.country,
       isAutoLocation: isAuto,
       maxTemp,
@@ -362,111 +346,103 @@ export function formatTemperature(celsius: number, unit: TemperatureUnit = 'cels
   return `${celsius > 0 ? '+' : ''}${celsius}°`;
 }
 
-export function formatWindSpeed(speedMs: number, unit: WindSpeedUnit = 'ms'): string {
-  if (unit === 'kmh') {
-    return `${Math.round(speedMs * 3.6)} км/ч`;
-  }
-  if (unit === 'mph') {
-    return `${Math.round(speedMs * 2.237)} миль/ч`;
-  }
-  return `${speedMs} м/с`;
+export function formatWindSpeed(
+  speedMs: number,
+  unit: WindSpeedUnit = 'ms',
+  lang: SupportedLanguage = 'ru',
+): string {
+  if (unit === 'kmh') return t('weather.units.kmh', { value: Math.round(speedMs * 3.6) }, lang);
+  if (unit === 'mph') return t('weather.units.mph', { value: Math.round(speedMs * 2.237) }, lang);
+  return t('weather.units.ms', { value: speedMs }, lang);
 }
 
-export function formatPressure(hPa: number, unit: PressureUnit = 'mmhg'): string {
-  if (unit === 'mmhg') {
-    // 1 гПа ≈ 0.750062 мм рт. ст.
-    return `${Math.round(hPa * 0.750062)} мм рт. ст.`;
-  }
-  return `${hPa} гПа`;
+export function formatPressure(
+  hPa: number,
+  unit: PressureUnit = 'mmhg',
+  lang: SupportedLanguage = 'ru',
+): string {
+  // 1 гПа ≈ 0.750062 мм рт. ст.
+  if (unit === 'mmhg') return t('weather.units.mmhg', { value: Math.round(hPa * 0.750062) }, lang);
+  return t('weather.units.hpa', { value: hPa }, lang);
 }
 
-export function formatSunTime(isoString: string): string {
+export function formatSunTime(isoString: string, lang: SupportedLanguage = 'ru'): string {
   try {
     const d = new Date(isoString);
-    return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString(lang === 'ru' ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' });
   } catch {
     return isoString.slice(-5);
   }
 }
 
-export function getDayName(dateStr: string, index: number): string {
-  if (index === 0) return 'Сегодня';
-  if (index === 1) return 'Завтра';
+export function getDayName(dateStr: string, index: number, lang: SupportedLanguage = 'ru'): string {
+  if (index === 0) return t('weather.today', undefined, lang);
+  if (index === 1) return t('weather.tomorrow', undefined, lang);
   try {
     const d = new Date(dateStr);
-    const day = d.toLocaleDateString('ru-RU', { weekday: 'short' });
+    const day = d.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { weekday: 'short' });
     return day.charAt(0).toUpperCase() + day.slice(1);
   } catch {
     return dateStr;
   }
 }
 
-export function getWeatherDescription(code?: number, isDay = true): string {
-  if (code === undefined) return 'Облачно';
-  switch (code) {
-    case 0:
-      return isDay ? 'Ясно' : 'Ясная ночь';
-    case 1:
-      return 'Преимущественно ясно';
-    case 2:
-      return 'Переменная облачность';
-    case 3:
-      return 'Пасмурно';
-    case 45:
-    case 48:
-      return 'Туман';
-    case 51:
-    case 53:
-    case 55:
-      return 'Небольшая морось';
-    case 56:
-    case 57:
-      return 'Ледяная морось';
-    case 61:
-      return 'Небольшой дождь';
-    case 63:
-      return 'Умеренный дождь';
-    case 65:
-      return 'Сильный ливень';
-    case 66:
-    case 67:
-      return 'Ледяной дождь';
-    case 71:
-      return 'Небольшой снег';
-    case 73:
-      return 'Снегопад';
-    case 75:
-      return 'Сильный снегопад';
-    case 77:
-      return 'Снежные зерна';
-    case 80:
-    case 81:
-    case 82:
-      return 'Кратковременные дожди';
-    case 85:
-    case 86:
-      return 'Снегопад с дождем';
-    case 95:
-      return 'Гроза';
-    case 96:
-    case 99:
-      return 'Гроза с градом';
-    default:
-      return 'Облачно';
-  }
+/** Ключ описания погоды по коду WMO */
+function weatherCodeKey(code: number | undefined, isDay: boolean): TranslationKey {
+  if (code === undefined) return 'weather.codes.cloudy';
+  if (code === 0) return isDay ? 'weather.codes.clear' : 'weather.codes.clearNight';
+  const table: Record<number, TranslationKey> = {
+    1: 'weather.codes.mainlyClear',
+    2: 'weather.codes.partlyCloudy',
+    3: 'weather.codes.overcast',
+    45: 'weather.codes.fog',
+    48: 'weather.codes.fog',
+    51: 'weather.codes.drizzle',
+    53: 'weather.codes.drizzle',
+    55: 'weather.codes.drizzle',
+    56: 'weather.codes.freezingDrizzle',
+    57: 'weather.codes.freezingDrizzle',
+    61: 'weather.codes.lightRain',
+    63: 'weather.codes.moderateRain',
+    65: 'weather.codes.heavyRain',
+    66: 'weather.codes.freezingRain',
+    67: 'weather.codes.freezingRain',
+    71: 'weather.codes.lightSnow',
+    73: 'weather.codes.snow',
+    75: 'weather.codes.heavySnow',
+    77: 'weather.codes.snowGrains',
+    80: 'weather.codes.showers',
+    81: 'weather.codes.showers',
+    82: 'weather.codes.showers',
+    85: 'weather.codes.sleet',
+    86: 'weather.codes.sleet',
+    95: 'weather.codes.thunderstorm',
+    96: 'weather.codes.thunderstormHail',
+    99: 'weather.codes.thunderstormHail',
+  };
+  return table[code] ?? 'weather.codes.cloudy';
 }
 
-export function getUvIndexInfo(uv = 0): { label: string; badgeClass: string; color: string } {
-  if (uv <= 2) return { label: 'Низкий', badgeClass: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30', color: '#10b981' };
-  if (uv <= 5) return { label: 'Умеренный', badgeClass: 'bg-amber-500/15 text-amber-400 border-amber-500/30', color: '#f59e0b' };
-  if (uv <= 7) return { label: 'Высокий', badgeClass: 'bg-orange-500/15 text-orange-400 border-orange-500/30', color: '#f97316' };
-  if (uv <= 10) return { label: 'Очень высокий', badgeClass: 'bg-rose-500/15 text-rose-400 border-rose-500/30', color: '#f43f5e' };
-  return { label: 'Экстремальный', badgeClass: 'bg-purple-500/15 text-purple-400 border-purple-500/30', color: '#a855f7' };
+export function getWeatherDescription(code?: number, isDay = true, lang: SupportedLanguage = 'ru'): string {
+  return t(weatherCodeKey(code, isDay), undefined, lang);
 }
 
-export function getWindDirectionText(deg?: number): string {
+export function getUvIndexInfo(
+  uv = 0,
+  lang: SupportedLanguage = 'ru',
+): { label: string; badgeClass: string; color: string } {
+  const label = (level: 'low' | 'moderate' | 'high' | 'veryHigh' | 'extreme') =>
+    t(`weather.uvLevels.${level}`, undefined, lang);
+  if (uv <= 2) return { label: label('low'), badgeClass: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30', color: '#10b981' };
+  if (uv <= 5) return { label: label('moderate'), badgeClass: 'bg-amber-500/15 text-amber-400 border-amber-500/30', color: '#f59e0b' };
+  if (uv <= 7) return { label: label('high'), badgeClass: 'bg-orange-500/15 text-orange-400 border-orange-500/30', color: '#f97316' };
+  if (uv <= 10) return { label: label('veryHigh'), badgeClass: 'bg-rose-500/15 text-rose-400 border-rose-500/30', color: '#f43f5e' };
+  return { label: label('extreme'), badgeClass: 'bg-purple-500/15 text-purple-400 border-purple-500/30', color: '#a855f7' };
+}
+
+const COMPASS = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'] as const;
+
+export function getWindDirectionText(deg?: number, lang: SupportedLanguage = 'ru'): string {
   if (deg === undefined) return '—';
-  const dirs = ['С', 'СВ', 'В', 'ЮВ', 'Ю', 'ЮЗ', 'З', 'СЗ'];
-  const idx = Math.round(deg / 45) % 8;
-  return dirs[idx];
+  return t(`weather.compass.${COMPASS[Math.round(deg / 45) % 8]}`, undefined, lang);
 }

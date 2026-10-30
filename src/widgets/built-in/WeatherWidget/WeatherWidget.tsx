@@ -28,16 +28,21 @@ import {
 import type { WidgetProps } from '@/core/widget';
 import { Skeleton } from '@/ui/feedback';
 import { cn } from '@/ui/lib/cn';
+import { useTranslation } from '@/core/i18n';
+import { DEFAULT_CITY } from './cities';
 import { useElementSize } from '@/ui/lib/useElementSize';
 import type {
   DailyForecastItem,
   HourlyForecastItem,
   WeatherSettings,
   WeatherData,
+  TemperatureUnit,
 } from './types';
 import {
   fetchFullWeatherData,
   formatPressure,
+  formatSunTime,
+  getDayName,
   formatTemperature,
   formatWindSpeed,
   getCachedWeatherData,
@@ -72,11 +77,12 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
   settings,
   forceCompact,
 }) => {
-  const city = settings?.city || 'Москва';
+  const city = settings?.city || DEFAULT_CITY;
   const autoLocation = settings?.autoLocation;
   const coords = settings?.coords;
   const selectedView = settings?.viewMode || 'dashboard';
   const viewMode = selectedView === 'dashboard' && forceCompact ? 'compact' : selectedView;
+  const { t, language } = useTranslation();
   const tempUnit = settings?.tempUnit || 'celsius';
   const windSpeedUnit = settings?.windSpeedUnit || 'ms';
   const pressureUnit = settings?.pressureUnit || 'mmhg';
@@ -198,9 +204,9 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
           <ShieldAlert className="w-8 h-8" />
         </div>
         <div>
-          <h4 className="text-sm font-semibold text-fg">Не удалось загрузить погоду</h4>
+          <h4 className="text-sm font-semibold text-fg">{t('weather.loadFailed')}</h4>
           <p className="text-xs text-fg-muted mt-1 max-w-64">
-            Сервер погоды Open-Meteo временно недоступен или заблокирован провайдером. Проверьте интернет или VPN.
+            {t('weather.loadFailedHint')}
           </p>
         </div>
         <button
@@ -209,13 +215,13 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-fg text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer shadow-1 min-h-9 relative before:absolute before:-inset-1 before:content-['']"
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          <span>Повторить</span>
+          <span>{t('weather.retry')}</span>
         </button>
       </div>
     );
   }
 
-  const uvInfo = getUvIndexInfo(data.metrics?.uvIndex);
+  const uvInfo = getUvIndexInfo(data.metrics?.uvIndex, language);
 
   // 1. Компактный режим (Compact View)
   if (viewMode === 'compact') {
@@ -227,14 +233,14 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
             {data.isAutoLocation && <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />}
             <span className="font-medium text-fg truncate">{data.city}</span>
             {data.isOffline && (
-              <span className="text-2xs text-warning bg-warning/15 px-1.5 rounded-full">Офлайн</span>
+              <span className="text-2xs text-warning bg-warning/15 px-1.5 rounded-full">{t('weather.offline')}</span>
             )}
           </div>
           <button
             type="button"
             onClick={() => refetch()}
             disabled={isFetching}
-            aria-label="Обновить погоду"
+            aria-label={t('weather.refresh')}
             className="relative p-1 text-fg-muted hover:text-fg rounded-full transition-colors cursor-pointer before:absolute before:-inset-2 before:content-['']"
           >
             <RefreshCw className={cn('w-3.5 h-3.5', isFetching && 'animate-spin text-primary')} />
@@ -248,7 +254,7 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
               {formatTemperature(data.temperature, tempUnit)}
             </div>
             <p className="text-13 text-fg-muted truncate mt-1">
-              {getWeatherDescription(data.weathercode, data.metrics?.isDay)}
+              {getWeatherDescription(data.weathercode, data.metrics?.isDay, language)}
             </p>
           </div>
           <div className="shrink-0">{getWeatherIcon(data.weathercode, data.metrics?.isDay, 'w-10 h-10')}</div>
@@ -260,7 +266,9 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
             {formatTemperature(data.minTemp, tempUnit)} / {formatTemperature(data.maxTemp, tempUnit)}
           </span>
           {showFeelsLike && data.metrics?.feelsLike !== undefined && (
-            <span>ощущ. {formatTemperature(data.metrics.feelsLike, tempUnit)}</span>
+            <span>
+              {t('weather.feelsShort', { value: formatTemperature(data.metrics.feelsLike, tempUnit) })}
+            </span>
           )}
           {showHumidity && data.metrics?.humidity !== undefined && (
             <span className="flex items-center gap-1">
@@ -271,7 +279,7 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
           {showWind && data.metrics?.windSpeed !== undefined && (
             <span className="flex items-center gap-1">
               <Wind className="w-3.5 h-3.5 text-secondary shrink-0" aria-hidden="true" />
-              {formatWindSpeed(data.metrics.windSpeed, windSpeedUnit)}
+              {formatWindSpeed(data.metrics.windSpeed, windSpeedUnit, language)}
             </span>
           )}
         </div>
@@ -287,7 +295,7 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
         <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-xs font-bold text-fg truncate">{data.city}</span>
-            <span className="text-2xs text-fg-muted">• 24-часовой прогноз</span>
+            <span className="text-2xs text-fg-muted">{t('weather.forecast24h')}</span>
           </div>
           <button
             type="button"
@@ -306,7 +314,9 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
               key={idx}
               className="flex items-center justify-between p-2 rounded-xl bg-surface/40 hover:bg-surface/70 border border-line/40 transition-colors"
             >
-              <span className="text-xs font-medium text-fg-muted w-14 font-mono">{h.time}</span>
+              <span className="text-xs font-medium text-fg-muted w-14 font-mono">
+                {idx === 0 ? t('weather.now') : h.time}
+              </span>
               <div className="flex items-center gap-2">
                 {getWeatherIcon(h.code, h.isDay, 'w-4 h-4')}
                 {h.precipitationProbability !== undefined && h.precipitationProbability > 15 && (
@@ -330,7 +340,7 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
     return (
       <div className={cn('relative flex flex-col h-full p-3 select-none overflow-hidden bg-linear-to-b', weatherGlow)}>
         <div className="flex items-center justify-between pb-2">
-          <span className="text-xs font-bold text-fg truncate">{data.city} • 7 дней</span>
+          <span className="text-xs font-bold text-fg truncate">{data.city} {t('weather.forecast7d')}</span>
           <button
             type="button"
             onClick={() => refetch()}
@@ -345,6 +355,7 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
           {data.daily.map((day, idx) => (
             <DailyRow
               key={idx}
+              index={idx}
               item={day}
               weekMin={weekExtremes.min}
               weekMax={weekExtremes.max}
@@ -364,7 +375,7 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
       <div className="flex items-center justify-between px-3 pt-2.5 pb-1 border-b border-line/40 shrink-0">
         <div className="flex items-center gap-1.5 min-w-0">
           {data.isAutoLocation ? (
-            <span title="Определено по геолокации" className="text-primary flex items-center">
+            <span title={t('weather.byGeolocation')} className="text-primary flex items-center">
               <MapPin className="w-3.5 h-3.5" />
             </span>
           ) : (
@@ -373,7 +384,7 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
           <span className="text-xs font-bold text-fg truncate">{data.city}</span>
           {data.isOffline && (
             <span className="text-2xs text-amber-400 bg-amber-500/15 px-1 py-0.5 rounded font-medium">
-              Офлайн
+              {t('weather.offline')}
             </span>
           )}
         </div>
@@ -384,46 +395,46 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
             <button
               type="button"
               onClick={() => setActiveTab('overview')}
-              title="Общий обзор"
+              title={t('weather.tabs.overviewHint')}
               className={cn(
                 'px-2 py-0.5 rounded-md text-2xs font-semibold transition-all cursor-pointer',
                 activeTab === 'overview' ? 'bg-primary text-primary-fg shadow-1' : 'text-fg-muted hover:text-fg',
               )}
             >
-              Обзор
+              {t('weather.tabs.overview')}
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('hourly')}
-              title="По часам"
+              title={t('weather.tabs.hourlyHint')}
               className={cn(
                 'px-2 py-0.5 rounded-md text-2xs font-semibold transition-all cursor-pointer',
                 activeTab === 'hourly' ? 'bg-primary text-primary-fg shadow-1' : 'text-fg-muted hover:text-fg',
               )}
             >
-              24ч
+              {t('weather.tabs.hourly')}
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('daily')}
-              title="На 7 дней"
+              title={t('weather.tabs.dailyHint')}
               className={cn(
                 'px-2 py-0.5 rounded-md text-2xs font-semibold transition-all cursor-pointer',
                 activeTab === 'daily' ? 'bg-primary text-primary-fg shadow-1' : 'text-fg-muted hover:text-fg',
               )}
             >
-              7 дн.
+              {t('weather.tabs.daily')}
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('metrics')}
-              title="Атмосферные параметры"
+              title={t('weather.tabs.detailsHint')}
               className={cn(
                 'px-2 py-0.5 rounded-md text-2xs font-semibold transition-all cursor-pointer',
                 activeTab === 'metrics' ? 'bg-primary text-primary-fg shadow-1' : 'text-fg-muted hover:text-fg',
               )}
             >
-              Детали
+              {t('weather.tabs.details')}
             </button>
           </div>
 
@@ -431,7 +442,7 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
             type="button"
             onClick={() => refetch()}
             disabled={isFetching}
-            aria-label="Обновить погоду"
+            aria-label={t('weather.refresh')}
             className="p-1.5 text-fg-muted hover:text-fg rounded-lg transition-colors cursor-pointer"
           >
             <RefreshCw className={cn('w-3.5 h-3.5', isFetching && 'animate-spin text-primary')} />
@@ -453,13 +464,13 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
                   </span>
                   {showFeelsLike && data.metrics?.feelsLike !== undefined && (
                     <span className="text-xs text-fg-muted">
-                      Ощущается как {formatTemperature(data.metrics.feelsLike, tempUnit)}
+                      {t('weather.feelsLike')} {formatTemperature(data.metrics.feelsLike, tempUnit)}
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="text-xs font-medium text-fg">
-                    {getWeatherDescription(data.weathercode, data.metrics?.isDay)}
+                    {getWeatherDescription(data.weathercode, data.metrics?.isDay, language)}
                   </span>
                   <span className="text-2xs text-fg-dim font-mono">• {data.minTemp}° / {data.maxTemp}°</span>
                 </div>
@@ -475,9 +486,9 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-2xs font-semibold text-fg-muted px-1">
                   <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-primary" /> Почасовой прогноз
+                    <Clock className="w-3 h-3 text-primary" /> {t('weather.hourlyTitle')}
                   </span>
-                  <span className="text-2xs text-fg-dim">24 часа</span>
+                  <span className="text-2xs text-fg-dim">{t('weather.hours24')}</span>
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar pt-0.5">
                   {data.hourly.slice(0, 12).map((h, i) => (
@@ -490,7 +501,9 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
                           : 'bg-surface/40 border-line/40 hover:bg-surface/70',
                       )}
                     >
-                      <span className="text-2xs text-fg-muted font-mono">{h.time}</span>
+                      <span className="text-2xs text-fg-muted font-mono">
+                        {i === 0 ? t('weather.now') : h.time}
+                      </span>
                       {getWeatherIcon(h.code, h.isDay, 'w-4 h-4')}
                       <span className="text-xs font-bold text-fg font-display">
                         {formatTemperature(h.temp, tempUnit)}
@@ -511,13 +524,14 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-2xs font-semibold text-fg-muted px-1">
                   <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-secondary" /> Прогноз на неделю
+                    <Calendar className="w-3 h-3 text-secondary" /> {t('weather.weeklyTitle')}
                   </span>
                 </div>
                 <div className="space-y-1 bg-surface/30 p-2 rounded-lg border border-line/40">
                   {data.daily.slice(0, 5).map((day, idx) => (
                     <DailyRow
                       key={idx}
+                      index={idx}
                       item={day}
                       weekMin={weekExtremes.min}
                       weekMax={weekExtremes.max}
@@ -535,33 +549,34 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
                 {showWind && (
                   <MetricCard
                     icon={<Wind className="w-4 h-4 text-cyan-400" />}
-                    title="Ветер"
-                    value={formatWindSpeed(data.metrics?.windSpeed ?? 0, windSpeedUnit)}
-                    subtitle={`Направление: ${getWindDirectionText(data.metrics?.windDirection)}`}
+                    title={t('weather.metrics.wind')}
+                    value={formatWindSpeed(data.metrics?.windSpeed ?? 0, windSpeedUnit, language)}
+                    subtitle={t('weather.metrics.direction', {
+                      value: getWindDirectionText(data.metrics?.windDirection, language),
+                    })}
                   />
                 )}
                 {showHumidity && (
                   <MetricCard
                     icon={<Droplets className="w-4 h-4 text-blue-400" />}
-                    title="Влажность"
-                    value={`${data.metrics?.humidity ?? 60}%`}
-                    subtitle={`Точка росы в норме`}
+                    title={t('weather.metrics.humidity')}
+                    value={data.metrics?.humidity !== undefined ? `${data.metrics.humidity}%` : '—'}
                   />
                 )}
                 {showUv && (
                   <MetricCard
                     icon={<Sun className="w-4 h-4 text-amber-400" />}
-                    title="УФ-индекс"
-                    value={`${data.metrics?.uvIndex ?? 0}`}
+                    title={t('weather.metrics.uv')}
+                    value={data.metrics?.uvIndex !== undefined ? `${data.metrics.uvIndex}` : '—'}
                     badge={uvInfo.label}
                     badgeClass={uvInfo.badgeClass}
                   />
                 )}
                 <MetricCard
                   icon={<Gauge className="w-4 h-4 text-emerald-400" />}
-                  title="Давление"
-                  value={formatPressure(data.metrics?.pressure ?? 1013, pressureUnit)}
-                  subtitle="Атмосферное"
+                  title={t('weather.metrics.pressure')}
+                  value={formatPressure(data.metrics?.pressure ?? 1013, pressureUnit, language)}
+                  subtitle={t('weather.metrics.atmospheric')}
                 />
               </div>
             )}
@@ -576,10 +591,12 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
                 key={idx}
                 className="flex items-center justify-between p-2 rounded-xl bg-surface/40 hover:bg-surface/70 border border-line/40 transition-colors"
               >
-                <span className="text-xs font-semibold text-fg-muted w-16 font-mono">{h.time}</span>
+                <span className="text-xs font-semibold text-fg-muted w-16 font-mono">
+                  {idx === 0 ? t('weather.now') : h.time}
+                </span>
                 <div className="flex items-center gap-3">
                   {getWeatherIcon(h.code, h.isDay, 'w-4 h-4')}
-                  <span className="text-xs text-fg-dim hidden sm:inline">{getWeatherDescription(h.code, h.isDay)}</span>
+                  <span className="text-xs text-fg-dim hidden sm:inline">{getWeatherDescription(h.code, h.isDay, language)}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   {h.precipitationProbability !== undefined && h.precipitationProbability > 0 && (
@@ -602,6 +619,7 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
             {data.daily.map((day, idx) => (
               <DailyRow
                 key={idx}
+                index={idx}
                 item={day}
                 weekMin={weekExtremes.min}
                 weekMax={weekExtremes.max}
@@ -617,55 +635,74 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
           <div className="grid grid-cols-2 gap-2">
             <MetricCard
               icon={<Wind className="w-4 h-4 text-cyan-400" />}
-              title="Скорость ветра"
-              value={formatWindSpeed(data.metrics?.windSpeed ?? 0, windSpeedUnit)}
-              subtitle={`Порывы: ${formatWindSpeed(data.metrics?.windGusts ?? (data.metrics?.windSpeed ?? 0) * 1.3, windSpeedUnit)}`}
+              title={t('weather.metrics.windSpeed')}
+              value={formatWindSpeed(data.metrics?.windSpeed ?? 0, windSpeedUnit, language)}
+              subtitle={
+                data.metrics?.windGusts !== undefined
+                  ? t('weather.metrics.gusts', {
+                      value: formatWindSpeed(data.metrics.windGusts, windSpeedUnit, language),
+                    })
+                  : undefined
+              }
             />
             <MetricCard
               icon={<Compass className="w-4 h-4 text-primary" />}
-              title="Направление ветра"
-              value={getWindDirectionText(data.metrics?.windDirection)}
-              subtitle={`${data.metrics?.windDirection ?? 0}° на компасе`}
+              title={t('weather.metrics.windDirection')}
+              value={getWindDirectionText(data.metrics?.windDirection, language)}
+              subtitle={
+                data.metrics?.windDirection !== undefined
+                  ? t('weather.metrics.degrees', { value: data.metrics.windDirection })
+                  : undefined
+              }
             />
             <MetricCard
               icon={<Droplets className="w-4 h-4 text-blue-400" />}
-              title="Влажность воздуха"
-              value={`${data.metrics?.humidity ?? 60}%`}
-              subtitle={data.metrics?.humidity && data.metrics.humidity > 70 ? 'Повышенная влажность' : 'Комфортный уровень'}
+              title={t('weather.metrics.airHumidity')}
+              value={data.metrics?.humidity !== undefined ? `${data.metrics.humidity}%` : '—'}
+              subtitle={
+                data.metrics?.humidity === undefined
+                  ? undefined
+                  : data.metrics.humidity > 70
+                    ? t('weather.metrics.humidityHigh')
+                    : t('weather.metrics.humidityOk')
+              }
             />
             <MetricCard
               icon={<Gauge className="w-4 h-4 text-emerald-400" />}
-              title="Давление"
-              value={formatPressure(data.metrics?.pressure ?? 1013, pressureUnit)}
-              subtitle="На уровне моря"
+              title={t('weather.metrics.pressure')}
+              value={formatPressure(data.metrics?.pressure ?? 1013, pressureUnit, language)}
+              subtitle={t('weather.metrics.atSeaLevel')}
             />
             <MetricCard
               icon={<Sun className="w-4 h-4 text-amber-400" />}
-              title="УФ-индекс (макс.)"
-              value={`${data.metrics?.uvIndex ?? 0}`}
+              title={t('weather.metrics.uvMax')}
+              value={data.metrics?.uvIndex !== undefined ? `${data.metrics.uvIndex}` : '—'}
               badge={uvInfo.label}
               badgeClass={uvInfo.badgeClass}
             />
             <MetricCard
               icon={<Eye className="w-4 h-4 text-violet-400" />}
-              title="Видимость"
-              value={`${data.metrics?.visibility ?? 10} км`}
-              subtitle="Отличная прозрачность"
+              title={t('weather.metrics.visibility')}
+              value={
+                data.metrics?.visibility !== undefined
+                  ? t('weather.metrics.visibilityValue', { value: data.metrics.visibility })
+                  : '—'
+              }
             />
             {showSunTimes && data.metrics?.sunrise && (
               <MetricCard
                 icon={<Sunrise className="w-4 h-4 text-amber-300" />}
-                title="Восход солнца"
-                value={data.metrics.sunrise}
-                subtitle="Начало светового дня"
+                title={t('weather.metrics.sunrise')}
+                value={formatSunTime(data.metrics.sunrise, language)}
+                subtitle={t('weather.metrics.sunriseHint')}
               />
             )}
             {showSunTimes && data.metrics?.sunset && (
               <MetricCard
                 icon={<Sunset className="w-4 h-4 text-rose-400" />}
-                title="Заход солнца"
-                value={data.metrics.sunset}
-                subtitle="Сумерки"
+                title={t('weather.metrics.sunset')}
+                value={formatSunTime(data.metrics.sunset, language)}
+                subtitle={t('weather.metrics.sunsetHint')}
               />
             )}
           </div>
@@ -680,18 +717,30 @@ interface DailyRowProps {
   item: DailyForecastItem;
   weekMin: number;
   weekMax: number;
-  tempUnit: any;
+  tempUnit: TemperatureUnit;
+  /** Порядковый номер дня: 0 — сегодня, 1 — завтра */
+  index: number;
   getWeatherIcon: (code?: number, isDay?: boolean, sizeClass?: string) => React.ReactNode;
 }
 
-const DailyRow: React.FC<DailyRowProps> = ({ item, weekMin, weekMax, tempUnit, getWeatherIcon }) => {
+const DailyRow: React.FC<DailyRowProps> = ({
+  item,
+  index,
+  weekMin,
+  weekMax,
+  tempUnit,
+  getWeatherIcon,
+}) => {
+  const { language } = useTranslation();
   const range = weekMax - weekMin || 1;
   const leftPercent = Math.max(0, Math.min(100, ((item.minTemp - weekMin) / range) * 100));
   const rightPercent = Math.max(0, Math.min(100, ((weekMax - item.maxTemp) / range) * 100));
 
   return (
     <div className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-xl hover:bg-surface/50 transition-colors text-xs">
-      <span className="font-semibold text-fg w-16 truncate">{item.dayName}</span>
+      <span className="font-semibold text-fg w-16 truncate">
+        {getDayName(item.date, index, language)}
+      </span>
 
       <div className="flex items-center gap-1.5 w-12 justify-center shrink-0">
         {getWeatherIcon(item.code, true, 'w-4 h-4')}

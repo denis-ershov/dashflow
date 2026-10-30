@@ -165,7 +165,7 @@ export const ClockWidget: React.FC<WidgetProps<ClockSettings>> = ({ settings }) 
   };
 
   return (
-    <div role="timer" aria-label="Часы" className="flex flex-col items-center justify-center h-full w-full p-2">
+    <div role="timer" aria-label={t('clock.label')} className="flex flex-col items-center justify-center h-full w-full p-2">
       {showGreeting && (
         <div className="flex items-center gap-1.5 text-xs sm:text-sm text-fg-muted font-medium mb-1 transition-all">
           <span>{greeting.icon}</span>

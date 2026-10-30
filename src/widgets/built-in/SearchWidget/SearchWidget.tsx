@@ -185,7 +185,7 @@ export const SearchWidget: React.FC<WidgetProps<SearchSettings>> = ({
                       aria-label={t('search.engineList')}
                     >
                       <div className="text-2xs font-semibold text-fg-dim px-2.5 py-1 uppercase tracking-wider select-none">
-                        Поисковая система
+                        {t('search.engineList')}
                       </div>
                       <div className="flex flex-col gap-0.5 mt-0.5">
                         {ENGINES_LIST.map((eng) => {

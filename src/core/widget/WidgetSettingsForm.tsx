@@ -85,7 +85,7 @@ export function WidgetSettingsForm<S>({
         control = (
           <Input
             label={label}
-            placeholder={field.placeholder}
+            placeholder={resolveLabel(field.placeholder)}
             value={typeof rawValue === 'string' ? rawValue : String(field.defaultValue ?? '')}
             onChange={(e) => updateField(key, e.target.value)}
           />
@@ -97,7 +97,7 @@ export function WidgetSettingsForm<S>({
           <Input
             type="number"
             label={label}
-            placeholder={field.placeholder}
+            placeholder={resolveLabel(field.placeholder)}
             min={field.min}
             max={field.max}
             step={field.step}
@@ -127,7 +127,7 @@ export function WidgetSettingsForm<S>({
             min={field.min ?? 0}
             max={field.max ?? 100}
             step={field.step ?? 1}
-            unit={field.unit}
+            unit={field.unit && resolveLabel(field.unit)}
             onChange={(val) => updateField(key, val)}
           />
         );

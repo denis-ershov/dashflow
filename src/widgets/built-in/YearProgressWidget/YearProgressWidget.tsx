@@ -15,7 +15,7 @@ export const YearProgressWidget: React.FC<WidgetProps<YearProgressSettings>> = (
   const progressStyle = settings?.progressStyle || 'pill';
   const showRemainingDays = settings?.showRemainingDays !== false;
   const gradient = settings?.gradient || 'cyan-indigo';
-  const { formatDate } = useTranslation();
+  const { t, tp, formatDate } = useTranslation();
   const now = useNow(60_000);
 
   useEffect(() => {
@@ -26,19 +26,19 @@ export const YearProgressWidget: React.FC<WidgetProps<YearProgressSettings>> = (
 
   const progress = computePeriodProgress(viewMode, now);
   const labels: Record<ProgressPeriod, string> = {
-    year: `${now.getFullYear()} год`,
-    quarter: `${Math.floor(now.getMonth() / 3) + 1} квартал`,
+    year: t('yearProgress.year', { year: now.getFullYear() }),
+    quarter: t('yearProgress.quarter', { quarter: Math.floor(now.getMonth() / 3) + 1 }),
     month: formatDate(now, { month: 'long' }),
-    week: 'Текущая неделя',
-    day: 'Сегодня',
+    week: t('yearProgress.week'),
+    day: t('yearProgress.today'),
   };
   const current = {
     percent: progress.percent,
     label: labels[viewMode],
     remaining:
       viewMode === 'day'
-        ? `осталось ${progress.remainingHours} ч.`
-        : `осталось ${progress.remainingDays} дн.`,
+        ? tp('yearProgress.hoursLeft', progress.remainingHours)
+        : tp('yearProgress.daysLeft', progress.remainingDays),
   };
 
   const cycleMode = () => {
@@ -66,7 +66,7 @@ export const YearProgressWidget: React.FC<WidgetProps<YearProgressSettings>> = (
     <button
       type="button"
       role="button"
-      aria-label="Прогресс времени"
+      aria-label={t('yearProgress.label')}
       onClick={cycleMode}
       className="flex flex-col justify-center h-full w-full p-3 cursor-pointer group select-none transition-all text-left bg-transparent border-0"
     >

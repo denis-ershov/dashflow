@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from '@/core/i18n';
 import {
   Folder,
   Search,
@@ -118,6 +119,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
   const [tileShape, setTileShape] = useState<BookmarkTileShape>(
     settings?.tileShape || 'rectangle-horizontal',
   );
+  const { t } = useTranslation();
   const tileSize = settings?.tileSize || 'medium';
   const cardStyle = settings?.cardStyle || 'glass';
   const borderRadius = settings?.borderRadius || 'md';
@@ -215,12 +217,12 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
       chrome.tabs.query({}, (tabs) => {
         if (!tabs) return;
         setOpenTabs(
-          tabs.map((t) => ({
-            id: t.id || 0,
-            title: t.title || t.url || 'Вкладка',
-            url: t.url || '',
-            favIconUrl: t.favIconUrl,
-            active: Boolean(t.active),
+          tabs.map((tab) => ({
+            id: tab.id || 0,
+            title: tab.title || tab.url || t('bookmarks.tab'),
+            url: tab.url || '',
+            favIconUrl: tab.favIconUrl,
+            active: Boolean(tab.active),
           })),
         );
       });
@@ -238,17 +240,17 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
             items.push({
               id: s.tab.sessionId || String(idx),
               sessionId: s.tab.sessionId || '',
-              title: s.tab.title || s.tab.url || 'Вкладка',
+              title: s.tab.title || s.tab.url || t('bookmarks.tab'),
               url: s.tab.url || '',
               lastModified: s.lastModified || Date.now(),
             });
           } else if (s.window && s.window.tabs) {
-            s.window.tabs.forEach((t, tIdx) => {
+            s.window.tabs.forEach((tab, tIdx) => {
               items.push({
-                id: t.sessionId || `${idx}-${tIdx}`,
-                sessionId: t.sessionId || '',
-                title: t.title || t.url || 'Вкладка',
-                url: t.url || '',
+                id: tab.sessionId || `${idx}-${tIdx}`,
+                sessionId: tab.sessionId || '',
+                title: tab.title || tab.url || t('bookmarks.tab'),
+                url: tab.url || '',
                 lastModified: s.lastModified || Date.now(),
               });
             });
@@ -398,14 +400,18 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
     if (typeof chrome !== 'undefined' && chrome.tabs?.query) {
       chrome.tabs.query({}, async (tabs) => {
         if (!tabs) return;
-        for (const t of tabs) {
-          if (t.url && t.title && !t.url.startsWith('chrome://')) {
+        for (const tab of tabs) {
+          if (tab.url && tab.title && !tab.url.startsWith('chrome://')) {
             if (folderSource === 'chrome') {
-              await createBookmark(targetFolderId, t.title, t.url);
+              await createBookmark(targetFolderId, tab.title, tab.url);
             } else {
               setCustomLinks((prev) => [
                 ...prev,
-                { id: `tab-${Date.now()}-${t.id}`, title: t.title || 'Вкладка', url: t.url || '' },
+                {
+                  id: `tab-${Date.now()}-${tab.id}`,
+                  title: tab.title || t('bookmarks.tab'),
+                  url: tab.url || '',
+                },
               ]);
             }
           }
@@ -447,7 +453,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               )}
             >
               <BookmarkIcon className="w-3.5 h-3.5" />
-              <span>Закладки</span>
+              <span>{t('bookmarks.tabs.bookmarks')}</span>
             </button>
 
             <button
@@ -461,7 +467,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               )}
             >
               <Layers className="w-3.5 h-3.5" />
-              <span>Вкладки</span>
+              <span>{t('bookmarks.tabs.openTabs')}</span>
               {openTabs.length > 0 && (
                 <Badge variant="secondary">
                   {openTabs.length}
@@ -480,7 +486,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               )}
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Недавние</span>
+              <span>{t('bookmarks.tabs.recent')}</span>
             </button>
           </div>
         ) : (
@@ -494,7 +500,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                   onUpdateSettings?.({ selectedFolderId: 'all' });
                 }}
                 className="p-1.5 rounded-xl bg-surface hover:bg-surface-hover border border-line text-primary hover:text-primary-hover transition-colors cursor-pointer shrink-0"
-                title="Назад ко всем папкам"
+                title={t('bookmarks.backToFolders')}
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
               </button>
@@ -509,8 +515,8 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                 <Folder className="w-3.5 h-3.5 text-warning shrink-0" />
                 <span className="truncate">
                   {currentFolderId === 'all'
-                    ? 'Все папки закладок'
-                    : currentSelectedFolder?.title || 'Папка'}
+                    ? t('bookmarks.allFolders')
+                    : currentSelectedFolder?.title || t('bookmarks.folder')}
                 </span>
                 <ChevronDown className="w-3.5 h-3.5 text-fg-muted shrink-0 ml-0.5" />
               </button>
@@ -532,7 +538,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                     )}
                   >
                     <Folder className="w-4 h-4 text-warning shrink-0" />
-                    <span className="truncate">📁 Все папки закладок</span>
+                    <span className="truncate">{t('bookmarks.allFoldersOption')}</span>
                   </button>
 
                   {allAvailableFolders.map((f) => (
@@ -569,7 +575,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               <Search className="w-3.5 h-3.5 text-fg-muted absolute left-2 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Поиск..."
+                placeholder={t('bookmarks.search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-surface text-xs placeholder:text-fg-muted border border-line rounded-lg pl-7 pr-6 py-1 w-32 sm:w-40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
@@ -592,7 +598,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               <button
                 type="button"
                 onClick={() => setIsStyleMenuOpen(!isStyleMenuOpen)}
-                title="Внешний вид и форма закладок"
+                title={t('bookmarks.appearance')}
                 className={cn(
                   'p-1.5 rounded-lg border text-xs transition-colors cursor-pointer flex items-center gap-1',
                   isStyleMenuOpen
@@ -617,7 +623,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               {isStyleMenuOpen && (
                 <div className="absolute right-0 top-full mt-1 w-48 bg-surface border border-line shadow-3 rounded-xl p-1.5 z-50 backdrop-blur-xl space-y-1 text-xs">
                   <div className="px-2 py-1 text-2xs font-bold text-fg-muted uppercase tracking-wider">
-                    Вид закладок
+                    {t('bookmarks.viewTitle')}
                   </div>
 
                   <button
@@ -636,7 +642,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                     )}
                   >
                     <span className="flex items-center gap-2">
-                      <LayoutGrid className="w-3.5 h-3.5" /> Карточки
+                      <LayoutGrid className="w-3.5 h-3.5" /> {t('bookmarks.views.cards')}
                     </span>
                     {viewMode === 'tiles' && tileShape === 'rectangle-horizontal' && (
                       <Check className="w-3.5 h-3.5" />
@@ -659,7 +665,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                     )}
                   >
                     <span className="flex items-center gap-2">
-                      <Square className="w-3.5 h-3.5" /> Квадраты (1:1)
+                      <Square className="w-3.5 h-3.5" /> {t('bookmarks.views.squares')}
                     </span>
                     {viewMode === 'tiles' && tileShape === 'square' && <Check className="w-3.5 h-3.5" />}
                   </button>
@@ -680,7 +686,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                     )}
                   >
                     <span className="flex items-center gap-2">
-                      <Columns2 className="w-3.5 h-3.5" /> Постеры
+                      <Columns2 className="w-3.5 h-3.5" /> {t('bookmarks.views.posters')}
                     </span>
                     {viewMode === 'tiles' && tileShape === 'rectangle-vertical' && (
                       <Check className="w-3.5 h-3.5" />
@@ -703,7 +709,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                     )}
                   >
                     <span className="flex items-center gap-2">
-                      <Circle className="w-3.5 h-3.5" /> Круглые иконки
+                      <Circle className="w-3.5 h-3.5" /> {t('bookmarks.views.circles')}
                     </span>
                     {viewMode === 'tiles' && tileShape === 'circle' && <Check className="w-3.5 h-3.5" />}
                   </button>
@@ -724,7 +730,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                     )}
                   >
                     <span className="flex items-center gap-2">
-                      <Columns2 className="w-3.5 h-3.5" /> Капсулы
+                      <Columns2 className="w-3.5 h-3.5" /> {t('bookmarks.views.pills')}
                     </span>
                     {viewMode === 'tiles' && tileShape === 'pill' && <Check className="w-3.5 h-3.5" />}
                   </button>
@@ -744,7 +750,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                     )}
                   >
                     <span className="flex items-center gap-2">
-                      <List className="w-3.5 h-3.5" /> Список
+                      <List className="w-3.5 h-3.5" /> {t('bookmarks.views.list')}
                     </span>
                     {viewMode === 'list' && <Check className="w-3.5 h-3.5" />}
                   </button>
@@ -762,7 +768,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                   setStructureMode('tree');
                   onUpdateSettings?.({ structureMode: 'tree' });
                 }}
-                title="Иерархическая структура с папками"
+                title={t('bookmarks.treeHint')}
                 className={cn(
                   'p-1.5 rounded-md text-xs transition-colors cursor-pointer',
                   structureMode === 'tree'
@@ -778,7 +784,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                   setStructureMode('flatten');
                   onUpdateSettings?.({ structureMode: 'flatten' });
                 }}
-                title="Все ссылки одним плоским списком"
+                title={t('bookmarks.flatHint')}
                 className={cn(
                   'p-1.5 rounded-md text-xs transition-colors cursor-pointer',
                   structureMode === 'flatten'
@@ -796,7 +802,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
             <button
               type="button"
               onClick={() => setIsEditMode(!isEditMode)}
-              title={isEditMode ? 'Завершить редактирование' : 'Редактировать / Удалить закладки'}
+              title={isEditMode ? t('bookmarks.finishEditing') : t('bookmarks.edit')}
               className={cn(
                 'p-1.5 rounded-lg border text-xs transition-colors cursor-pointer flex items-center gap-1',
                 isEditMode
@@ -812,7 +818,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
             <Button
               size="sm"
               variant="secondary"
-              aria-label="Сохранить вкладки в папку"
+              aria-label={t('bookmarks.saveTabs')}
               onClick={saveAllOpenTabsToFolder}
               icon={<Save className="w-4 h-4" />}
             />
@@ -822,7 +828,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
             <Button
               size="sm"
               variant="primary"
-              aria-label="Добавить элемент"
+              aria-label={t('bookmarks.addItem')}
               onClick={() => setIsAddingItem(!isAddingItem)}
               icon={<Plus className="w-4 h-4" />}
             />
@@ -843,7 +849,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                   onChange={() => setIsFolderType(false)}
                   className="text-primary"
                 />
-                <span>Ссылка</span>
+                <span>{t('bookmarks.link')}</span>
               </label>
               <label className="flex items-center gap-1.5 cursor-pointer">
                 <input
@@ -853,14 +859,14 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                   onChange={() => setIsFolderType(true)}
                   className="text-primary"
                 />
-                <span>Папка</span>
+                <span>{t('bookmarks.folder')}</span>
               </label>
             </div>
           )}
 
           <input
             type="text"
-            placeholder="Название"
+            placeholder={t('bookmarks.titlePlaceholder')}
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             className="w-full bg-surface text-xs text-fg border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
@@ -879,10 +885,10 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
 
           <div className="flex justify-end gap-2 pt-1">
             <Button size="sm" variant="ghost" type="button" onClick={() => setIsAddingItem(false)}>
-              Отмена
+              {t('bookmarks.cancel')}
             </Button>
             <Button size="sm" variant="primary" type="submit">
-              Создать
+              {t('bookmarks.create')}
             </Button>
           </div>
         </form>
@@ -893,8 +899,8 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
         <div className="flex-1 min-h-0 overflow-y-auto pr-1">
           {items.length === 0 ? (
             <EmptyState
-              title="Нет закладок"
-              description={searchQuery ? 'Ничего не найдено по запросу' : 'В этой папке пока нет элементов'}
+              title={t('bookmarks.emptyTitle')}
+              description={searchQuery ? t('bookmarks.nothingFound') : t('bookmarks.emptyFolder')}
             />
           ) : viewMode === 'tiles' ? (
             /* Универсальная плиточная сетка */
@@ -920,7 +926,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                       {isEditMode && isSpeedDialShape && (
                         <button
                           type="button"
-                          aria-label="Удалить элемент"
+                          aria-label={t('bookmarks.removeItem')}
                           onClick={(e) => {
                             e.stopPropagation();
                             if (folderSource === 'chrome') {
@@ -949,7 +955,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                     >
                       {showTitle && (
                         <span className={tileClasses.titleClass}>
-                          {item.title || item.url || 'Закладка'}
+                          {item.title || item.url || t('bookmarks.bookmark')}
                         </span>
                       )}
                       {!isSpeedDialShape && showUrl && (
@@ -957,7 +963,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                           {structureMode === 'flatten' && item.folderName
                             ? item.folderName
                             : item.children
-                              ? 'Папка'
+                              ? t('bookmarks.folder')
                               : item.url?.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}
                         </span>
                       )}
@@ -968,7 +974,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                   {isEditMode && !isSpeedDialShape && (
                     <button
                       type="button"
-                      aria-label="Удалить элемент"
+                      aria-label={t('bookmarks.removeItem')}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (folderSource === 'chrome') {
@@ -1016,7 +1022,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                         {structureMode === 'flatten' && item.folderName
                           ? item.folderName
                           : item.children
-                            ? 'Папка'
+                            ? t('bookmarks.folder')
                             : item.url?.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}
                       </span>
                     </div>
@@ -1025,7 +1031,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                   {isEditMode ? (
                     <button
                       type="button"
-                      aria-label="Удалить закладку"
+                      aria-label={t('bookmarks.removeBookmark')}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (folderSource === 'chrome') {
@@ -1053,8 +1059,8 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
         <div className="flex-1 min-h-0 overflow-y-auto pr-1">
           {filteredOpenTabs.length === 0 ? (
             <EmptyState
-              title="Нет открытых вкладок"
-              description="Здесь отображаются вкладки активного окна Chrome"
+              title={t('bookmarks.noOpenTabs')}
+              description={t('bookmarks.noOpenTabsHint')}
             />
           ) : viewMode === 'tiles' ? (
             <div className={gridClass}>
@@ -1129,8 +1135,8 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
         <div className="flex-1 min-h-0 overflow-y-auto pr-1">
           {filteredRecent.length === 0 ? (
             <EmptyState
-              title="Нет недавних вкладок"
-              description="Здесь появятся недавно закрытые страницы Chrome"
+              title={t('bookmarks.noRecent')}
+              description={t('bookmarks.noRecentHint')}
             />
           ) : viewMode === 'tiles' ? (
             <div className={gridClass}>
@@ -1167,7 +1173,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                   )}
                   <button
                     type="button"
-                    aria-label="Восстановить вкладку"
+                    aria-label={t('bookmarks.restoreTab')}
                     onClick={(e) => {
                       e.stopPropagation();
                       restoreTab(item);
@@ -1176,7 +1182,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                       'p-1 text-fg-muted hover:text-primary rounded-lg hover:bg-primary/10 transition-all cursor-pointer shrink-0',
                       isSpeedDialShape && 'absolute top-1 right-1 bg-surface/90 shadow-1',
                     )}
-                    title="Восстановить вкладку"
+                    title={t('bookmarks.restoreTab')}
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                   </button>
@@ -1205,13 +1211,13 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
 
                   <button
                     type="button"
-                    aria-label="Восстановить вкладку"
+                    aria-label={t('bookmarks.restoreTab')}
                     onClick={(e) => {
                       e.stopPropagation();
                       restoreTab(item);
                     }}
                     className="p-1.5 text-fg-muted hover:text-primary rounded-lg hover:bg-primary/10 transition-all cursor-pointer shrink-0"
-                    title="Восстановить вкладку"
+                    title={t('bookmarks.restoreTab')}
                   >
                     <RotateCcw className="w-4 h-4" />
                   </button>

@@ -2,20 +2,9 @@ import React, { useState } from 'react';
 import { Quote, RefreshCw, Copy, Check } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { cn } from '@/ui/lib/cn';
-import type { QuoteItem, QuotesSettings } from './types';
-
-const QUOTES_COLLECTION: QuoteItem[] = [
-  { id: '1', text: 'Простота — необходимое условие надежности.', author: 'Эдсгер Дейкстра', category: 'code' },
-  { id: '2', text: 'Сначала решите проблему. Затем пишите код.', author: 'Джон Джонсон', category: 'code' },
-  { id: '3', text: 'Совершенство достигается не тогда, когда нечего добавить, а когда нечего убрать.', author: 'Антуан де Сент-Экзюпери', category: 'wisdom' },
-  { id: '4', text: 'Делайте так просто, как только возможно, но не проще.', author: 'Альберт Эйнштейн', category: 'wisdom' },
-  { id: '5', text: 'Лучший способ предсказать будущее — создать его.', author: 'Алан Кей', category: 'wisdom' },
-  { id: '6', text: 'Преждевременная оптимизация — корень всех зол.', author: 'Дональд Кнут', category: 'code' },
-  { id: '7', text: 'Ваше время ограничено, не тратьте его, живя чужой жизнью.', author: 'Стив Джобс', category: 'motivation' },
-  { id: '8', text: 'У вас есть власть над своим разумом, а не над внешними событиями.', author: 'Марк Аврелий', category: 'wisdom' },
-  { id: '9', text: 'Разговоры стоят дешево. Покажите мне код.', author: 'Линус Торвальдс', category: 'code' },
-  { id: '10', text: 'Не то, что вы имеете, а то, кем вы являетесь, определяет ваше счастье.', author: 'Сенека', category: 'wisdom' },
-];
+import type { QuotesSettings } from './types';
+import { getQuotes } from './quotes';
+import { useTranslation } from '@/core/i18n';
 
 export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }) => {
   const category = settings?.category || 'all';
@@ -25,7 +14,9 @@ export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }
   const fontStyle = settings?.fontStyle || 'serif';
   const autoRefreshInterval = Number(settings?.autoRefreshInterval || 0);
 
-  const quotes = QUOTES_COLLECTION.filter((q) => {
+  const { t, language } = useTranslation();
+  const collection = getQuotes(language);
+  const quotes = collection.filter((q) => {
     if (category === 'all') return true;
     return q.category === category;
   });
@@ -33,7 +24,7 @@ export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }
   const [index, setIndex] = useState(0);
   const [copied, setCopied] = useState(false);
 
-  const current = quotes[index % quotes.length] || quotes[0] || QUOTES_COLLECTION[0];
+  const current = quotes[index % quotes.length] || quotes[0] || collection[0];
 
   const fontClass = {
     serif: 'font-serif text-sm sm:text-base italic',
@@ -92,7 +83,7 @@ export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }
         {showCopyButton && (
           <button
             type="button"
-            aria-label="Копировать цитату"
+            aria-label={t('quotes.copy')}
             onClick={copyQuote}
             className="p-1 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors cursor-pointer"
           >
@@ -102,7 +93,7 @@ export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }
 
         <button
           type="button"
-          aria-label="Следующая цитата"
+          aria-label={t('quotes.next')}
           onClick={nextQuote}
           className="p-1 rounded-lg text-fg-muted hover:text-primary hover:bg-surface-hover transition-colors cursor-pointer"
         >

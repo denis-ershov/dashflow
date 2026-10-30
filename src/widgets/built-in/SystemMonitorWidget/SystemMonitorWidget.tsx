@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '@/core/i18n';
 import { Wifi, WifiOff, Battery, BatteryCharging, Layers, Cpu } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { cn } from '@/ui/lib/cn';
@@ -12,6 +13,7 @@ interface BatteryManager extends EventTarget {
 }
 
 export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> = ({ settings }) => {
+  const { t, tp } = useTranslation();
   const showNetwork = settings?.showNetwork ?? true;
   const showBattery = settings?.showBattery ?? true;
   const showTabs = settings?.showTabs ?? true;
@@ -91,9 +93,11 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
           <div className="flex flex-col gap-1">
             <div className="flex justify-between text-xs font-semibold text-fg">
               <span className="flex items-center gap-1.5 text-secondary">
-                <Cpu className="w-3.5 h-3.5" /> Память JS Heap
+                <Cpu className="w-3.5 h-3.5" /> {t('systemMonitor.memory')}
               </span>
-              <span className="font-mono text-fg-muted">{memoryUsage ?? 0} МБ</span>
+              <span className="font-mono text-fg-muted">
+                {t('systemMonitor.mb', { value: memoryUsage ?? 0 })}
+              </span>
             </div>
             <div className="w-full h-1.5 bg-surface-active rounded-full overflow-hidden border border-line">
               <div
@@ -109,10 +113,10 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
             <div className="flex justify-between text-xs font-semibold text-fg">
               <span className="flex items-center gap-1.5 text-warning">
                 {isCharging ? <BatteryCharging className="w-3.5 h-3.5" /> : <Battery className="w-3.5 h-3.5" />}
-                Батарея
+                {t('systemMonitor.battery')}
               </span>
               <span className="font-mono text-fg-muted">
-                {batteryLevel !== null ? `${batteryLevel}%` : 'Сеть AC'}
+                {batteryLevel !== null ? `${batteryLevel}%` : t('systemMonitor.acPower')}
               </span>
             </div>
             <div className="w-full h-1.5 bg-surface-active rounded-full overflow-hidden border border-line">
@@ -135,13 +139,13 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
           {showNetwork && (
             <span className="flex items-center gap-1">
               {isOnline ? <Wifi className="w-3.5 h-3.5 text-success" /> : <WifiOff className="w-3.5 h-3.5 text-danger" />}
-              {isOnline ? 'Онлайн' : 'Офлайн'}
+              {isOnline ? t('systemMonitor.online') : t('systemMonitor.offline')}
             </span>
           )}
           {showTabs && tabCount !== null && (
             <span className="flex items-center gap-1 font-mono">
               <Layers className="w-3.5 h-3.5 text-primary" />
-              {tabCount} вкладок
+              {tp('systemMonitor.tabsCount', tabCount)}
             </span>
           )}
         </div>
@@ -161,9 +165,9 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
             <WifiOff className="w-5 h-5 text-danger shrink-0" />
           )}
           <div className="min-w-0">
-            <span className="text-xs font-semibold text-fg block truncate">Сеть</span>
+            <span className="text-xs font-semibold text-fg block truncate">{t('systemMonitor.network')}</span>
             <p className="text-2xs text-fg-muted font-medium truncate">
-              {isOnline ? 'Подключено' : 'Офлайн'}
+              {isOnline ? t('systemMonitor.connected') : t('systemMonitor.offline')}
             </p>
           </div>
         </div>
@@ -183,9 +187,9 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
             />
           )}
           <div className="min-w-0">
-            <span className="text-xs font-semibold text-fg block truncate">Батарея</span>
+            <span className="text-xs font-semibold text-fg block truncate">{t('systemMonitor.battery')}</span>
             <p className="text-2xs text-fg-muted font-medium truncate">
-              {batteryLevel !== null ? `${batteryLevel}%` : 'Сеть AC'}
+              {batteryLevel !== null ? `${batteryLevel}%` : t('systemMonitor.acPower')}
             </p>
           </div>
         </div>
@@ -196,9 +200,9 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
         <div className="flex items-center gap-2 p-2 rounded-xl bg-surface border border-line">
           <Layers className="w-5 h-5 text-primary shrink-0" />
           <div className="min-w-0">
-            <span className="text-xs font-semibold text-fg block truncate">Вкладки</span>
+            <span className="text-xs font-semibold text-fg block truncate">{t('systemMonitor.tabs')}</span>
             <p className="text-2xs text-fg-muted font-medium truncate">
-              {tabCount} открыто
+              {tp('systemMonitor.tabsOpen', tabCount)}
             </p>
           </div>
         </div>
@@ -209,9 +213,9 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
         <div className="flex items-center gap-2 p-2 rounded-xl bg-surface border border-line">
           <Cpu className="w-5 h-5 text-secondary shrink-0" />
           <div className="min-w-0">
-            <span className="text-xs font-semibold text-fg block truncate">Память JS</span>
+            <span className="text-xs font-semibold text-fg block truncate">{t('systemMonitor.memoryShort')}</span>
             <p className="text-2xs text-fg-muted font-medium truncate">
-              {memoryUsage} МБ
+              {t('systemMonitor.mb', { value: memoryUsage })}
             </p>
           </div>
         </div>

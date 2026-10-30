@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '@/core/i18n';
 import { Plus, X, Globe } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { StorageAdapter } from '@/core/storage/StorageAdapter';
@@ -17,6 +18,7 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
   instanceId,
   settings,
 }) => {
+  const { t } = useTranslation();
   const showTitles = settings?.showTitles ?? true;
   const openInNewTab = settings?.openInNewTab !== false;
   const shape = settings?.shape || 'squircle';
@@ -117,10 +119,10 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
     <div className="flex flex-col h-full w-full p-2 select-none">
       {isAdding ? (
         <form onSubmit={handleAdd} className="flex flex-col gap-2 p-2 bg-surface/50 rounded-xl border border-line">
-          <span className="text-xs font-semibold text-fg">Новая ссылка</span>
+          <span className="text-xs font-semibold text-fg">{t('quickLinks.newLink')}</span>
           <input
             type="text"
-            placeholder="Название ссылки (напр. GitHub)"
+            placeholder={t('quickLinks.titlePlaceholder')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="bg-surface text-xs placeholder:text-fg-muted border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
@@ -128,7 +130,7 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
           />
           <input
             type="text"
-            placeholder="URL (напр. github.com)"
+            placeholder={t('quickLinks.urlPlaceholder')}
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             className="bg-surface text-xs placeholder:text-fg-muted border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
@@ -140,10 +142,10 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
               type="button"
               onClick={() => setIsAdding(false)}
             >
-              Отмена
+              {t('quickLinks.cancel')}
             </Button>
             <Button size="sm" variant="primary" type="submit">
-              Сохранить
+              {t('quickLinks.save')}
             </Button>
           </div>
         </form>
@@ -190,7 +192,7 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
 
               <button
                 type="button"
-                aria-label="Удалить ссылку"
+                aria-label={t('quickLinks.remove')}
                 onClick={(e) => {
                   e.stopPropagation();
                   removeLink(link.id);
@@ -204,12 +206,12 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
 
           <button
             type="button"
-            aria-label="Добавить ссылку"
+            aria-label={t('quickLinks.addLabel')}
             onClick={() => setIsAdding(true)}
             className="flex flex-col items-center justify-center p-2 rounded-xl border border-dashed border-line hover:border-primary text-fg-muted hover:text-primary transition-all cursor-pointer min-h-16"
           >
             <Plus className="w-5 h-5 mb-1" />
-            <span className="text-2xs font-medium">Добавить</span>
+            <span className="text-2xs font-medium">{t('quickLinks.add')}</span>
           </button>
         </div>
       )}

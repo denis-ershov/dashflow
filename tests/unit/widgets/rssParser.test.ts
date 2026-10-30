@@ -36,9 +36,16 @@ describe('rssParser utils', () => {
   it('должен форматировать относительное время на русском', () => {
     const now = Date.now();
     expect(formatRssTimeAgo(now - 1000 * 10)).toBe('только что');
-    expect(formatRssTimeAgo(now - 1000 * 60 * 5)).toBe('5 мин назад');
-    expect(formatRssTimeAgo(now - 1000 * 60 * 60 * 2)).toBe('2 часа назад');
+    expect(formatRssTimeAgo(now - 1000 * 60 * 5)).toBe('5 мин. назад');
+    expect(formatRssTimeAgo(now - 1000 * 60 * 60 * 2)).toBe('2 ч назад');
     expect(formatRssTimeAgo(now - 1000 * 60 * 60 * 24 * 1)).toBe('вчера');
+  });
+
+  it('форматирует относительное время на английском', () => {
+    const now = Date.now();
+    expect(formatRssTimeAgo(now - 1000 * 10, undefined, 'en')).toBe('just now');
+    expect(formatRssTimeAgo(now - 1000 * 60 * 5, undefined, 'en')).toBe('5 min. ago');
+    expect(formatRssTimeAgo(now - 1000 * 60 * 60 * 24, undefined, 'en')).toBe('yesterday');
   });
 
   it('должен парсить RSS 2.0 с enclosure картинками', () => {

@@ -1,5 +1,19 @@
 import type { RssFeedConfig } from './types';
 
+/**
+ * Имя папки по умолчанию. Хранится в настройках лент пользователя как значение,
+ * поэтому не переводится; в интерфейсе показывается перевод rss.defaultFolder.
+ */
+export const DEFAULT_FOLDER = 'Общие';
+
+/** Значение фильтра «все папки» из версий до 2026-10-29 — читается как ALL_FOLDERS */
+export const LEGACY_ALL_FOLDERS = 'Все темы';
+export const ALL_FOLDERS = '__all__';
+
+export function isAllFolders(value: string | undefined): boolean {
+  return !value || value === ALL_FOLDERS || value === LEGACY_ALL_FOLDERS;
+}
+
 export interface RssPresetCategory {
   id: string;
   name: string;

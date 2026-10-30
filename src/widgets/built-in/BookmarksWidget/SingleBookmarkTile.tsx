@@ -2,6 +2,7 @@ import React from 'react';
 import { ExternalLink } from 'lucide-react';
 import { cn } from '@/ui/lib/cn';
 import { isSafeHttpUrl } from '@/core/network';
+import { useTranslation } from '@/core/i18n';
 import type { BookmarkSettings } from './types';
 import { getBookmarkTileClasses, getBookmarkFallbackGradient } from './bookmarkStyles';
 
@@ -13,7 +14,8 @@ export interface SingleBookmarkTileProps {
 const DEFAULT_SINGLE_URL = 'https://google.com';
 
 export const SingleBookmarkTile: React.FC<SingleBookmarkTileProps> = ({ settings }) => {
-  const title = settings?.singleTitle || 'Быстрая закладка';
+  const { t } = useTranslation();
+  const title = settings?.singleTitle || t('bookmarks.quickBookmark');
   const rawUrl = settings?.singleUrl;
   const url = rawUrl && isSafeHttpUrl(rawUrl) ? rawUrl : DEFAULT_SINGLE_URL;
   const showTitle = settings?.showTitle !== false;
