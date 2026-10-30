@@ -5,6 +5,7 @@ import { cn } from '@/ui/lib/cn';
 import type { QuotesSettings } from './types';
 import { getQuotes } from './quotes';
 import { useTranslation } from '@/core/i18n';
+import { runLogged } from '@/core/observability';
 
 export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }) => {
   const category = settings?.category || 'all';
@@ -84,7 +85,7 @@ export const QuotesWidget: React.FC<WidgetProps<QuotesSettings>> = ({ settings }
           <button
             type="button"
             aria-label={t('quotes.copy')}
-            onClick={copyQuote}
+            onClick={() => runLogged(copyQuote())}
             className="p-1 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors cursor-pointer"
           >
             {copied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}

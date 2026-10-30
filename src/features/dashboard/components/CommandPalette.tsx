@@ -167,9 +167,12 @@ export const CommandPalette: React.FC = () => {
       aria-label={t('commandPalette.label')}
       className="fixed inset-0 z-(--z-modal,50) flex items-start justify-center pt-20 p-4 select-none"
     >
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-canvas/80 backdrop-blur-md transition-opacity duration-fast"
+      {/* Backdrop: клик закрывает палитру; с клавиатуры закрывает Escape, поэтому без tab-остановки */}
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label={t('common.close')}
+        className="fixed inset-0 bg-canvas/80 backdrop-blur-md transition-opacity duration-fast cursor-default"
         onClick={() => setCommandPaletteOpen(false)}
       />
 

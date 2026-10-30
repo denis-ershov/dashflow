@@ -3,8 +3,16 @@ import { ExternalLink } from 'lucide-react';
 import { cn } from '@/ui/lib/cn';
 import { isSafeHttpUrl } from '@/core/network';
 import { useTranslation } from '@/core/i18n';
-import type { BookmarkSettings } from './types';
+import type { BookmarkCardStyle, BookmarkSettings } from './types';
 import { getBookmarkTileClasses, getBookmarkFallbackGradient } from './bookmarkStyles';
+
+/** Старое поле bgStyle (до cardStyle) → ближайший современный стиль карточки */
+const LEGACY_BG_STYLE: Record<NonNullable<BookmarkSettings['bgStyle']>, BookmarkCardStyle> = {
+  glass: 'glass',
+  accent: 'glow',
+  dark: 'solid',
+  transparent: 'transparent',
+};
 
 export interface SingleBookmarkTileProps {
   instanceId: string;
@@ -46,7 +54,7 @@ export const SingleBookmarkTile: React.FC<SingleBookmarkTileProps> = ({ settings
   const classes = getBookmarkTileClasses({
     tileShape: settings?.tileShape || 'square',
     tileSize: settings?.tileSize || 'medium',
-    cardStyle: settings?.cardStyle || (settings?.bgStyle as any) || 'glass',
+    cardStyle: settings?.cardStyle || (settings?.bgStyle && LEGACY_BG_STYLE[settings.bgStyle]) || 'glass',
     borderRadius: settings?.borderRadius || 'md',
     hoverEffect: settings?.hoverEffect || 'scale',
     iconSize: settings?.iconSize || 'medium',

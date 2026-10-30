@@ -8,6 +8,8 @@ import { Switch, Slider, Button } from '@/ui/primitives';
 import { ImportExportModal } from './ImportExportModal';
 import { Globe, Layout, Sparkles, SlidersHorizontal, Activity } from 'lucide-react';
 import { DiagnosticsSection } from './DiagnosticsSection';
+import { runLogged } from '@/core/observability';
+import type { HeroSettings } from '@/core/storage/dashboardMigrations';
 
 export const SettingsModal: React.FC = () => {
   const {
@@ -213,7 +215,9 @@ export const SettingsModal: React.FC = () => {
                 <span className="text-xs font-medium text-fg">{t('layoutSettings.clockStyle')}</span>
                 <select
                   value={heroSettings?.clockStyle || 'digital'}
-                  onChange={(e) => updateHeroSettings({ clockStyle: e.target.value as any })}
+                  onChange={(e) =>
+                    updateHeroSettings({ clockStyle: e.target.value as HeroSettings['clockStyle'] })
+                  }
                   className="bg-surface text-xs text-fg border border-line rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer"
                 >
                   <option value="digital">{t('layoutSettings.clockStyles.digital')}</option>
@@ -287,14 +291,14 @@ export const SettingsModal: React.FC = () => {
               <Button
                 size="sm"
                 variant={language === 'ru' ? 'primary' : 'secondary'}
-                onClick={() => setLanguage('ru')}
+                onClick={() => runLogged(setLanguage('ru'), 'storage')}
               >
                 {t('languages.ru')}
               </Button>
               <Button
                 size="sm"
                 variant={language === 'en' ? 'primary' : 'secondary'}
-                onClick={() => setLanguage('en')}
+                onClick={() => runLogged(setLanguage('en'), 'storage')}
               >
                 {t('languages.en')}
               </Button>
@@ -303,7 +307,10 @@ export const SettingsModal: React.FC = () => {
 
           <div className="flex items-center justify-between pt-2">
             <span className="text-xs font-medium text-fg">{t('settings.animations')}</span>
-            <Switch checked={animationsEnabled} onChange={setAnimationsEnabled} />
+            <Switch
+              checked={animationsEnabled}
+              onChange={(value) => runLogged(setAnimationsEnabled(value), 'storage')}
+            />
           </div>
         </div>
 

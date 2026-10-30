@@ -69,7 +69,8 @@ export const AddWidgetModal: React.FC = () => {
 
   const isOpen = activeModal === 'addWidget';
 
-  const allWidgets = useMemo(() => WidgetRegistry.getAll(), [isOpen]);
+  // Реестр перечитывается при каждом открытии: плагины могли зарегистрироваться с прошлого раза
+  const allWidgets = useMemo(() => (isOpen ? WidgetRegistry.getAll() : []), [isOpen]);
 
   const filteredWidgets = useMemo(() => {
     return allWidgets.filter((w) => {

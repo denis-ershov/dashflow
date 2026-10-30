@@ -51,6 +51,9 @@ import {
   getBookmarkGridClass,
   getBookmarkFallbackGradient,
 } from './bookmarkStyles';
+import { runLogged } from '@/core/observability';
+import { isSafeHttpUrl } from '@/core/network';
+import { onActivationKey } from '@/ui/lib/activation';
 
 /**
  * Вспомогательный компонент фавикона с красивым градиентным фолбэком
@@ -285,10 +288,15 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
     }
   };
 
+  // Загрузчики пересоздаются на каждом рендере, а перезагружать списки нужно только
+  // при смене вкладки виджета или выдаче прав — поэтому они вызываются через ref
+  const loadersRef = useRef({ loadOpenTabs, loadRecentlyClosed });
+  loadersRef.current = { loadOpenTabs, loadRecentlyClosed };
+
   useEffect(() => {
     if (!hasAccess) return;
-    if (activeSubTab === 'openTabs') loadOpenTabs();
-    if (activeSubTab === 'recent') loadRecentlyClosed();
+    if (activeSubTab === 'openTabs') loadersRef.current.loadOpenTabs();
+    if (activeSubTab === 'recent') loadersRef.current.loadRecentlyClosed();
   }, [activeSubTab, hasAccess]);
 
   // Если режим Одиночный сайт — рендерим SingleBookmarkTile
@@ -362,6 +370,13 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
       r.url.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  /** Добавляет https:// к адресу без схемы; null, если результат не http(s)-ссылка */
+  const normalizeHttpUrl = (raw: string): string | null => {
+    const trimmed = raw.trim();
+    const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    return isSafeHttpUrl(withScheme) ? withScheme : null;
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
@@ -372,17 +387,17 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
       if (isFolderType) {
         await createFolder(targetFolderId, newTitle.trim());
       } else if (newUrl.trim()) {
-        let formattedUrl = newUrl.trim();
-        if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-          formattedUrl = `https://${formattedUrl}`;
-        }
+        const formattedUrl = normalizeHttpUrl(newUrl);
+        if (!formattedUrl) return;
         await createBookmark(targetFolderId, newTitle.trim(), formattedUrl);
       }
     } else {
+      const formattedUrl = normalizeHttpUrl(newUrl);
+      if (!formattedUrl) return;
       const newLink: CustomBookmarkLink = {
         id: `link-${Date.now()}`,
         title: newTitle.trim(),
-        url: newUrl.trim().startsWith('http') ? newUrl.trim() : `https://${newUrl.trim()}`,
+        url: formattedUrl,
       };
       setCustomLinks((prev) => [...prev, newLink]);
     }
@@ -392,17 +407,26 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
     setIsAddingItem(false);
   };
 
+  // Колбэк-форма API: в Firefox MV2 пространство chrome.* промисов не возвращает
   const restoreTab = (item: RecentlyClosedItem) => {
     if (item.sessionId && typeof chrome !== 'undefined' && chrome.sessions?.restore) {
-      chrome.sessions.restore(item.sessionId);
+      chrome.sessions.restore(item.sessionId, () => undefined);
     } else if (item.url) {
-      window.open(item.url, '_blank');
+      window.open(item.url, '_blank', 'noopener,noreferrer');
     }
   };
 
   const switchToOpenTab = (tabId: number) => {
     if (typeof chrome !== 'undefined' && chrome.tabs?.update) {
-      chrome.tabs.update(tabId, { active: true });
+      chrome.tabs.update(tabId, { active: true }, () => undefined);
+    }
+  };
+
+  const removeItem = (id: string) => {
+    if (folderSource === 'chrome') {
+      runLogged(deleteBookmark(id), 'storage', { widget: 'bookmarks' });
+    } else {
+      setCustomLinks((prev) => prev.filter((l) => l.id !== id));
     }
   };
 
@@ -419,12 +443,10 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
   };
 
   // Сохранить все открытые вкладки в текущую папку
-  const saveAllOpenTabsToFolder = async () => {
+  const saveAllOpenTabsToFolder = () => {
     const targetFolderId = currentFolderId === 'all' ? (tree[0]?.id || '1') : currentFolderId;
 
-    if (typeof chrome !== 'undefined' && chrome.tabs?.query) {
-      chrome.tabs.query({}, async (tabs) => {
-        if (!tabs) return;
+    const saveTabs = async (tabs: chrome.tabs.Tab[]) => {
         for (const tab of tabs) {
           if (tab.url && tab.title && !tab.url.startsWith('chrome://')) {
             if (folderSource === 'chrome') {
@@ -442,6 +464,11 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
           }
         }
         setIsAddingItem(false);
+    };
+
+    if (typeof chrome !== 'undefined' && chrome.tabs?.query) {
+      chrome.tabs.query({}, (tabs) => {
+        if (tabs) runLogged(saveTabs(tabs), 'storage', { widget: 'bookmarks' });
       });
     }
   };
@@ -863,7 +890,9 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
 
       {/* Форма добавления закладки */}
       {activeSubTab === 'bookmarks' && isAddingItem && (
-        <form onSubmit={handleCreate} className="p-3 rounded-xl bg-surface border border-line space-y-2.5 shadow-2">
+        <form
+          onSubmit={(e) => runLogged(handleCreate(e), 'storage', { widget: 'bookmarks' })}
+          className="p-3 rounded-xl bg-surface border border-line space-y-2.5 shadow-2">
           {folderSource === 'chrome' && (
             <div className="flex items-center gap-3 text-xs text-fg">
               <label className="flex items-center gap-1.5 cursor-pointer">
@@ -945,7 +974,10 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               {items.map((item) => (
                 <div
                   key={item.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => handleItemClick(item)}
+                  onKeyDown={onActivationKey(() => handleItemClick(item))}
                   className={cn('relative', tileClasses.containerClass)}
                   title={`${item.title}${item.url ? `\n${item.url}` : ''}`}
                 >
@@ -966,11 +998,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                           aria-label={t('bookmarks.removeItem')}
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (folderSource === 'chrome') {
-                              deleteBookmark(item.id);
-                            } else {
-                              setCustomLinks((prev) => prev.filter((l) => l.id !== item.id));
-                            }
+                            removeItem(item.id);
                           }}
                           className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-danger text-white flex items-center justify-center shadow-md hover:scale-110 active:scale-90 transition-transform cursor-pointer z-10"
                         >
@@ -1014,11 +1042,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                       aria-label={t('bookmarks.removeItem')}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (folderSource === 'chrome') {
-                          deleteBookmark(item.id);
-                        } else {
-                          setCustomLinks((prev) => prev.filter((l) => l.id !== item.id));
-                        }
+                        removeItem(item.id);
                       }}
                       className="p-1 text-danger hover:bg-danger/10 rounded-lg shrink-0 transition-colors cursor-pointer ml-1"
                     >
@@ -1039,7 +1063,10 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               {items.map((item) => (
                 <div
                   key={item.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => handleItemClick(item)}
+                  onKeyDown={onActivationKey(() => handleItemClick(item))}
                   className="group/tile flex items-center justify-between p-2.5 rounded-xl bg-surface/70 hover:bg-surface border border-line hover:border-primary/50 transition-all duration-200 ease-out cursor-pointer select-none backdrop-blur-sm hover:translate-x-0.5 hover:shadow-1"
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -1071,11 +1098,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                       aria-label={t('bookmarks.removeBookmark')}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (folderSource === 'chrome') {
-                          deleteBookmark(item.id);
-                        } else {
-                          setCustomLinks((prev) => prev.filter((l) => l.id !== item.id));
-                        }
+                        removeItem(item.id);
                       }}
                       className="p-1.5 text-danger hover:bg-danger/10 rounded-lg shrink-0 transition-colors cursor-pointer"
                     >
@@ -1104,7 +1127,10 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               {filteredOpenTabs.map((tab) => (
                 <div
                   key={tab.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => switchToOpenTab(tab.id)}
+                  onKeyDown={onActivationKey(() => switchToOpenTab(tab.id))}
                   className={cn('relative', tileClasses.containerClass)}
                   title={`${tab.title}\n${tab.url}`}
                 >
@@ -1141,7 +1167,10 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               {filteredOpenTabs.map((tab) => (
                 <div
                   key={tab.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => switchToOpenTab(tab.id)}
+                  onKeyDown={onActivationKey(() => switchToOpenTab(tab.id))}
                   className="group/tile flex items-center justify-between p-2.5 rounded-xl bg-surface/70 hover:bg-surface border border-line hover:border-primary/50 transition-all duration-200 ease-out cursor-pointer select-none hover:translate-x-0.5 hover:shadow-1"
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -1180,7 +1209,10 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               {filteredRecent.map((item) => (
                 <div
                   key={item.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => restoreTab(item)}
+                  onKeyDown={onActivationKey(() => restoreTab(item))}
                   className={cn('relative', tileClasses.containerClass)}
                   title={`${item.title}\n${item.url}`}
                 >
@@ -1231,7 +1263,10 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
               {filteredRecent.map((item) => (
                 <div
                   key={item.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => restoreTab(item)}
+                  onKeyDown={onActivationKey(() => restoreTab(item))}
                   className="group/tile flex items-center justify-between p-2.5 rounded-xl bg-surface/70 hover:bg-surface border border-line hover:border-primary/50 transition-all duration-200 ease-out cursor-pointer select-none hover:translate-x-0.5 hover:shadow-1"
                 >
                   <div className="flex items-center gap-3 min-w-0">

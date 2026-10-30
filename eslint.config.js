@@ -6,18 +6,7 @@ import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
   {
-    ignores: [
-      '.wxt/',
-      '.output/',
-      'node_modules/',
-      // Каталоги, ещё не приведённые к правилам (≈225 замечаний на 2026-10-30: no-unsafe-*,
-      // плавающие промисы, a11y). Список сокращается по мере очистки — см. ROADMAP, этап 0.
-      'src/features/dashboard/',
-      'src/features/marketplace/',
-      'src/features/settings/',
-      'src/stores/',
-      'src/widgets/',
-    ],
+    ignores: ['.wxt/', '.output/', 'node_modules/'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,

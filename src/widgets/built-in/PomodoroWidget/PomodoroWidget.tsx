@@ -41,12 +41,19 @@ export const PomodoroWidget: React.FC<WidgetProps<PomodoroSettings>> = ({ settin
     endTimeRef.current = null;
   }, [workDuration, breakDuration, longBreakDuration, mode]);
 
+  // Остаток нужен эффекту таймера только в момент запуска; через ref, чтобы каждый тик
+  // не перезапускал интервал
+  const timeLeftRef = useRef(timeLeft);
+  useEffect(() => {
+    timeLeftRef.current = timeLeft;
+  }, [timeLeft]);
+
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
 
     if (isRunning) {
       if (!endTimeRef.current) {
-        endTimeRef.current = Date.now() + timeLeft * 1000;
+        endTimeRef.current = Date.now() + timeLeftRef.current * 1000;
       }
 
       const updateRemaining = () => {

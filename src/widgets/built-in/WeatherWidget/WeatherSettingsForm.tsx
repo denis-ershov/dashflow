@@ -1,12 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Search, Sparkles, LayoutDashboard, Minimize2, Clock, Calendar, RefreshCw, Check } from 'lucide-react';
+import { MapPin, Search, LayoutDashboard, Minimize2, Clock, Calendar, RefreshCw, Check } from 'lucide-react';
 import { Switch } from '@/ui/primitives/Switch';
 import { Select } from '@/ui/primitives/Select';
 import { cn } from '@/ui/lib/cn';
-import type { CitySearchResult, WeatherSettings, WeatherViewMode } from './types';
+import type {
+  CitySearchResult,
+  PressureUnit,
+  TemperatureUnit,
+  WeatherSettings,
+  WeatherViewMode,
+  WindSpeedUnit,
+} from './types';
 import { detectUserLocation, searchCities } from './weatherService';
 import { DEFAULT_CITY } from './cities';
 import { useTranslation, type TranslationKey } from '@/core/i18n';
+import { runLogged } from '@/core/observability';
 
 interface WeatherSettingsFormProps {
   settings: WeatherSettings;
@@ -66,19 +74,20 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
       return;
     }
 
-    const timer = setTimeout(async () => {
+    const search = async () => {
       setIsSearching(true);
       try {
-        const res = await searchCities(cityInput);
+        const res = await searchCities(cityInput, language);
         setSuggestions(res);
         setShowSuggestions(res.length > 0);
       } finally {
         setIsSearching(false);
       }
-    }, 300);
+    };
+    const timer = setTimeout(() => runLogged(search(), 'network', { widget: 'weather' }), 300);
 
     return () => clearTimeout(timer);
-  }, [cityInput, settings.autoLocation, isUserEditing]);
+  }, [cityInput, settings.autoLocation, isUserEditing, language]);
 
   // Закрытие подсказок при клике вне поля
   useEffect(() => {
@@ -140,7 +149,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
           </label>
           <button
             type="button"
-            onClick={handleDetectGeo}
+            onClick={() => runLogged(handleDetectGeo(), 'network')}
             disabled={isDetectingLocation}
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-medium cursor-pointer disabled:opacity-50"
           >
@@ -223,7 +232,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
             checked={settings.autoLocation || false}
             onChange={(checked) => {
               if (checked) {
-                handleDetectGeo();
+                runLogged(handleDetectGeo(), 'network');
               } else {
                 onChange({ ...settings, autoLocation: false });
               }
@@ -281,7 +290,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
           <Select
             label={t('weather.form.temperature')}
             value={settings.tempUnit || 'celsius'}
-            onChange={(e) => onChange({ ...settings, tempUnit: e.target.value as any })}
+            onChange={(e) => onChange({ ...settings, tempUnit: e.target.value as TemperatureUnit })}
             options={[
               { value: 'celsius', label: t('weather.form.celsius') },
               { value: 'fahrenheit', label: t('weather.form.fahrenheit') },
@@ -290,7 +299,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
           <Select
             label={t('weather.form.windSpeed')}
             value={settings.windSpeedUnit || 'ms'}
-            onChange={(e) => onChange({ ...settings, windSpeedUnit: e.target.value as any })}
+            onChange={(e) => onChange({ ...settings, windSpeedUnit: e.target.value as WindSpeedUnit })}
             options={[
               { value: 'ms', label: t('weather.form.ms') },
               { value: 'kmh', label: t('weather.form.kmh') },
@@ -300,7 +309,7 @@ export const WeatherSettingsForm: React.FC<WeatherSettingsFormProps> = ({ settin
           <Select
             label={t('weather.form.pressure')}
             value={settings.pressureUnit || 'mmhg'}
-            onChange={(e) => onChange({ ...settings, pressureUnit: e.target.value as any })}
+            onChange={(e) => onChange({ ...settings, pressureUnit: e.target.value as PressureUnit })}
             options={[
               { value: 'mmhg', label: t('weather.form.mmhg') },
               { value: 'hpa', label: t('weather.form.hpa') },

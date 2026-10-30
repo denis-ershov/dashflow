@@ -46,7 +46,11 @@ export const useAppStore = create<AppState>()(
       if (useI18nStore.getState().language !== savedLang) {
         useI18nStore.getState().setLanguage(savedLang);
       }
-      if (readError) throw readError;
+      if (readError) {
+        throw readError instanceof Error
+          ? readError
+          : new Error('Settings read failed', { cause: readError });
+      }
     },
 
     setLanguage: async (lang) => {

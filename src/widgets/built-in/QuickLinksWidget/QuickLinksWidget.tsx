@@ -7,6 +7,7 @@ import { STORAGE_KEYS } from '@/core/storage/keys';
 import { Button } from '@/ui/primitives';
 import { cn } from '@/ui/lib/cn';
 import type { QuickLinkItem, QuickLinksSettings } from './types';
+import { runLogged } from '@/core/observability';
 
 const DEFAULT_LINKS: QuickLinkItem[] = [
   { id: '1', title: 'GitHub', url: 'https://github.com' },
@@ -55,19 +56,28 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
   const storageKey = instanceId ? `${STORAGE_KEYS.QUICK_LINKS}_${instanceId}` : STORAGE_KEYS.QUICK_LINKS;
 
   useEffect(() => {
-    StorageAdapter.get<QuickLinkItem[]>(storageKey, []).then((saved) => {
-      if (saved && saved.length > 0) {
-        setLinks(saved);
-      } else {
-        StorageAdapter.get<QuickLinkItem[]>(STORAGE_KEYS.QUICK_LINKS, DEFAULT_LINKS).then(setLinks);
-      }
-    });
+    let cancelled = false;
+    const loadLinks = async () => {
+      const saved = await StorageAdapter.get<QuickLinkItem[]>(storageKey, []);
+      const value =
+        saved.length > 0
+          ? saved
+          : await StorageAdapter.get<QuickLinkItem[]>(STORAGE_KEYS.QUICK_LINKS, DEFAULT_LINKS);
+      if (!cancelled) setLinks(value);
+    };
+    runLogged(loadLinks(), 'storage', { widget: 'quickLinks' });
+    return () => {
+      cancelled = true;
+    };
   }, [storageKey]);
 
-  const saveLinks = async (newLinks: QuickLinkItem[]) => {
+  const saveLinks = (newLinks: QuickLinkItem[]) => {
     setLinks(newLinks);
-    await StorageAdapter.set(storageKey, newLinks);
-    await StorageAdapter.set(STORAGE_KEYS.QUICK_LINKS, newLinks);
+    const persist = async () => {
+      await StorageAdapter.set(storageKey, newLinks);
+      await StorageAdapter.set(STORAGE_KEYS.QUICK_LINKS, newLinks);
+    };
+    runLogged(persist(), 'storage', { widget: 'quickLinks' });
   };
 
   const handleAdd = (e: React.FormEvent) => {
@@ -152,17 +162,14 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
       ) : (
         <div className={cn('grid gap-2 overflow-y-auto flex-1 min-h-0 p-1', colClass)}>
           {links.map((link) => (
-            <div
-              key={link.id}
-              onClick={() => {
-                if (openInNewTab) {
-                  window.open(link.url, '_blank');
-                } else {
-                  window.location.href = link.url;
-                }
-              }}
-              className="group relative flex flex-col items-center justify-center p-2 rounded-xl bg-surface hover:bg-surface-hover border border-line hover:border-line-hover transition-all cursor-pointer text-center"
-            >
+            <div key={link.id} className="group relative">
+              {/* Настоящая ссылка: работает с клавиатуры, средней кнопкой и из контекстного меню */}
+              <a
+                href={link.url}
+                target={openInNewTab ? '_blank' : undefined}
+                rel={openInNewTab ? 'noopener noreferrer' : undefined}
+                className="flex h-full flex-col items-center justify-center p-2 rounded-xl bg-surface hover:bg-surface-hover border border-line hover:border-line-hover transition-all cursor-pointer text-center focus-visible:outline-2 focus-visible:outline-primary"
+              >
               <div className={cn('w-10 h-10 bg-surface-active flex items-center justify-center overflow-hidden mb-1.5 border border-line shadow-xs group-hover:scale-105 transition-transform', shapeClass)}>
                 {getFaviconUrl(link.url) ? (
                   <img
@@ -189,15 +196,13 @@ export const QuickLinksWidget: React.FC<WidgetProps<QuickLinksSettings>> = ({
                   {getDomain(link.url)}
                 </span>
               )}
+              </a>
 
               <button
                 type="button"
                 aria-label={t('quickLinks.remove')}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeLink(link.id);
-                }}
-                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 text-fg-muted hover:text-danger rounded-lg hover:bg-danger/10 transition-all cursor-pointer"
+                onClick={() => removeLink(link.id)}
+                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1 text-fg-muted hover:text-danger rounded-lg hover:bg-danger/10 transition-all cursor-pointer"
               >
                 <X className="w-3 h-3" />
               </button>

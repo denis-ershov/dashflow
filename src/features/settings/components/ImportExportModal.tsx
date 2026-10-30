@@ -14,6 +14,7 @@ import {
 } from '@/core/storage';
 import { Button } from '@/ui/primitives';
 import { Download, Upload, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { runLogged } from '@/core/observability';
 
 export interface ImportExportModalProps {
   isOpen: boolean;
@@ -74,8 +75,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
       const hasDashboardData = Boolean(
         parsed.dashboard ||
           (Array.isArray(parsed.widgets) && parsed.widgets.length > 0) ||
-          (Array.isArray((parsed as Record<string, unknown>).instances) &&
-            ((parsed as Record<string, unknown>).instances as unknown[]).length > 0) ||
+          (Array.isArray(parsed.instances) && parsed.instances.length > 0) ||
           parsed.layout,
       );
 
@@ -157,7 +157,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
             variant="secondary"
             icon={<Upload className="w-4 h-4" />}
             disabled={!importJson.trim()}
-            onClick={handleImport}
+            onClick={() => runLogged(handleImport(), 'storage')}
           >
             {t('backup.apply')}
           </Button>

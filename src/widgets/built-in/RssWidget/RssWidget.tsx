@@ -10,7 +10,6 @@ import {
   FolderTree,
   Rss,
   Folder,
-  ChevronDown,
   ShieldCheck,
 } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
@@ -32,6 +31,7 @@ import { useTranslation } from '@/core/i18n';
 import { originPatternsFor, useBrowserPermissions } from '@/core/permissions/browserPermissions';
 import { getRssCardClasses } from './rssStyles';
 import { RssFeedManagerModal } from './RssFeedManagerModal';
+import { runLogged } from '@/core/observability';
 
 export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
   instanceId,
@@ -173,21 +173,24 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
       setLoading(false);
       setIsRefreshing(false);
     }
-  }, [activeFeeds, itemCount, hasFeedAccess]);
+  }, [activeFeeds, itemCount, hasFeedAccess, t]);
+
+  // Ошибки отдельных лент loadFeeds обрабатывает сам; здесь ловится только непредвиденное
+  const refreshFeeds = useCallback(() => {
+    runLogged(loadFeeds(), 'network', { widget: 'rss' });
+  }, [loadFeeds]);
 
   useEffect(() => {
-    loadFeeds();
-  }, [loadFeeds]);
+    refreshFeeds();
+  }, [refreshFeeds]);
 
   // Автообновление по интервалу
   useEffect(() => {
     if (!refreshInterval || refreshInterval <= 0) return;
     const intervalMs = refreshInterval * 60 * 1000;
-    const timer = setInterval(() => {
-      loadFeeds();
-    }, intervalMs);
+    const timer = setInterval(refreshFeeds, intervalMs);
     return () => clearInterval(timer);
-  }, [refreshInterval, loadFeeds]);
+  }, [refreshInterval, refreshFeeds]);
 
   // Сохранение отредактированных лент
   const handleSaveFeeds = (newFeeds: RssFeedConfig[]) => {
@@ -312,7 +315,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
             <button
               type="button"
               aria-label={t('rss.refresh')}
-              onClick={loadFeeds}
+              onClick={refreshFeeds}
               disabled={isRefreshing}
               className="p-1.5 text-fg-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
               title={t('rss.refreshHint')}
@@ -418,7 +421,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
           </div>
         ) : error && items.length === 0 ? (
           <div className="p-4 h-full flex flex-col items-center justify-center">
-            <ErrorState title={t('rss.errorTitle')} message={error} onRetry={loadFeeds} />
+            <ErrorState title={t('rss.errorTitle')} message={error} onRetry={refreshFeeds} />
           </div>
         ) : activeFeeds.length === 0 ? (
           <div className="p-4 h-full flex flex-col items-center justify-center">

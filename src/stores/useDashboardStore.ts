@@ -84,7 +84,7 @@ export function pickPersistedDashboard(source: unknown): Partial<PersistedDashbo
   for (const key of PERSISTED_KEYS) {
     if (key in source) result[key] = (source as Record<string, unknown>)[key];
   }
-  return result as Partial<PersistedDashboardState>;
+  return result;
 }
 
 export const useDashboardStore = create<DashboardState>()(

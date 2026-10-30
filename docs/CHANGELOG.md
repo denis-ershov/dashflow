@@ -9,6 +9,27 @@
 
 ## [Unreleased] - 2026-10-30
 
+### Этап 0.1: ESLint на весь код
+
+#### Изменено
+- **ESLint больше не пропускает каталоги.** Из `ignores` убраны `src/widgets`, `src/stores`, `src/features/{dashboard,marketplace,settings}`; исправлены ≈225 замечаний в 24 файлах.
+- **Ответы внешних API читаются с проверкой типов** (`src/core/network/jsonReaders.ts`: `asRecord`, `asNumber`, `asString`, `numberAt`…). `weatherService` больше не обращается к полям `any`: города без координат отбрасываются, нечисловые значения прогноза не попадают в интерфейс.
+- **Промисы из обработчиков событий не теряются:** `runLogged` (`src/core/observability/crashLogger.ts`) пишет отказ в журнал «Диагностика». Применено к записям в хранилище в виджетах Todo, Notes, QuickLinks, Bookmarks, к RSS, погоде, плагинам и настройкам.
+- **Доступность:** карточки закладок, открытых и недавно закрытых вкладок получили `role="button"`, фокус и активацию Enter/Пробелом (`src/ui/lib/activation.ts`); плитки быстрых ссылок стали настоящими ссылками `<a>` (работают средняя кнопка и контекстное меню); фон командной палитры — кнопка закрытия.
+
+#### Исправлено
+- Название города (BigDataCloud, Nominatim) и поиск городов приходили всегда на русском — теперь на языке интерфейса; время в почасовом прогнозе форматируется по языку интерфейса, а не `ru-RU`.
+- Новая закладка и собственная ссылка в виджете «Закладки» проверяются как http(s)-адрес; раньше можно было сохранить произвольную строку.
+- Старое поле `bgStyle` одиночной закладки сопоставляется с допустимым `cardStyle` вместо приведения `as any` (значения `accent`/`dark` давали неизвестный стиль).
+- Pomodoro: таймер не перезапускает интервал на каждом тике (остаток читается через ref).
+- Загрузка задач, заметок и ссылок не обновляет состояние размонтированного виджета.
+
+#### Файлы
+`eslint.config.js`, `src/core/network/{jsonReaders.ts,index.ts}`, `src/core/observability/crashLogger.ts`, `src/ui/lib/activation.ts`, виджеты `TodoWidget`, `NotesWidget`, `QuickLinksWidget`, `BookmarksWidget`, `SingleBookmarkTile`, `RssWidget`, `QuotesWidget`, `PomodoroWidget`, `YearProgressWidget`, `WeatherWidget`, `WeatherSettingsForm`, `weatherService`, `sandbox/PluginHost`, `features/{dashboard,marketplace,settings}`, `stores/{useAppStore,useDashboardStore}`; тесты `tests/unit/core/{jsonReaders,runLoggedAndActivation}.test.ts`, `tests/unit/widgets/weatherService.test.ts`.
+
+#### Миграции и совместимость
+- Формат данных не менялся. Откат: `git revert`.
+
 ### Исправлено
 - CI падал на шаге установки Playwright: `ubuntu-latest` перешёл на Ubuntu 26.04, для которой Playwright 1.56.1 не ставит Chromium. Раннеры `ci.yml` и `release.yml` закреплены на `ubuntu-24.04`. Файлы: `.github/workflows/{ci,release}.yml`. Откат: `git revert`.
 

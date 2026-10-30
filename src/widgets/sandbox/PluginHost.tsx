@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { SandboxBridge } from '@/core/plugins/SandboxBridge';
 import { useTranslation } from '@/core/i18n';
+import { runLogged } from '@/core/observability';
 
 /** Значения вставляются в HTML песочницы — экранируем их */
 function escapeHtml(value: string): string {
@@ -34,8 +35,11 @@ export const PluginHost: React.FC<PluginHostProps> = ({
       }
     };
 
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    const onMessage = (e: MessageEvent) => {
+      runLogged(handleMessage(e), 'plugin', { pluginId });
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
   }, [pluginId]);
 
   const defaultHtml = `

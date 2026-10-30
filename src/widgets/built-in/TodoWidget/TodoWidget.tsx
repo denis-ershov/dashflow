@@ -8,6 +8,7 @@ import { Button, Badge } from '@/ui/primitives';
 import { EmptyState } from '@/ui/feedback';
 import { cn } from '@/ui/lib/cn';
 import type { TodoItem, TodoPriority, TodoFilter, TodoSettings, HabitItem, TodoTab } from './types';
+import { runLogged } from '@/core/observability';
 
 /**
  * Стартовые задачи и привычки становятся данными пользователя при первом запуске,
@@ -111,49 +112,47 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
   const habitKey = instanceId ? `${STORAGE_KEYS.HABIT_ITEMS}_${instanceId}` : STORAGE_KEYS.HABIT_ITEMS;
 
   useEffect(() => {
-    StorageAdapter.get<TodoItem[]>(STORAGE_KEYS.TODO_ITEMS, createDefaultTodos(useI18nStore.getState().language)).then((baseTodos) => {
-      if (instanceId && todoKey !== STORAGE_KEYS.TODO_ITEMS) {
-        StorageAdapter.get<TodoItem[]>(todoKey, []).then((scoped) => {
-          if (scoped && scoped.length > 0) {
-            setTodos(scoped);
-          } else {
-            setTodos(baseTodos);
-          }
-        });
-      } else {
-        setTodos(baseTodos);
-      }
-    });
+    let cancelled = false;
+    const language = useI18nStore.getState().language;
 
-    StorageAdapter.get<HabitItem[]>(STORAGE_KEYS.HABIT_ITEMS, createDefaultHabits(useI18nStore.getState().language)).then((baseHabits) => {
-      if (instanceId && habitKey !== STORAGE_KEYS.HABIT_ITEMS) {
-        StorageAdapter.get<HabitItem[]>(habitKey, []).then((scoped) => {
-          if (scoped && scoped.length > 0) {
-            setHabits(scoped);
-          } else {
-            setHabits(baseHabits);
-          }
-        });
-      } else {
-        setHabits(baseHabits);
-      }
-    });
-  }, [instanceId, todoKey, habitKey]);
+    // Копия экземпляра важнее общего ключа: общий — запасной вариант для нового виджета
+    const loadItems = async () => {
+      const [baseTodos, baseHabits] = await Promise.all([
+        StorageAdapter.get<TodoItem[]>(STORAGE_KEYS.TODO_ITEMS, createDefaultTodos(language)),
+        StorageAdapter.get<HabitItem[]>(STORAGE_KEYS.HABIT_ITEMS, createDefaultHabits(language)),
+      ]);
+      const [scopedTodos, scopedHabits] = await Promise.all([
+        todoKey !== STORAGE_KEYS.TODO_ITEMS ? StorageAdapter.get<TodoItem[]>(todoKey, []) : [],
+        habitKey !== STORAGE_KEYS.HABIT_ITEMS ? StorageAdapter.get<HabitItem[]>(habitKey, []) : [],
+      ]);
+      if (cancelled) return;
+      setTodos(scopedTodos.length > 0 ? scopedTodos : baseTodos);
+      setHabits(scopedHabits.length > 0 ? scopedHabits : baseHabits);
+    };
+    runLogged(loadItems(), 'storage', { widget: 'todo' });
 
-  const saveTodos = async (newTodos: TodoItem[]) => {
-    setTodos(newTodos);
-    await StorageAdapter.set(STORAGE_KEYS.TODO_ITEMS, newTodos);
-    if (instanceId && todoKey !== STORAGE_KEYS.TODO_ITEMS) {
-      await StorageAdapter.set(todoKey, newTodos);
+    return () => {
+      cancelled = true;
+    };
+  }, [todoKey, habitKey]);
+
+  const persist = async (baseKey: string, scopedKey: string, value: unknown) => {
+    await StorageAdapter.set(baseKey, value);
+    if (scopedKey !== baseKey) {
+      await StorageAdapter.set(scopedKey, value);
     }
   };
 
-  const saveHabits = async (newHabits: HabitItem[]) => {
+  const saveTodos = (newTodos: TodoItem[]) => {
+    setTodos(newTodos);
+    runLogged(persist(STORAGE_KEYS.TODO_ITEMS, todoKey, newTodos), 'storage', { widget: 'todo' });
+  };
+
+  const saveHabits = (newHabits: HabitItem[]) => {
     setHabits(newHabits);
-    await StorageAdapter.set(STORAGE_KEYS.HABIT_ITEMS, newHabits);
-    if (instanceId && habitKey !== STORAGE_KEYS.HABIT_ITEMS) {
-      await StorageAdapter.set(habitKey, newHabits);
-    }
+    runLogged(persist(STORAGE_KEYS.HABIT_ITEMS, habitKey, newHabits), 'storage', {
+      widget: 'todo',
+    });
   };
 
   const addTodo = (e: React.FormEvent) => {

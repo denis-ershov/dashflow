@@ -1,7 +1,15 @@
 import { StorageAdapter } from '@/core/storage/StorageAdapter';
 import { STORAGE_KEYS } from '@/core/storage/keys';
-import { resilientFetch } from '@/core/network';
-import { t, type SupportedLanguage, type TranslationKey } from '@/core/i18n';
+import {
+  asArray,
+  asNumber,
+  asRecord,
+  asString,
+  numberAt,
+  resilientFetch,
+  stringAt,
+} from '@/core/network';
+import { t, useI18nStore, type SupportedLanguage, type TranslationKey } from '@/core/i18n';
 import { DEFAULT_CITY, POPULAR_CITIES } from './cities';
 
 export { DEFAULT_CITY, POPULAR_CITIES };
@@ -22,27 +30,36 @@ import type {
 /**
  * Живой поиск городов по API Open-Meteo Geocoding
  */
-export async function searchCities(query: string): Promise<CitySearchResult[]> {
+/** Язык ответов геокодинга следует языку интерфейса, если вызывающий не передал свой */
+const currentLanguage = (): SupportedLanguage => useI18nStore.getState().language;
+
+export async function searchCities(
+  query: string,
+  lang: SupportedLanguage = currentLanguage(),
+): Promise<CitySearchResult[]> {
   const trimmed = query.trim();
   if (!trimmed || trimmed.length < 2) return [];
 
   try {
     const res = await resilientFetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmed)}&count=8&language=ru&format=json`,
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmed)}&count=8&language=${lang}&format=json`,
       { timeoutMs: 5000, retries: 1, circuitBreakerName: 'geocoding', silent: true },
     );
     if (!res.ok) return [];
-    const data = await res.json();
-    if (!data.results) return [];
+    const data = asRecord(await res.json());
 
-    return data.results.map((r: any) => ({
-      id: r.id,
-      name: r.name,
-      country: r.country,
-      admin1: r.admin1,
-      latitude: r.latitude,
-      longitude: r.longitude,
-    }));
+    // Город без координат или названия бесполезен — такие записи отбрасываются
+    return asArray(data.results).flatMap((item): CitySearchResult[] => {
+      const r = asRecord(item);
+      const id = asNumber(r.id);
+      const name = asString(r.name);
+      const latitude = asNumber(r.latitude);
+      const longitude = asNumber(r.longitude);
+      if (id === undefined || !name || latitude === undefined || longitude === undefined) {
+        return [];
+      }
+      return [{ id, name, country: asString(r.country), admin1: asString(r.admin1), latitude, longitude }];
+    });
   } catch (err) {
     console.warn('[WeatherService] Geocoding search failed:', err);
     return [];
@@ -52,20 +69,21 @@ export async function searchCities(query: string): Promise<CitySearchResult[]> {
 /**
  * Обратное геокодирование: получение названия города по координатам
  */
-export async function reverseGeocode(lat: number, lon: number): Promise<{ name: string; country?: string }> {
+export async function reverseGeocode(
+  lat: number,
+  lon: number,
+  lang: SupportedLanguage = currentLanguage(),
+): Promise<{ name: string; country?: string }> {
   try {
     const res = await resilientFetch(
-      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ru`,
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=${lang}`,
       { timeoutMs: 5000, retries: 1, circuitBreakerName: 'geocoding', silent: true },
     );
     if (res.ok) {
-      const data = await res.json();
-      const city = data.city || data.locality || data.principalSubdivision;
+      const data = asRecord(await res.json());
+      const city = asString(data.city) ?? asString(data.locality) ?? asString(data.principalSubdivision);
       if (city) {
-        return {
-          name: city,
-          country: data.countryName,
-        };
+        return { name: city, country: asString(data.countryName) };
       }
     }
   } catch {
@@ -74,7 +92,7 @@ export async function reverseGeocode(lat: number, lon: number): Promise<{ name: 
 
   try {
     const res = await resilientFetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&accept-language=ru`,
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&accept-language=${lang}`,
       {
         headers: { 'User-Agent': 'DashFlow-Weather/3.0' },
         timeoutMs: 5000,
@@ -84,13 +102,12 @@ export async function reverseGeocode(lat: number, lon: number): Promise<{ name: 
       },
     );
     if (res.ok) {
-      const data = await res.json();
-      const city = data.address?.city || data.address?.town || data.address?.state || data.name;
+      const data = asRecord(await res.json());
+      const address = asRecord(data.address);
+      const city =
+        asString(address.city) ?? asString(address.town) ?? asString(address.state) ?? asString(data.name);
       if (city) {
-        return {
-          name: city,
-          country: data.address?.country,
-        };
+        return { name: city, country: asString(address.country) };
       }
     }
   } catch {
@@ -103,28 +120,16 @@ export async function reverseGeocode(lat: number, lon: number): Promise<{ name: 
 /**
  * Запрос геолокации браузера пользователя
  */
-export async function detectUserLocation(lang: SupportedLanguage = 'ru'): Promise<WeatherCoordinates> {
+export async function detectUserLocation(
+  lang: SupportedLanguage = currentLanguage(),
+): Promise<WeatherCoordinates> {
   if (typeof navigator === 'undefined' || !navigator.geolocation) {
     throw new Error(t('weather.geo.unsupported', undefined, lang));
   }
 
-  return new Promise((resolve, reject) => {
+  const position = await new Promise<GeolocationPosition>((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-        try {
-          const geoInfo = await reverseGeocode(lat, lon);
-          resolve({
-            lat,
-            lon,
-            name: geoInfo.name,
-            country: geoInfo.country,
-          });
-        } catch {
-          resolve({ lat, lon, name: t('weather.myLocation', undefined, lang) });
-        }
-      },
+      resolve,
       (err) => {
         const reasons: Record<number, TranslationKey> = {
           1: 'weather.geo.denied',
@@ -136,6 +141,14 @@ export async function detectUserLocation(lang: SupportedLanguage = 'ru'): Promis
       { timeout: 10000, enableHighAccuracy: false, maximumAge: 600000 },
     );
   });
+
+  const { latitude: lat, longitude: lon } = position.coords;
+  try {
+    const geoInfo = await reverseGeocode(lat, lon, lang);
+    return { lat, lon, name: geoInfo.name, country: geoInfo.country };
+  } catch {
+    return { lat, lon, name: t('weather.myLocation', undefined, lang) };
+  }
 }
 
 /**
@@ -199,75 +212,80 @@ export async function fetchFullWeatherData(params: {
       throw new Error(`Open-Meteo HTTP Error ${res.status}`);
     }
 
-    const json = await res.json();
-    const current = json.current || json.current_weather || {};
-    const daily = json.daily || {};
-    const hourly = json.hourly || {};
+    const json = asRecord(await res.json());
+    const current = asRecord(json.current ?? json.current_weather);
+    const daily = asRecord(json.daily);
+    const hourly = asRecord(json.hourly);
+    const lang = currentLanguage();
 
-    const currentTemp = Math.round(current.temperature_2m ?? current.temperature ?? 20);
-    const code = current.weather_code ?? current.weathercode ?? 0;
-    const feels = current.apparent_temperature !== undefined ? Math.round(current.apparent_temperature) : currentTemp;
-    const humidity = current.relative_humidity_2m ? Math.round(current.relative_humidity_2m) : 60;
-    const windSpeed = current.wind_speed_10m !== undefined ? Math.round(current.wind_speed_10m * 10) / 10 : 3;
-    const windDirection = current.wind_direction_10m;
-    const windGusts = current.wind_gusts_10m;
-    const pressure = current.surface_pressure ? Math.round(current.surface_pressure) : 1013;
+    const currentTemp = Math.round(asNumber(current.temperature_2m) ?? asNumber(current.temperature) ?? 20);
+    const code = asNumber(current.weather_code) ?? asNumber(current.weathercode) ?? 0;
+    const apparent = asNumber(current.apparent_temperature);
+    const feels = apparent !== undefined ? Math.round(apparent) : currentTemp;
+    const rawHumidity = asNumber(current.relative_humidity_2m);
+    const humidity = rawHumidity !== undefined ? Math.round(rawHumidity) : 60;
+    const rawWind = asNumber(current.wind_speed_10m);
+    const windSpeed = rawWind !== undefined ? Math.round(rawWind * 10) / 10 : 3;
+    const windDirection = asNumber(current.wind_direction_10m);
+    const windGusts = asNumber(current.wind_gusts_10m);
+    const rawPressure = asNumber(current.surface_pressure);
+    const pressure = rawPressure !== undefined ? Math.round(rawPressure) : 1013;
     const isDay = current.is_day === 1 || current.is_day === undefined;
 
     // Сбор почасового прогноза (начиная с текущего часа, 24 точки)
     const hourlyList: HourlyForecastItem[] = [];
-    if (hourly.time && hourly.temperature_2m) {
-      const now = new Date();
-      let startIdx = 0;
-
+    const hourlyTimes = asArray(hourly.time);
+    if (hourlyTimes.length > 0 && Array.isArray(hourly.temperature_2m)) {
       // Ищем ближайший к текущему моменту час
-      const nowMs = now.getTime();
+      const nowMs = Date.now();
+      let startIdx = 0;
       let minDiff = Infinity;
-      for (let i = 0; i < hourly.time.length; i++) {
-        const itemTime = new Date(hourly.time[i]).getTime();
-        const diff = Math.abs(itemTime - nowMs);
+      hourlyTimes.forEach((value, i) => {
+        const time = asString(value);
+        if (!time) return;
+        const diff = Math.abs(new Date(time).getTime() - nowMs);
         if (diff < minDiff) {
           minDiff = diff;
           startIdx = i;
         }
-      }
+      });
 
-      for (let i = 0; i < 24 && startIdx + i < hourly.time.length; i++) {
+      for (let i = 0; i < 24 && startIdx + i < hourlyTimes.length; i++) {
         const idx = startIdx + i;
-        const rawTime = hourly.time[idx];
-        const dateObj = new Date(rawTime);
-        const timeFormatted = dateObj.toLocaleTimeString('ru-RU', {
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-
+        const rawTime = stringAt(hourlyTimes, idx);
+        if (!rawTime) continue;
         hourlyList.push({
-          time: timeFormatted,
+          time: new Date(rawTime).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' }),
           fullTime: rawTime,
-          temp: Math.round(hourly.temperature_2m[idx] ?? currentTemp),
-          code: hourly.weather_code?.[idx] ?? code,
-          precipitationProbability: hourly.precipitation_probability?.[idx] ?? 0,
-          isDay: hourly.is_day?.[idx] === 1,
-          humidity: hourly.relative_humidity_2m?.[idx],
-          windSpeed: hourly.wind_speed_10m?.[idx],
+          temp: Math.round(numberAt(hourly.temperature_2m, idx) ?? currentTemp),
+          code: numberAt(hourly.weather_code, idx) ?? code,
+          precipitationProbability: numberAt(hourly.precipitation_probability, idx) ?? 0,
+          isDay: numberAt(hourly.is_day, idx) === 1,
+          humidity: numberAt(hourly.relative_humidity_2m, idx),
+          windSpeed: numberAt(hourly.wind_speed_10m, idx),
         });
       }
     }
 
     // Сбор 7-дневного прогноза
     const dailyList: DailyForecastItem[] = [];
-    if (daily.time && daily.temperature_2m_max) {
-      for (let i = 0; i < daily.time.length && i < 7; i++) {
-        const dateStr = daily.time[i];
+    const dailyDates = asArray(daily.time);
+    if (dailyDates.length > 0 && Array.isArray(daily.temperature_2m_max)) {
+      for (let i = 0; i < dailyDates.length && i < 7; i++) {
+        const dateStr = stringAt(dailyDates, i);
+        if (!dateStr) continue;
+        const sunrise = stringAt(daily.sunrise, i);
+        const sunset = stringAt(daily.sunset, i);
+        const uvMax = numberAt(daily.uv_index_max, i);
         dailyList.push({
           date: dateStr,
-          minTemp: Math.round(daily.temperature_2m_min?.[i] ?? currentTemp - 3),
-          maxTemp: Math.round(daily.temperature_2m_max?.[i] ?? currentTemp + 3),
-          code: daily.weather_code?.[i] ?? code,
-          precipitationProbability: daily.precipitation_probability_max?.[i] ?? 0,
-          sunrise: daily.sunrise?.[i] ? formatSunTime(daily.sunrise[i]) : undefined,
-          sunset: daily.sunset?.[i] ? formatSunTime(daily.sunset[i]) : undefined,
-          uvIndexMax: daily.uv_index_max?.[i] !== undefined ? Math.round(daily.uv_index_max[i]) : undefined,
+          minTemp: Math.round(numberAt(daily.temperature_2m_min, i) ?? currentTemp - 3),
+          maxTemp: Math.round(numberAt(daily.temperature_2m_max, i) ?? currentTemp + 3),
+          code: numberAt(daily.weather_code, i) ?? code,
+          precipitationProbability: numberAt(daily.precipitation_probability_max, i) ?? 0,
+          sunrise: sunrise ? formatSunTime(sunrise, lang) : undefined,
+          sunset: sunset ? formatSunTime(sunset, lang) : undefined,
+          uvIndexMax: uvMax !== undefined ? Math.round(uvMax) : undefined,
         });
       }
     }
@@ -280,9 +298,9 @@ export async function fetchFullWeatherData(params: {
       windDirection,
       windGusts,
       pressure,
-      uvIndex: todayDaily?.uvIndexMax ?? (hourly.uv_index?.[0] !== undefined ? Math.round(hourly.uv_index[0]) : 3),
-      visibility: hourly.visibility?.[0] ? Math.round(hourly.visibility[0] / 1000) : 10,
-      cloudCover: current.cloud_cover,
+      uvIndex: todayDaily?.uvIndexMax ?? Math.round(numberAt(hourly.uv_index, 0) ?? 3),
+      visibility: Math.round((numberAt(hourly.visibility, 0) ?? 10_000) / 1000),
+      cloudCover: asNumber(current.cloud_cover),
       sunrise: todayDaily?.sunrise,
       sunset: todayDaily?.sunset,
       isDay,

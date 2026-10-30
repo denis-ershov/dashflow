@@ -255,6 +255,7 @@ export const GridEngine: React.FC = () => {
           return (
             <div
               key={item.instanceId}
+              role="group"
               tabIndex={isEditMode ? 0 : undefined}
               aria-label={isEditMode ? String(widgetTitle) : undefined}
               onFocus={() => setFocusedInstanceId(item.instanceId)}

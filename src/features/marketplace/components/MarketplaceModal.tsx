@@ -21,6 +21,7 @@ import {
   CheckCircle,
   FileJson,
 } from 'lucide-react';
+import { runLogged } from '@/core/observability';
 
 export const MarketplaceModal: React.FC = () => {
   const { t } = useTranslation();
@@ -55,7 +56,8 @@ export const MarketplaceModal: React.FC = () => {
 
   const isOpen = activeModal === 'marketplace';
 
-  const allBuiltin = useMemo(() => WidgetRegistry.getAll(), [isOpen]);
+  // Реестр перечитывается при каждом открытии: плагины могли зарегистрироваться с прошлого раза
+  const allBuiltin = useMemo(() => (isOpen ? WidgetRegistry.getAll() : []), [isOpen]);
 
   const combinedItems = useMemo(() => {
     const builtinItems = allBuiltin.map((w) => {
@@ -81,7 +83,7 @@ export const MarketplaceModal: React.FC = () => {
       description: p.description,
       author: p.author,
       version: p.version,
-      category: 'utilities' as WidgetCategory,
+      category: 'utilities',
       permissions: p.permissions,
       w: p.size.defaultW,
       h: p.size.defaultH,
@@ -151,7 +153,7 @@ export const MarketplaceModal: React.FC = () => {
 
   const handleImportJson = async () => {
     try {
-      const parsed = JSON.parse(importJson);
+      const parsed: unknown = JSON.parse(importJson);
       const res = await installPlugin(parsed);
       if (res.success) {
         setImportStatus({ success: true, message: t('marketplace.installed') });
@@ -269,7 +271,7 @@ export const MarketplaceModal: React.FC = () => {
                 <Button
                   variant="primary"
                   icon={<Upload className="w-4 h-4" />}
-                  onClick={handleImportJson}
+                  onClick={() => runLogged(handleImportJson(), 'plugin')}
                   disabled={!importJson.trim()}
                   className="min-h-11"
                 >
@@ -380,7 +382,7 @@ export const MarketplaceModal: React.FC = () => {
                                 size="sm"
                                 variant="danger"
                                 icon={<Trash2 className="w-4 h-4" />}
-                                onClick={() => uninstallPlugin(item.id)}
+                                onClick={() => runLogged(uninstallPlugin(item.id), 'plugin')}
                                 aria-label={t('marketplace.removePlugin')}
                               />
                             )}
@@ -401,7 +403,7 @@ export const MarketplaceModal: React.FC = () => {
                                 size="sm"
                                 variant="primary"
                                 icon={<Plus className="w-4 h-4" />}
-                                onClick={() => handleAddClick(item)}
+                                onClick={() => runLogged(handleAddClick(item), 'plugin')}
                               >
                                 {t('marketplace.addToScreen')}
                               </Button>
@@ -426,7 +428,7 @@ export const MarketplaceModal: React.FC = () => {
           widgetTitle={pendingConsent.title}
           author={pendingConsent.author}
           permissions={pendingConsent.permissions}
-          onAllow={handleConsentAllow}
+          onAllow={() => runLogged(handleConsentAllow(), 'plugin')}
           onDeny={handleConsentDeny}
         />
       )}

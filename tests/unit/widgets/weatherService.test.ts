@@ -96,6 +96,18 @@ describe('weatherService Unit Tests', () => {
       expect(res[0].name).toBe('Казань');
       expect(res[0].latitude).toBe(55.7887);
     });
+
+    it('запрашивает города на языке интерфейса или переданном языке', async () => {
+      const fetchSpy = vi
+        .spyOn(global, 'fetch')
+        .mockResolvedValue({ ok: true, json: () => Promise.resolve({ results: [] }) } as Response);
+
+      await searchCities('Berlin');
+      expect(fetchSpy.mock.calls[0][0]).toContain('language=ru');
+
+      await searchCities('Berlin', 'en');
+      expect(fetchSpy.mock.calls[1][0]).toContain('language=en');
+    });
   });
 
   describe('fetchFullWeatherData', () => {

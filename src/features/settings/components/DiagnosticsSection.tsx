@@ -20,8 +20,8 @@ import { getAllCircuitBreakers } from '@/core/network';
 import {
   useFeatureFlags,
   FEATURE_FLAG_DEFINITIONS,
-  type FeatureFlagKey,
 } from '@/core/featureFlags';
+import { runLogged } from '@/core/observability';
 
 function formatTime(timestamp: number): string {
   try {
@@ -206,7 +206,7 @@ export const DiagnosticsSection: React.FC = () => {
               size="sm"
               variant="secondary"
               icon={copiedAll ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
-              onClick={handleCopyReport}
+              onClick={() => runLogged(handleCopyReport())}
             >
               {copiedAll ? t('diagnostics.reportCopied') : t('diagnostics.copyReport')}
             </Button>
@@ -216,7 +216,7 @@ export const DiagnosticsSection: React.FC = () => {
                 size="sm"
                 variant="ghost"
                 icon={<Trash2 className="w-3.5 h-3.5" />}
-                onClick={handleClearReports}
+                onClick={() => runLogged(handleClearReports())}
               >
                 {t('diagnostics.clear')}
               </Button>
@@ -445,7 +445,7 @@ export const DiagnosticsSection: React.FC = () => {
                 </div>
                 <Switch
                   checked={isChecked}
-                  onChange={(val) => setFlag(def.key as FeatureFlagKey, val)}
+                  onChange={(val) => runLogged(setFlag(def.key, val), 'storage')}
                 />
               </div>
             );

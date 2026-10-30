@@ -22,8 +22,6 @@ import {
   RefreshCw,
   Calendar,
   Clock,
-  LayoutDashboard,
-  Sliders,
 } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { Skeleton } from '@/ui/feedback';
@@ -33,7 +31,6 @@ import { DEFAULT_CITY } from './cities';
 import { useElementSize } from '@/ui/lib/useElementSize';
 import type {
   DailyForecastItem,
-  HourlyForecastItem,
   WeatherSettings,
   WeatherData,
   TemperatureUnit,
@@ -50,6 +47,7 @@ import {
   getWeatherDescription,
   getWindDirectionText,
 } from './weatherService';
+import { runLogged } from '@/core/observability';
 
 /**
  * Ниже этой высоты режим «Метеостанция» не помещается без внутренней прокрутки:
@@ -104,17 +102,19 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
 
   React.useEffect(() => {
     let active = true;
-    getCachedWeatherData().then((cached) => {
+    const loadCached = async () => {
+      const cached = await getCachedWeatherData();
       if (active && cached) {
         setCachedFallback({ ...cached, isOffline: true });
       }
-    });
+    };
+    runLogged(loadCached(), 'storage', { widget: 'weather' });
     return () => {
       active = false;
     };
   }, []);
 
-  const { data: remoteData, isLoading, isFetching, error, refetch } = useQuery<WeatherData>({
+  const { data: remoteData, isLoading, isFetching, refetch } = useQuery<WeatherData>({
     queryKey: ['weather', city, autoLocation, coords?.lat, coords?.lon],
     queryFn: () => fetchFullWeatherData({ city, coords, autoLocation }),
     staleTime: 1000 * 60 * 20, // 20 минут
@@ -211,7 +211,7 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
         </div>
         <button
           type="button"
-          onClick={() => refetch()}
+          onClick={() => void refetch()}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-fg text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer shadow-1 min-h-9 relative before:absolute before:-inset-1 before:content-['']"
         >
           <RefreshCw className="w-3.5 h-3.5" />
@@ -238,7 +238,7 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
           </div>
           <button
             type="button"
-            onClick={() => refetch()}
+            onClick={() => void refetch()}
             disabled={isFetching}
             aria-label={t('weather.refresh')}
             className="relative p-1 text-fg-muted hover:text-fg rounded-full transition-colors cursor-pointer before:absolute before:-inset-2 before:content-['']"
@@ -299,7 +299,7 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
           </div>
           <button
             type="button"
-            onClick={() => refetch()}
+            onClick={() => void refetch()}
             disabled={isFetching}
             className="p-1 text-fg-muted hover:text-fg rounded-lg transition-colors cursor-pointer"
           >
@@ -343,7 +343,7 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
           <span className="text-xs font-bold text-fg truncate">{data.city} {t('weather.forecast7d')}</span>
           <button
             type="button"
-            onClick={() => refetch()}
+            onClick={() => void refetch()}
             disabled={isFetching}
             className="p-1 text-fg-muted hover:text-fg rounded-lg transition-colors cursor-pointer"
           >
@@ -440,7 +440,7 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
 
           <button
             type="button"
-            onClick={() => refetch()}
+            onClick={() => void refetch()}
             disabled={isFetching}
             aria-label={t('weather.refresh')}
             className="p-1.5 text-fg-muted hover:text-fg rounded-lg transition-colors cursor-pointer"

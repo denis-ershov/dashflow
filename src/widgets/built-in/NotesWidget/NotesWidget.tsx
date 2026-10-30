@@ -6,6 +6,7 @@ import { StorageAdapter } from '@/core/storage/StorageAdapter';
 import { STORAGE_KEYS } from '@/core/storage/keys';
 import { cn } from '@/ui/lib/cn';
 import type { NotesSettings } from './types';
+import { runLogged } from '@/core/observability';
 
 export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
   instanceId,
@@ -40,15 +41,22 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
     }
   }, [settings?.defaultMode]);
 
+  // Стартовая заметка становится данными пользователя — на языке интерфейса в момент создания.
+  // Язык читается один раз при загрузке, поэтому t намеренно не в зависимостях эффекта
+  const seedNote = useRef(t('notes.seed'));
+
   useEffect(() => {
-    StorageAdapter.get<string>(storageKey, '').then((saved) => {
-      if (saved) {
-        setContent(saved);
-      } else {
-        // Стартовая заметка становится данными пользователя — на языке интерфейса в момент создания
-        StorageAdapter.get<string>(STORAGE_KEYS.NOTES_CONTENT, t('notes.seed')).then(setContent);
-      }
-    });
+    let cancelled = false;
+    const loadNote = async () => {
+      const saved = await StorageAdapter.get<string>(storageKey, '');
+      const value =
+        saved || (await StorageAdapter.get<string>(STORAGE_KEYS.NOTES_CONTENT, seedNote.current));
+      if (!cancelled) setContent(value);
+    };
+    runLogged(loadNote(), 'storage', { widget: 'notes' });
+    return () => {
+      cancelled = true;
+    };
   }, [storageKey]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -60,11 +68,14 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
       clearTimeout(saveTimerRef.current);
     }
 
-    saveTimerRef.current = setTimeout(async () => {
-      await StorageAdapter.set(storageKey, val);
-      // Для обратной совместимости с тестами и v1
-      await StorageAdapter.set(STORAGE_KEYS.NOTES_CONTENT, val);
-      setIsSaved(true);
+    saveTimerRef.current = setTimeout(() => {
+      const persist = async () => {
+        await StorageAdapter.set(storageKey, val);
+        // Для обратной совместимости с тестами и v1
+        await StorageAdapter.set(STORAGE_KEYS.NOTES_CONTENT, val);
+        setIsSaved(true);
+      };
+      runLogged(persist(), 'storage', { widget: 'notes' });
     }, 300);
   };
 

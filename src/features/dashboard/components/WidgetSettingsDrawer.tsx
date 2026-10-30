@@ -7,6 +7,12 @@ import { Button } from '@/ui/primitives/Button';
 import { useTranslation } from '@/core/i18n';
 import { EmptyState } from '@/ui/feedback/EmptyState';
 import { Spinner } from '@/ui/feedback/Spinner';
+import type { WidgetDefinition } from '@/core/widget/types';
+
+/** Собственная форма настроек виджета из его манифеста (loadSettings) */
+type CustomSettingsComponent = Awaited<
+  ReturnType<NonNullable<WidgetDefinition['loadSettings']>>
+>['default'];
 
 export interface WidgetSettingsDrawerProps {
   instanceId: string | null;
@@ -23,9 +29,11 @@ export const WidgetSettingsDrawer: React.FC<WidgetSettingsDrawerProps> = ({
 
   const instance = instances.find((w) => w.instanceId === instanceId);
   const definition = instance ? WidgetRegistry.get(instance.widgetId) : null;
-  const currentSettings = (instance?.settings || {}) as Record<string, unknown>;
+  const currentSettings: Record<string, unknown> = instance?.settings || {};
 
-  const [CustomSettingsComp, setCustomSettingsComp] = useState<React.ComponentType<any> | null>(null);
+  const [CustomSettingsComp, setCustomSettingsComp] = useState<CustomSettingsComponent | null>(
+    null,
+  );
   const [isLoadingComp, setIsLoadingComp] = useState(false);
 
   useEffect(() => {

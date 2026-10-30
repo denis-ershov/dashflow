@@ -125,3 +125,17 @@ class CrashLoggerService {
 }
 
 export const crashLogger = new CrashLoggerService();
+
+/**
+ * Запуск промиса из обработчика события (onClick, onChange), который не может его дождаться:
+ * отказ не теряется как unhandled rejection, а попадает в журнал «Диагностика».
+ */
+export function runLogged(
+  task: Promise<unknown>,
+  context: CrashContext = 'general',
+  meta?: Record<string, string | number | boolean>,
+): void {
+  task.catch((error: unknown) => {
+    crashLogger.logError(error, context, meta);
+  });
+}
