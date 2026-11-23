@@ -7,6 +7,7 @@ import {
   type Dispatcher,
 } from '@/core/commands';
 import {
+  ItemConflictError,
   ItemValidationError,
   createItemRepository,
   type Board,
@@ -78,6 +79,36 @@ describe('Команды Item', () => {
     await bus.undo();
     const back = await repo.get(c.id);
     expect(back).toMatchObject({ status: 'doing', order: c.order });
+  });
+
+  it('ставит запись без соседей в конец и отклоняет перенос по устаревшим данным', async () => {
+    const target = await create({ kind: 'task', title: 'На доске', status: 'todo', boardId: 'b1' });
+    const moved = await create({ kind: 'note', title: 'Из входящих' });
+    await bus.dispatch('item.move', {
+      id: moved.id,
+      status: 'todo',
+      boardId: 'b1',
+      expectedVersion: moved.version,
+    });
+    expect((await repo.query({ boardId: 'b1' })).map(({ id }) => id)).toEqual([
+      target.id,
+      moved.id,
+    ]);
+    await expect(
+      bus.dispatch('item.move', {
+        id: moved.id,
+        status: 'done',
+        expectedVersion: moved.version,
+      }),
+    ).rejects.toBeInstanceOf(ItemConflictError);
+    await expect(
+      bus.dispatch('item.move', {
+        id: moved.id,
+        status: 'done',
+        beforeId: target.id,
+      }),
+    ).rejects.toBeInstanceOf(ItemConflictError);
+    expect(await repo.get(moved.id)).toMatchObject({ kind: 'note', status: 'todo' });
   });
 
   it('выполнение, отложение и архив отменяются', async () => {

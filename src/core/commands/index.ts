@@ -1,5 +1,6 @@
 import { itemRepository, type ItemSource } from '@/core/items';
 import { createDispatcher } from './dispatcher';
+import { DASHBOARD_COMMANDS } from './dashboardCommands';
 import { ITEM_COMMANDS } from './itemCommands';
 
 export * from './types';
@@ -12,5 +13,5 @@ export const LOCAL_USER_SOURCE: ItemSource = { type: 'user', id: 'local', name: 
 /** Шина команд интерфейса: изменения от имени пользователя, история отмены вкладки */
 export const commandBus = createDispatcher({
   context: { repository: itemRepository, source: LOCAL_USER_SOURCE },
-  commands: ITEM_COMMANDS,
+  commands: [...ITEM_COMMANDS, ...DASHBOARD_COMMANDS],
 });

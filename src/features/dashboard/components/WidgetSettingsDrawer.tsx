@@ -1,3 +1,4 @@
+import { activeSpaceOf } from '@/core/storage';
 import React, { useState, useEffect } from 'react';
 import { Drawer } from '@/ui/overlays/Drawer';
 import { useDashboardStore } from '@/stores/useDashboardStore';
@@ -24,7 +25,7 @@ export const WidgetSettingsDrawer: React.FC<WidgetSettingsDrawerProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
-  const instances = useDashboardStore((s) => s.instances);
+  const instances = useDashboardStore((s) => activeSpaceOf(s).instances);
   const updateWidgetSettings = useDashboardStore((s) => s.updateWidgetSettings);
 
   const instance = instances.find((w) => w.instanceId === instanceId);

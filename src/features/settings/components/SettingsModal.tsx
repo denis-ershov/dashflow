@@ -1,3 +1,4 @@
+import { activeSpaceOf } from '@/core/storage';
 import React, { useState } from 'react';
 import { Modal } from '@/ui/overlays';
 import { useShallow } from 'zustand/react/shallow';
@@ -27,9 +28,9 @@ export const SettingsModal: React.FC = () => {
     useShallow((s) => ({
       activeModal: s.activeModal,
       setActiveModal: s.setActiveModal,
-      baseColumns: s.baseColumns,
+      baseColumns: activeSpaceOf(s).baseColumns,
       setBaseColumns: s.setBaseColumns,
-      gap: s.gap,
+      gap: activeSpaceOf(s).gap,
       setGap: s.setGap,
       layoutMode: s.layoutMode,
       setLayoutMode: s.setLayoutMode,

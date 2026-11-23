@@ -18,12 +18,7 @@ function isTextEditing(target: EventTarget | null): boolean {
 
 async function undoWith(dispatcher?: Dispatcher): Promise<void> {
   const { undoLast } = await import('./undo');
-  if (dispatcher) {
-    if (dispatcher.canUndo()) await undoLast(dispatcher);
-    return;
-  }
-  const { commandBus } = await import('@/core/commands');
-  if (commandBus.canUndo()) await undoLast(commandBus);
+  await undoLast(dispatcher);
 }
 
 /** dispatcher — для тестов; по умолчанию — commandBus, загружаемый лениво */
@@ -34,7 +29,7 @@ export function useUndoHotkey(dispatcher?: Dispatcher): void {
         (event.ctrlKey || event.metaKey) &&
         !event.shiftKey &&
         !event.altKey &&
-        event.key.toLowerCase() === 'z';
+        (event.code === 'KeyZ' || event.key.toLowerCase() === 'z');
       if (!isUndo || isTextEditing(event.target)) return;
       event.preventDefault();
       void undoWith(dispatcher);

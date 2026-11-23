@@ -6,6 +6,8 @@ export const STORAGE_KEYS = {
   DASHBOARD: 'dashflow_dashboard_store',
   /** Резервная копия состояния v1 для безопасного отката (Правило 51) */
   DASHBOARD_BACKUP_V1: 'dashflow_backup_v1',
+  /** Снимок Zustand v2 на момент первого обновления до Spaces. */
+  DASHBOARD_BACKUP_V2: 'dashflow_backup_v2',
   /** Состояние темы и внешнего вида */
   THEME: 'dashflow_theme_store',
   /** Резервная копия темы v1 */

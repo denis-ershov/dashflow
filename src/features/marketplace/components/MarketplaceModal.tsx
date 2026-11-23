@@ -1,7 +1,9 @@
+import { activeSpaceOf } from '@/core/storage';
 import React, { useState, useMemo } from 'react';
 import { Modal } from '@/ui/overlays';
 import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStore } from '@/stores/useDashboardStore';
+import { deleteDashboardEntity } from '@/features/commands/deleteDashboardEntity';
 import { usePluginStore } from '@/core/plugins/pluginStore';
 import { WidgetRegistry } from '@/core/widget/registry';
 import { useTranslation } from '@/core/i18n';
@@ -25,13 +27,13 @@ import { runLogged } from '@/core/observability';
 
 export const MarketplaceModal: React.FC = () => {
   const { t } = useTranslation();
-  const { activeModal, setActiveModal, instances, addWidget, removeWidget } = useDashboardStore(
+  const { activeModal, setActiveModal, instances, addWidget, activeSpaceId } = useDashboardStore(
     useShallow((s) => ({
       activeModal: s.activeModal,
       setActiveModal: s.setActiveModal,
-      instances: s.instances,
+      instances: activeSpaceOf(s).instances,
       addWidget: s.addWidget,
-      removeWidget: s.removeWidget,
+      activeSpaceId: s.activeSpaceId,
     })),
   );
   const { plugins, installPlugin, uninstallPlugin } = usePluginStore();
@@ -393,7 +395,7 @@ export const MarketplaceModal: React.FC = () => {
                                 variant="secondary"
                                 onClick={() => {
                                   const inst = instances.find((w) => w.widgetId === item.id);
-                                  if (inst) removeWidget(inst.instanceId);
+                                  if (inst) deleteDashboardEntity('widget.delete', inst.instanceId, activeSpaceId);
                                 }}
                               >
                                 {t('marketplace.removeFromScreen')}

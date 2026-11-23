@@ -1,16 +1,16 @@
+import { configureDashboard } from '../helpers/dashboard';
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import App from '@/entrypoints/newtab/App';
 import { useAppStore } from '@/stores/useAppStore';
-import { useDashboardStore } from '@/stores/useDashboardStore';
 import { registerBuiltInWidgets } from '@/widgets/built-in';
 
 describe('App Root Layout', () => {
   beforeEach(() => {
     registerBuiltInWidgets();
     useAppStore.setState({ isInitialized: true });
-    useDashboardStore.setState({
+    configureDashboard({
       layoutMode: 'modular',
       instances: [
         {

@@ -1,4 +1,5 @@
-import { openItemsDb, type ItemsDb, type StoredChange } from './db';
+import type { IDBPObjectStore } from 'idb';
+import { openItemsDb, type ItemsDb, type ItemsDbSchema, type StoredChange } from './db';
 import type { ItemsChangedEvent } from './events';
 import { orderBetween, ulid } from './ids';
 import {
@@ -51,11 +52,27 @@ const DEFAULT_COLUMNS = [
   { id: 'doing', title: 'In progress' },
   { id: 'done', title: 'Done' },
 ];
+type ItemWriteStore = IDBPObjectStore<ItemsDbSchema, ['items', 'changes'], 'items', 'readwrite'>;
+type ChangeWriteStore = IDBPObjectStore<
+  ItemsDbSchema,
+  ['items', 'changes'],
+  'changes',
+  'readwrite'
+>;
 
 export interface ItemRepositoryOptions {
   dbName?: string;
   now?: () => Date;
   notify?: (event: ItemsChangedEvent) => void;
+}
+
+export interface ItemMoveTarget {
+  status?: string;
+  boardId?: string | null;
+  /** Соседи в целевой колонке. Без соседей при переходе запись ставится в конец. */
+  afterId?: string;
+  beforeId?: string;
+  expectedVersion?: number;
 }
 
 export function createItemRepository(options: ItemRepositoryOptions = {}) {
@@ -73,8 +90,8 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
   });
 
   /** Последний ключ порядка в группе (доска + статус), чтобы новая запись встала в конец */
-  async function lastOrderIn(database: ItemsDb, status: string, boardId?: string) {
-    const inStatus = await database.getAllFromIndex('items', 'status', status);
+  async function lastOrderIn(store: ItemWriteStore, status: string, boardId?: string) {
+    const inStatus = await store.index('status').getAll(status);
     let last: string | undefined;
     for (const item of inStatus) {
       if (item.boardId === boardId && !item.deletedAt && (!last || item.order > last)) {
@@ -84,35 +101,59 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
     return last;
   }
 
-  async function trimChanges(database: ItemsDb, seq: number) {
-    if (seq % 100 !== 0) return;
-    const tx = database.transaction('changes', 'readwrite');
-    let excess = (await tx.store.count()) - CHANGES_RETENTION;
-    let cursor = await tx.store.openCursor();
+  async function trimChanges(store: ChangeWriteStore) {
+    let excess = (await store.count()) - CHANGES_RETENTION;
+    let cursor = excess > 0 ? await store.openCursor() : null;
     while (cursor && excess > 0) {
       await cursor.delete();
       excess--;
       cursor = await cursor.continue();
     }
-    await tx.done;
   }
 
-  /** Записывает версию записи и строку журнала одной транзакцией */
-  async function writeItem(item: Item, op: ItemChangeOp, source: ItemSource) {
+  /** Читает исходные версии и фиксирует изменения вместе с журналом в одной транзакции. */
+  async function changeItems<Result>(
+    op: ItemChangeOp,
+    source: ItemSource,
+    prepare: (store: ItemWriteStore) => Promise<{ result: Result; writes: Item[] }>,
+  ): Promise<Result> {
     const database = await db();
     const tx = database.transaction(['items', 'changes'], 'readwrite');
-    await tx.objectStore('items').put(item);
-    const seq = await tx.objectStore('changes').add(changeOf(item, op, source));
-    await tx.done;
-    await trimChanges(database, seq);
-    notify({ type: 'items-changed', itemIds: [item.id] });
+    const store = tx.objectStore('items');
+    const changes = tx.objectStore('changes');
+    try {
+      const { result, writes } = await prepare(store);
+      let trim = false;
+      for (const item of writes) {
+        await store.put(item);
+        const seq = await changes.add(changeOf(item, op, source));
+        trim ||= seq % 100 === 0;
+      }
+      if (trim) await trimChanges(changes);
+      await tx.done;
+      if (writes.length) notify({ type: 'items-changed', itemIds: writes.map(({ id }) => id) });
+      return result;
+    } catch (error) {
+      // Валидация заканчивается до записей. Ошибка запроса IndexedDB сама прерывает транзакцию.
+      await tx.done.catch(() => undefined);
+      throw error;
+    }
+  }
+
+  async function requireItem(store: ItemWriteStore, id: string): Promise<Item> {
+    const item = await store.get(id);
+    if (!item) throw new ItemNotFoundError(id);
     return item;
   }
 
-  async function requireItem(id: string): Promise<Item> {
-    const item = await (await db()).get('items', id);
-    if (!item) throw new ItemNotFoundError(id);
-    return item;
+  function markDeleted(current: Item, timestamp: string): Item {
+    return { ...current, deletedAt: timestamp, updatedAt: timestamp, version: current.version + 1 };
+  }
+
+  function clearDeleted(current: Item, timestamp: string): Item {
+    const restored = { ...current, updatedAt: timestamp, version: current.version + 1 };
+    delete restored.deletedAt;
+    return restored;
   }
 
   function applyPatch(item: Item, patch: ItemPatch): Item {
@@ -130,24 +171,64 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
     return next;
   }
 
+  function prepareUpdate(current: Item, patch: ItemPatch) {
+    const next = applyPatch(current, patch);
+    if (JSON.stringify(next) === JSON.stringify(current)) return { updated: current, writes: [] };
+    next.updatedAt = now();
+    next.version = current.version + 1;
+    return { updated: next, writes: [next] };
+  }
+
+  async function orderForMove(
+    store: ItemWriteStore,
+    current: Item,
+    { afterId, beforeId, status = current.status, boardId = current.boardId }: ItemMoveTarget,
+  ): Promise<string> {
+    const targetBoard = boardId ?? undefined;
+    const neighborOrder = async (id: string | undefined) => {
+      if (!id) return undefined;
+      const neighbor = await store.get(id);
+      if (
+        !neighbor ||
+        neighbor.deletedAt ||
+        neighbor.archivedAt ||
+        neighbor.id === current.id ||
+        neighbor.boardId !== targetBoard ||
+        neighbor.status !== status
+      ) {
+        throw new ItemConflictError(current);
+      }
+      return neighbor.order;
+    };
+    if (afterId || beforeId) {
+      const [after, before] = await Promise.all([neighborOrder(afterId), neighborOrder(beforeId)]);
+      if (after !== undefined && before !== undefined && after >= before)
+        throw new ItemConflictError(current);
+      return orderBetween(after, before);
+    }
+    if (current.status === status && current.boardId === targetBoard) return current.order;
+    return orderBetween(await lastOrderIn(store, status, targetBoard));
+  }
+
   return {
     async create(draftInput: ItemDraft, source: ItemSource): Promise<Item> {
       const draft = parseItemDraft(draftInput);
-      const database = await db();
-      const status = draft.status ?? DEFAULT_STATUS;
-      const timestamp = now();
-      const item: Item = {
-        ...draft,
-        id: ulid(Date.parse(timestamp)),
-        status,
-        order: draft.order ?? orderBetween(await lastOrderIn(database, status, draft.boardId)),
-        tags: draft.tags ?? [],
-        source,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-        version: 1,
-      };
-      return writeItem(item, 'create', source);
+      return changeItems('create', source, async (store) => {
+        const status = draft.status ?? DEFAULT_STATUS;
+        const timestamp = now();
+        const item: Item = {
+          ...draft,
+          id: ulid(Date.parse(timestamp)),
+          status,
+          order: draft.order ?? orderBetween(await lastOrderIn(store, status, draft.boardId)),
+          tags: draft.tags ?? [],
+          source,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+          version: 1,
+        };
+        return { result: item, writes: [item] };
+      });
     },
 
     async get(id: string): Promise<Item | undefined> {
@@ -165,37 +246,83 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
       expectedVersion?: number,
     ): Promise<Item> {
       const patch = parseItemPatch(patchInput);
-      const current = await requireItem(id);
-      if (current.deletedAt) throw new ItemNotFoundError(id);
-      if (expectedVersion !== undefined && current.version !== expectedVersion) {
-        throw new ItemConflictError(current);
-      }
-      const next = applyPatch(current, patch);
-      // Изменение без фактических правок не создаёт версию, запись журнала и событие
-      if (JSON.stringify(next) === JSON.stringify(current)) return current;
-      next.updatedAt = now();
-      next.version = current.version + 1;
-      return writeItem(next, 'update', source);
+      return changeItems('update', source, async (store) => {
+        const current = await requireItem(store, id);
+        if (current.deletedAt) throw new ItemNotFoundError(id);
+        if (expectedVersion !== undefined && current.version !== expectedVersion) {
+          throw new ItemConflictError(current);
+        }
+        // Изменение без фактических правок не создаёт версию, запись журнала и событие.
+        const { updated, writes } = prepareUpdate(current, patch);
+        return { result: updated, writes };
+      });
+    },
+
+    async move(id: string, target: ItemMoveTarget, source: ItemSource) {
+      const patch = parseItemPatch({ status: target.status, boardId: target.boardId });
+      return changeItems('update', source, async (store) => {
+        const current = await requireItem(store, id);
+        if (current.deletedAt || current.archivedAt) throw new ItemNotFoundError(id);
+        if (target.expectedVersion !== undefined && current.version !== target.expectedVersion) {
+          throw new ItemConflictError(current);
+        }
+        const order = await orderForMove(store, current, {
+          ...target,
+          status: patch.status,
+          boardId: patch.boardId,
+        });
+        const { updated, writes } = prepareUpdate(current, { ...patch, order });
+        return { result: { current, updated }, writes };
+      });
     },
 
     /** Мягкое удаление: запись уходит в корзину и восстанавливается restore */
     async remove(id: string, source: ItemSource): Promise<Item> {
-      const current = await requireItem(id);
-      if (current.deletedAt) return current;
-      const timestamp = now();
-      return writeItem(
-        { ...current, deletedAt: timestamp, updatedAt: timestamp, version: current.version + 1 },
-        'delete',
-        source,
-      );
+      return changeItems('delete', source, async (store) => {
+        const current = await requireItem(store, id);
+        if (current.deletedAt) return { result: current, writes: [] };
+        const removed = markDeleted(current, now());
+        return { result: removed, writes: [removed] };
+      });
     },
 
     async restore(id: string, source: ItemSource): Promise<Item> {
-      const current = await requireItem(id);
-      if (!current.deletedAt) return current;
-      const restored: Item = { ...current, updatedAt: now(), version: current.version + 1 };
-      delete restored.deletedAt;
-      return writeItem(restored, 'restore', source);
+      return changeItems('restore', source, async (store) => {
+        const current = await requireItem(store, id);
+        if (!current.deletedAt) return { result: current, writes: [] };
+        const restored = clearDeleted(current, now());
+        return { result: restored, writes: [restored] };
+      });
+    },
+
+    /** Одна операция для выделенных записей. Уже удалённые записи пропускаются. */
+    async removeMany(ids: readonly string[], source: ItemSource): Promise<Item[]> {
+      return changeItems('delete', source, async (store) => {
+        const entries = await Promise.all([...new Set(ids)].map((id) => store.get(id)));
+        const timestamp = now();
+        const removed = entries.flatMap((item) =>
+          item && !item.deletedAt ? [markDeleted(item, timestamp)] : [],
+        );
+        return { result: removed, writes: removed };
+      });
+    },
+
+    /** Отменяет весь пакет только при совпадении каждой версии из корзины. */
+    async restoreMany(
+      previous: readonly Pick<Item, 'id' | 'version'>[],
+      source: ItemSource,
+    ): Promise<void> {
+      return changeItems('restore', source, async (store) => {
+        const timestamp = now();
+        const restored = await Promise.all(
+          previous.map(async ({ id, version }) => {
+            const item = await requireItem(store, id);
+            if (!item.deletedAt || item.version !== version) throw new ItemConflictError(item);
+            return clearDeleted(item, timestamp);
+          }),
+        );
+        return { result: undefined, writes: restored };
+      });
     },
 
     /** Окончательно удаляет записи из корзины старше срока хранения; возвращает их число */

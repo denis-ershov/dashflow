@@ -412,6 +412,8 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
               filteredTodos.map((todo) => (
                 <div
                   key={todo.id}
+                  data-search-item={todo.id}
+                  tabIndex={-1}
                   className={cn(
                     'group flex items-center justify-between bg-surface/60 hover:bg-surface border border-line hover:border-line-hover transition-all',
                     density === 'compact' ? 'py-1.5 px-2.5 rounded-lg' : 'p-2.5 rounded-xl',

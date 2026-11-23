@@ -1,3 +1,4 @@
+import type { DashboardSpace } from '@/core/storage';
 import { useEffect, useRef, useState } from 'react';
 import { useI18nStore } from '@/core/i18n';
 import {
@@ -11,7 +12,7 @@ import {
 } from '@/core/items';
 import { runLogged } from '@/core/observability';
 import { legacyLabels } from '@/features/settings/backupFile';
-import { useDashboardStore } from '@/stores/useDashboardStore';
+import { useDashboardStore, waitForDashboard } from '@/stores/useDashboardStore';
 
 /**
  * Привязка экземпляров виджетов к данным рабочего пространства (шаг 1.4).
@@ -35,21 +36,10 @@ export function resetWorkspaceBindings(): void {
   pending.clear();
 }
 
-function waitForDashboard(): Promise<void> {
-  const { persist } = useDashboardStore;
-  if (persist.hasHydrated()) return Promise.resolve();
-  return new Promise((resolve) => {
-    const unsubscribe = persist.onFinishHydration(() => {
-      unsubscribe();
-      resolve();
-    });
-  });
-}
-
 /** Привязывает экземпляры, у которых ещё нет своей доски/записи, к перенесённым данным */
 function applyMapping(mapping: Readonly<Record<string, LegacyMappingEntry>>): void {
-  const { instances, updateWidgetSettings } = useDashboardStore.getState();
-  for (const instance of instances) {
+  const { spaces, updateWidgetSettings } = useDashboardStore.getState();
+  for (const instance of spaces.flatMap((space) => space.instances)) {
     const entry = mapping[instance.instanceId];
     const settings = instance.settings;
     if (entry && settings.boardId === undefined && settings.itemId === undefined) {
@@ -65,7 +55,9 @@ export function ensureWorkspaceReady(): Promise<LegacyMigrationRecord> {
       await waitForDashboard();
       const instances = useDashboardStore
         .getState()
-        .instances.map(({ instanceId, widgetId }) => ({ instanceId, widgetId }));
+        .spaces.flatMap((space) =>
+          space.instances.map(({ instanceId, widgetId }) => ({ instanceId, widgetId })),
+        );
       const record = await runLegacyMigration({
         repository: itemRepository,
         instances,
@@ -92,9 +84,21 @@ async function isAlive(field: InstanceField, id: string): Promise<boolean> {
 }
 
 function settingOf(instanceId: string, field: InstanceField): string | undefined {
-  const instance = useDashboardStore.getState().instances.find((i) => i.instanceId === instanceId);
-  const value = instance?.settings[field];
-  return typeof value === 'string' ? value : undefined;
+  return settingFor(useDashboardStore.getState().spaces, instanceId, field);
+}
+
+function settingFor(
+  spaces: readonly DashboardSpace[],
+  instanceId: string,
+  field: InstanceField,
+): string | undefined {
+  for (const space of spaces) {
+    const instance = space.instances.find((i) => i.instanceId === instanceId);
+    if (!instance) continue;
+    const value = instance.settings[field];
+    return typeof value === 'string' ? value : undefined;
+  }
+  return undefined;
 }
 
 /**
@@ -157,10 +161,7 @@ export function useInstanceTarget(
   const [state, setState] = useState<InstanceTarget>({ id: null, error: null });
   const createRef = useRef(create);
   createRef.current = create;
-  const settingValue = useDashboardStore((s) => {
-    const value = s.instances.find((i) => i.instanceId === instanceId)?.settings[field];
-    return typeof value === 'string' ? value : undefined;
-  });
+  const settingValue = useDashboardStore((state) => settingFor(state.spaces, instanceId, field));
 
   useEffect(() => {
     let cancelled = false;

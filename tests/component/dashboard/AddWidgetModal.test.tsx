@@ -1,3 +1,4 @@
+import { configureDashboard, getActiveSpace } from '../../helpers/dashboard';
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -11,7 +12,7 @@ describe('AddWidgetModal Component', () => {
   beforeEach(() => {
     registerBuiltInWidgets();
     useI18nStore.setState({ language: 'ru' });
-    useDashboardStore.setState({
+    configureDashboard({
       activeModal: 'addWidget',
       instances: [],
     });
@@ -41,7 +42,7 @@ describe('AddWidgetModal Component', () => {
     const addButtons = screen.getAllByRole('button', { name: /добавить/i });
     fireEvent.click(at(addButtons, 0));
 
-    expect(useDashboardStore.getState().instances.length).toBe(1);
+    expect(getActiveSpace().instances.length).toBe(1);
     expect(useDashboardStore.getState().activeModal).toBeNull();
   });
 });

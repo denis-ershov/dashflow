@@ -1,9 +1,11 @@
+import { activeSpaceOf } from '@/core/storage';
 import React, { useCallback, useState } from 'react';
 import { ResponsiveGridLayout, useContainerWidth, verticalCompactor } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
 import { Columns, Move, Plus, Check, Sliders } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useDashboardStore } from '@/stores/useDashboardStore';
+import { deleteDashboardEntity } from '@/features/commands/deleteDashboardEntity';
 import { WidgetRegistry } from '@/core/widget/registry';
 import { WidgetShell } from '@/core/widget/WidgetShell';
 import { registerBuiltInWidgets } from '@/widgets/built-in';
@@ -43,23 +45,25 @@ export const GridEngine: React.FC = () => {
     setBaseColumns,
     setGap,
     updateLayout,
-    removeWidget,
     activeModal,
     setActiveModal,
+    activeSpaceId,
+    isCommandPaletteOpen,
   } = useDashboardStore(
     useShallow((s) => ({
-      baseColumns: s.baseColumns,
-      gap: s.gap,
-      instances: s.instances,
-      layouts: s.layouts,
+      baseColumns: activeSpaceOf(s).baseColumns,
+      gap: activeSpaceOf(s).gap,
+      instances: activeSpaceOf(s).instances,
+      layouts: activeSpaceOf(s).layouts,
       isEditMode: s.isEditMode,
       setEditMode: s.setEditMode,
       setBaseColumns: s.setBaseColumns,
       setGap: s.setGap,
       updateLayout: s.updateLayout,
-      removeWidget: s.removeWidget,
       activeModal: s.activeModal,
       setActiveModal: s.setActiveModal,
+      activeSpaceId: s.activeSpaceId,
+      isCommandPaletteOpen: s.isCommandPaletteOpen,
     })),
   );
 
@@ -102,15 +106,15 @@ export const GridEngine: React.FC = () => {
 
   const { liveAnnouncement } = useGridKeyboardNav({
     // Пока открыта модалка или панель настроек, Escape и стрелки принадлежат им
-    enabled: isEditMode && activeModal === null && activeSettingsInstanceId === null,
+    enabled: isEditMode && activeModal === null && activeSettingsInstanceId === null && !isCommandPaletteOpen,
     selectedInstanceId: focusedInstanceId,
     onExitEditMode: () => setEditMode(false),
     onMoveWidget: (id, dx, dy) => applyDelta(id, dx, dy, 'move'),
     onResizeWidget: (id, dx, dy) => applyDelta(id, dx, dy, 'resize'),
   });
 
-  const handleLayoutChange = (currentLayout: Layout) => {
-    if (!isEditMode) return;
+  const saveGridEdit = (currentLayout: Layout) => {
+    if (!isEditMode || useDashboardStore.getState().activeSpaceId !== activeSpaceId) return;
     if (currentLayout && currentLayout.length > 0) {
       const updated = currentLayout.map((item) => ({
         i: item.i,
@@ -246,7 +250,8 @@ export const GridEngine: React.FC = () => {
         }}
         compactor={verticalCompactor}
         onBreakpointChange={(bp) => setCurrentBreakpoint(bp as Breakpoint)}
-        onLayoutChange={handleLayoutChange}
+        onDragStop={saveGridEdit}
+        onResizeStop={saveGridEdit}
       >
         {instances.map((item) => {
           const definition = WidgetRegistry.get(item.widgetId);
@@ -256,8 +261,9 @@ export const GridEngine: React.FC = () => {
             <div
               key={item.instanceId}
               role="group"
-              tabIndex={isEditMode ? 0 : undefined}
-              aria-label={isEditMode ? String(widgetTitle) : undefined}
+              tabIndex={isEditMode ? 0 : -1}
+              aria-label={String(widgetTitle)}
+              data-search-widget={item.instanceId}
               onFocus={() => setFocusedInstanceId(item.instanceId)}
               className="focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 rounded-xl"
             >
@@ -267,7 +273,7 @@ export const GridEngine: React.FC = () => {
                 surface={definition?.surface || 'panel'}
                 isEditMode={isEditMode}
                 onOpenSettings={() => setActiveSettingsInstanceId(item.instanceId)}
-                onRemove={() => removeWidget(item.instanceId)}
+                onRemove={() => deleteDashboardEntity('widget.delete', item.instanceId, activeSpaceId)}
               >
                 <LazyWidgetRenderer
                   widgetId={item.widgetId}

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '@/stores/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
-import { useDashboardStore } from '@/stores/useDashboardStore';
+import { useDashboardHydration, useDashboardStore } from '@/stores/useDashboardStore';
 import { useTranslation } from '@/core/i18n';
 import { GridEngine } from '@/features/dashboard/components/GridEngine';
 import { CommandPalette } from '@/features/dashboard/components/CommandPalette';
+import { SpacesModal } from '@/features/dashboard/components/SpacesModal';
+import { useSpaceHotkeys } from '@/features/dashboard/hooks/useSpaceHotkeys';
 import { SettingsModal } from '@/features/settings/components/SettingsModal';
 import { AddWidgetModal } from '@/features/dashboard/components/AddWidgetModal';
 import { MarketplaceModal } from '@/features/marketplace/components/MarketplaceModal';
@@ -18,14 +20,17 @@ import { useFeatureFlags } from '@/core/featureFlags';
 import { useThemeStore } from '@/core/theme/themeStore';
 import { Spinner, RootErrorBoundary } from '@/ui/feedback';
 import { ToastContainer } from '@/ui/primitives/Toast';
+import { Button } from '@/ui/primitives';
 import { crashLogger } from '@/core/observability';
 import { useUndoHotkey } from '@/features/commands/useUndoHotkey';
+import { deleteDashboardEntity } from '@/features/commands/deleteDashboardEntity';
 
 /** Модалки, у которых есть своя кнопка в доке */
-const DOCK_PANELS: ReadonlyArray<DockPanel> = ['addWidget', 'marketplace', 'appearance', 'settings'];
+const DOCK_PANELS: ReadonlyArray<DockPanel> = ['spaces', 'addWidget', 'marketplace', 'appearance', 'settings'];
 
 function DashboardContent() {
   const isInitialized = useAppStore((s) => s.isInitialized);
+  const dashboardStatus = useDashboardHydration();
   const initApp = useAppStore((s) => s.initialize);
   const {
     activeModal,
@@ -36,10 +41,10 @@ function DashboardContent() {
     updateHeroSettings,
     speedDialLinks,
     addSpeedDialLink,
-    removeSpeedDialLink,
     isEditMode,
     toggleEditMode,
     setCommandPaletteOpen,
+    activeSpaceId,
   } = useDashboardStore(
     useShallow((s) => ({
       activeModal: s.activeModal,
@@ -50,10 +55,10 @@ function DashboardContent() {
       updateHeroSettings: s.updateHeroSettings,
       speedDialLinks: s.speedDialLinks,
       addSpeedDialLink: s.addSpeedDialLink,
-      removeSpeedDialLink: s.removeSpeedDialLink,
       isEditMode: s.isEditMode,
       toggleEditMode: s.toggleEditMode,
       setCommandPaletteOpen: s.setCommandPaletteOpen,
+      activeSpaceId: s.activeSpaceId,
     })),
   );
   const initializeTheme = useThemeStore((state) => state.initialize);
@@ -67,6 +72,7 @@ function DashboardContent() {
 
   // Ctrl+Z / Cmd+Z вне полей ввода — отмена последнего действия с данными
   useUndoHotkey();
+  useSpaceHotkeys(isInitialized && dashboardStatus === 'ready');
 
   useEffect(() => {
     // Стор запускается на значениях по умолчанию даже при ошибке чтения — её только журналируем
@@ -77,6 +83,7 @@ function DashboardContent() {
   // Перенос данных 3.8 в Item — в фоне после первого кадра, даже если на дашборде нет
   // виджетов задач, заметок и ссылок (их содержимое уйдёт в архив, а не потеряется)
   useEffect(() => {
+    if (dashboardStatus !== 'ready') return;
     const start = () => {
       const bootstrap = async () => {
         const { ensureWorkspaceReady } = await import('@/features/workspace/bindings');
@@ -92,14 +99,25 @@ function DashboardContent() {
     }
     const timer = setTimeout(start, 1000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [dashboardStatus]);
 
   // Выключение флага ambientAudio должно глушить уже играющие треки
   useEffect(() => {
     if (!isAudioEnabled) stopAllAudio();
   }, [isAudioEnabled, stopAllAudio]);
 
-  if (!isInitialized) {
+  if (dashboardStatus === 'error') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-canvas p-4 text-center text-fg">
+        <p role="alert">{t('spaces.loadError')}</p>
+        <Button onClick={() => void useDashboardStore.persist.rehydrate()}>
+          {t('commandPalette.retry')}
+        </Button>
+      </div>
+    );
+  }
+
+  if (!isInitialized || dashboardStatus === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-canvas text-fg">
         <div className="flex flex-col items-center gap-4">
@@ -137,7 +155,7 @@ function DashboardContent() {
               <SpeedDialGrid
                 links={speedDialLinks}
                 onAddClick={() => setIsAddLinkOpen(true)}
-                onRemoveLink={removeSpeedDialLink}
+                onRemoveLink={(id) => deleteDashboardEntity('speedDial.delete', id)}
               />
             )}
           </section>
@@ -146,7 +164,7 @@ function DashboardContent() {
         {/* Модульная сетка виджетов (режимы Modular и Pure Canvas) */}
         {showGrid && (
           <main className="flex-1 w-full px-3 sm:px-6 py-4">
-            <GridEngine />
+            <GridEngine key={activeSpaceId} />
           </main>
         )}
       </div>
@@ -165,6 +183,7 @@ function DashboardContent() {
         onOpenAudio={isAudioEnabled ? () => setIsAudioDrawerOpen(true) : undefined}
         onOpenSettings={() => setActiveModal('settings')}
         onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+        onOpenSpaces={() => setActiveModal('spaces')}
         isEditMode={isEditMode}
         onToggleEditMode={toggleEditMode}
         isAudioPlaying={isAudioPlaying}
@@ -173,6 +192,7 @@ function DashboardContent() {
 
       {/* Модальные окна и оверлеи */}
       <CommandPalette />
+      <SpacesModal />
       <SettingsModal />
       <AddWidgetModal />
       <MarketplaceModal />

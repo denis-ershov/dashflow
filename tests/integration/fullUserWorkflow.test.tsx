@@ -1,3 +1,4 @@
+import { configureDashboard, getActiveSpace } from '../helpers/dashboard';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { StorageAdapter, STORAGE_KEYS } from '@/core/storage';
 import { useDashboardStore } from '@/stores/useDashboardStore';
@@ -22,7 +23,7 @@ describe('Integration: Full User Workflow & Core Resilience', () => {
     await StorageAdapter.set(STORAGE_KEYS.CUSTOM_PLUGINS, []);
     await StorageAdapter.set(STORAGE_KEYS.PERMISSION_GRANTS, {});
 
-    useDashboardStore.setState({
+    configureDashboard({
       instances: [],
       layouts: { xl: [], lg: [], md: [], sm: [], xs: [] },
       isEditMode: false,
@@ -36,27 +37,27 @@ describe('Integration: Full User Workflow & Core Resilience', () => {
   });
 
   it('должен проходить полный жизненный цикл управления виджетами на дашборде', () => {
-    const initialCount = useDashboardStore.getState().instances.length;
+    const initialCount = getActiveSpace().instances.length;
 
     // 1. Добавление виджета часов
     useDashboardStore.getState().addWidget('clock');
-    expect(useDashboardStore.getState().instances).toHaveLength(initialCount + 1);
-    const { instances } = useDashboardStore.getState();
+    expect(getActiveSpace().instances).toHaveLength(initialCount + 1);
+    const { instances } = getActiveSpace();
     const clockInstance = at(instances, instances.length - 1);
     expect(clockInstance.widgetId).toBe('clock');
     expect(clockInstance.instanceId).toBeDefined();
 
     // 2. Добавление виджета заметок
     useDashboardStore.getState().addWidget('notes');
-    expect(useDashboardStore.getState().instances).toHaveLength(initialCount + 2);
+    expect(getActiveSpace().instances).toHaveLength(initialCount + 2);
 
     // 3. Обновление настроек виджета
     useDashboardStore
       .getState()
       .updateWidgetSettings(clockInstance.instanceId, { is24Hour: false, showSeconds: true });
-    const updated = useDashboardStore
-      .getState()
-      .instances.find((w) => w.instanceId === clockInstance.instanceId);
+    const updated = getActiveSpace().instances.find(
+      (w) => w.instanceId === clockInstance.instanceId,
+    );
     expect(updated?.settings).toEqual({ is24Hour: false, showSeconds: true });
 
     // 4. Переключение режима редактирования
@@ -66,7 +67,7 @@ describe('Integration: Full User Workflow & Core Resilience', () => {
 
     // 5. Удаление виджета
     useDashboardStore.getState().removeWidget(clockInstance.instanceId);
-    expect(useDashboardStore.getState().instances).toHaveLength(initialCount + 1);
+    expect(getActiveSpace().instances).toHaveLength(initialCount + 1);
   });
 
   it('должен проходить полный сценарий смены тем, пресетов и валидации CSS', () => {

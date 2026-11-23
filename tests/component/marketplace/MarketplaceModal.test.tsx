@@ -1,8 +1,8 @@
+import { configureDashboard } from '../../helpers/dashboard';
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MarketplaceModal } from '@/features/marketplace/components/MarketplaceModal';
-import { useDashboardStore } from '@/stores/useDashboardStore';
 import { registerBuiltInWidgets } from '@/widgets/built-in';
 import { usePluginStore } from '@/core/plugins/pluginStore';
 import { useI18nStore } from '@/core/i18n';
@@ -12,7 +12,7 @@ describe('MarketplaceModal Component', () => {
     registerBuiltInWidgets();
     useI18nStore.setState({ language: 'ru' });
     usePluginStore.setState({ plugins: [] });
-    useDashboardStore.setState({
+    configureDashboard({
       activeModal: 'marketplace',
       instances: [],
     });

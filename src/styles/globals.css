@@ -282,3 +282,8 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+[data-search-highlight] {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}

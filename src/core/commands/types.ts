@@ -22,6 +22,11 @@ export interface CommandOutcome<R> {
   label?: CommandLabel;
 }
 
+export interface DispatchOutcome<R> extends CommandOutcome<R> {
+  /** Запись истории, соответствующая выполненной операции. */
+  historyId?: number;
+}
+
 export interface CommandLabel {
   key: string;
   params?: Record<string, string | number>;
@@ -55,6 +60,7 @@ export interface DispatchOptions {
 }
 
 export interface HistoryEntry {
+  id: number;
   type: string;
   label?: CommandLabel;
   undo: () => Promise<void>;

@@ -1,6 +1,7 @@
 import {
   ItemValidationError,
-  orderBetween,
+  ItemConflictError,
+  ItemNotFoundError,
   parseBoardDraft,
   parseItemDraft,
   parseItemPatch,
@@ -8,6 +9,7 @@ import {
   type BoardDraft,
   type Item,
   type ItemDraft,
+  type ItemMoveTarget,
   type ItemPatch,
 } from '@/core/items';
 import { asRecord } from '@/core/network/jsonReaders';
@@ -58,7 +60,14 @@ async function revertFields(ctx: CommandContext, id: string, after: Item, before
   for (const key of Object.keys(before)) {
     if (!sameValue(currentRecord[key], afterRecord[key])) throw new UndoConflictError(id);
   }
-  await ctx.repository.update(id, before, ctx.source);
+  try {
+    await ctx.repository.update(id, before, ctx.source, current.version);
+  } catch (error) {
+    if (error instanceof ItemConflictError || error instanceof ItemNotFoundError) {
+      throw new UndoConflictError(id);
+    }
+    throw error;
+  }
 }
 
 /** Изменение с обратным действием; пустое изменение отменять нечего */
@@ -69,7 +78,7 @@ async function updateWithUndo(
 ): Promise<CommandOutcome<Item>> {
   const current = await ctx.repository.get(id);
   const before = current ? snapshot(current, patch) : {};
-  const updated = await ctx.repository.update(id, patch, ctx.source);
+  const updated = await ctx.repository.update(id, patch, ctx.source, current?.version);
   if (!current || updated.version === current.version) return { result: updated };
   return {
     result: updated,
@@ -109,13 +118,8 @@ export const itemUpdate: CommandDefinition<{ id: string; patch: ItemPatch }, Ite
   execute: ({ id, patch }, ctx) => updateWithUndo(ctx, id, patch),
 };
 
-interface MovePayload {
+interface MovePayload extends ItemMoveTarget {
   id: string;
-  status?: string;
-  boardId?: string | null;
-  /** Соседи в целевой колонке: запись встанет между ними */
-  afterId?: string;
-  beforeId?: string;
 }
 
 export const itemMove: CommandDefinition<MovePayload, Item> = {
@@ -123,26 +127,35 @@ export const itemMove: CommandDefinition<MovePayload, Item> = {
   validate: (payload) => {
     const record = asRecord(payload);
     const patch = parseItemPatch({ status: record.status, boardId: record.boardId });
+    const expectedVersion = record.expectedVersion;
+    if (
+      expectedVersion !== undefined &&
+      (typeof expectedVersion !== 'number' ||
+        !Number.isSafeInteger(expectedVersion) ||
+        expectedVersion < 1)
+    ) {
+      throw new ItemValidationError('version', 'expectedVersion');
+    }
     return {
       id: readId(record.id),
       status: patch.status,
       boardId: patch.boardId,
       afterId: readOptionalId(record.afterId, 'afterId'),
       beforeId: readOptionalId(record.beforeId, 'beforeId'),
+      expectedVersion,
     };
   },
-  async execute({ id, status, boardId, afterId, beforeId }, ctx) {
-    const [after, before] = await Promise.all([
-      afterId ? ctx.repository.get(afterId) : undefined,
-      beforeId ? ctx.repository.get(beforeId) : undefined,
-    ]);
-    const patch: ItemPatch = { order: orderBetween(after?.order, before?.order) };
-    if (status !== undefined) patch.status = status;
-    if (boardId !== undefined) patch.boardId = boardId;
-    const outcome = await updateWithUndo(ctx, id, patch);
+  async execute({ id, ...target }, ctx) {
+    const { current, updated } = await ctx.repository.move(id, target, ctx.source);
+    if (current.version === updated.version) return { result: current };
+    const before: ItemPatch = {};
+    if (current.order !== updated.order) before.order = current.order;
+    if (current.status !== updated.status) before.status = current.status;
+    if (current.boardId !== updated.boardId) before.boardId = current.boardId ?? null;
     return {
-      ...outcome,
-      label: { key: 'commands.moved', params: { title: outcome.result.title } },
+      result: updated,
+      undo: () => revertFields(ctx, id, updated, before),
+      label: { key: 'commands.moved', params: { title: updated.title } },
     };
   },
 };
@@ -184,16 +197,41 @@ export const itemDelete: CommandDefinition<IdPayload, Item> = {
   type: 'item.delete',
   validate: readIdPayload,
   async execute({ id }, ctx) {
-    const removed = await ctx.repository.remove(id, ctx.source);
+    const [removed] = await ctx.repository.removeMany([id], ctx.source);
+    if (!removed) {
+      const current = await ctx.repository.get(id);
+      if (!current) throw new ItemNotFoundError(id);
+      return { result: current };
+    }
     return {
       result: removed,
-      undo: async () => {
-        const current = await ctx.repository.get(id);
-        if (!current?.deletedAt) throw new UndoConflictError(id);
-        await ctx.repository.restore(id, ctx.source);
-      },
+      undo: () => restoreDeleted(ctx, [removed]),
       label: { key: 'commands.deleted', params: { title: removed.title } },
     };
+  },
+};
+
+async function restoreDeleted(ctx: CommandContext, removed: readonly Item[]): Promise<void> {
+  try {
+    await ctx.repository.restoreMany(removed, ctx.source);
+  } catch (error) {
+    if (error instanceof ItemConflictError) throw new UndoConflictError(error.current.id);
+    if (error instanceof ItemNotFoundError) throw new UndoConflictError(error.itemId);
+    throw error;
+  }
+}
+
+export const itemDeleteMany: CommandDefinition<{ ids: string[] }, number> = {
+  type: 'item.deleteMany',
+  validate(payload) {
+    const { ids } = asRecord(payload);
+    if (!Array.isArray(ids)) throw new ItemValidationError('id', 'ids');
+    return { ids: [...new Set(ids.map((id: unknown) => readId(id)))] };
+  },
+  async execute({ ids }, ctx) {
+    const removed = await ctx.repository.removeMany(ids, ctx.source);
+    if (!removed.length) return { result: 0 };
+    return { result: removed.length, undo: () => restoreDeleted(ctx, removed) };
   },
 };
 
@@ -263,6 +301,7 @@ export const ITEM_COMMANDS = [
   itemSnooze,
   itemArchive,
   itemDelete,
+  itemDeleteMany,
   itemRestore,
   boardCreate,
   boardUpdate,

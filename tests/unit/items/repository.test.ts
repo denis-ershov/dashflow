@@ -114,6 +114,39 @@ describe('Репозиторий Item: изменение', () => {
     expect((error as ItemConflictError).current.title).toBe('B');
   });
 
+  it('из двух конкурентных записей одной версии принимает только одну', async () => {
+    const item = await repo.create({ kind: 'task', title: 'Исходная' }, user);
+    const outcomes = await Promise.allSettled([
+      repo.update(item.id, { title: 'Первая' }, user, item.version),
+      repo.update(item.id, { title: 'Вторая' }, user, item.version),
+    ]);
+
+    expect(outcomes.filter(({ status }) => status === 'fulfilled')).toHaveLength(1);
+    expect(outcomes.find(({ status }) => status === 'rejected')).toMatchObject({
+      reason: expect.any(ItemConflictError),
+    });
+    expect(await repo.get(item.id)).toMatchObject({ version: item.version + 1 });
+    expect(await repo.listChanges()).toHaveLength(2);
+  });
+
+  it('откатывает пакет целиком или оставляет все записи без изменений при конфликте', async () => {
+    const a = await repo.create({ kind: 'task', title: 'A' }, user);
+    const b = await repo.create({ kind: 'task', title: 'B' }, user);
+    const removed = await repo.removeMany([a.id, b.id, a.id, 'missing'], user);
+    expect(removed.map(({ id }) => id)).toEqual([a.id, b.id]);
+    expect(await repo.query({ onlyDeleted: true })).toHaveLength(2);
+
+    await repo.restore(a.id, user);
+    await repo.remove(a.id, user);
+    await expect(repo.restoreMany(removed, user)).rejects.toBeInstanceOf(ItemConflictError);
+    expect(await repo.query({ onlyDeleted: true })).toHaveLength(2);
+
+    const current = await repo.query({ onlyDeleted: true });
+    await repo.restoreMany(current, user);
+    expect(await repo.query({ onlyDeleted: true })).toEqual([]);
+    expect(await repo.query()).toHaveLength(2);
+  });
+
   it('несуществующая и удалённая запись — ItemNotFoundError', async () => {
     await expect(repo.update('nope', { title: 'x' }, user)).rejects.toBeInstanceOf(
       ItemNotFoundError,

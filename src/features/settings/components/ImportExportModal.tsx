@@ -9,7 +9,8 @@ import {
   StorageAdapter,
   STORAGE_KEYS,
   collectUserContent,
-  migrateDashboardState,
+  exportDashboardSnapshot,
+  migrateDashboardSnapshot,
   restoreUserContent,
 } from '@/core/storage';
 import { Button } from '@/ui/primitives';
@@ -47,20 +48,22 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleExport = async () => {
-    const dashboard = pickPersistedDashboard(useDashboardStore.getState());
+    const { ensureWorkspaceReady } = await import('@/features/workspace/bindings');
+    await ensureWorkspaceReady();
+    const snapshot = pickPersistedDashboard(useDashboardStore.getState());
     const { itemRepository, exportWorkspaceItems, EXPORT_VERSION } = await loadBackup();
     const workspace = await exportWorkspaceItems(itemRepository);
     const data = {
       version: EXPORT_VERSION,
       exportedAt: new Date().toISOString(),
       theme: { activePresetId, wallpaperUrl, scrim, customCss },
-      dashboard,
+      dashboard: exportDashboardSnapshot(snapshot),
       settings: { language },
       // Задачи, заметки, ссылки и доски рабочего пространства (с 3.0)
       items: workspace.items,
       boards: workspace.boards,
       // Старые ключи виджетов (привычки и копия для отката на 3.8) — до 3.10.0
-      content: await collectUserContent((dashboard.instances ?? []).map((i) => i.instanceId)),
+      content: await collectUserContent(snapshot.spaces.flatMap((space) => space.instances.map((i) => i.instanceId))),
     };
 
     const jsonStr = JSON.stringify(data, null, 2);
@@ -89,14 +92,16 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
       const hasDashboardData = Boolean(
         parsed.dashboard ||
           (Array.isArray(parsed.widgets) && parsed.widgets.length > 0) ||
-          (Array.isArray(parsed.instances) && parsed.instances.length > 0) ||
+          Array.isArray(parsed.instances) ||
+          Array.isArray(parsed.spaces) ||
           parsed.layout,
       );
 
       const migrated = hasDashboardData
-        ? pickPersistedDashboard(migrateDashboardState(rawDashboard))
+        ? migrateDashboardSnapshot(rawDashboard)
         : null;
-      const instances = migrated?.instances ?? useDashboardStore.getState().instances;
+      const spaces = migrated?.spaces ?? useDashboardStore.getState().spaces;
+      const instances = spaces.flatMap((space) => space.instances);
 
       // Записи до раскладки: файлу 2.x нужны экземпляры виджетов, чтобы привязать к ним доски
       const { itemRepository, importWorkspaceItems, applyItemsMapping } = await loadBackup();
@@ -106,15 +111,17 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
         instances,
         language: useAppStore.getState().language,
       });
-      const linkedInstances = applyItemsMapping(instances, imported.mapping);
+      const linkedSpaces = spaces.map((space) => ({
+        ...space, instances: applyItemsMapping(space.instances, imported.mapping),
+      }));
 
       if (migrated) {
-        const state = { ...migrated, instances: linkedInstances };
+        const state = { ...migrated, spaces: linkedSpaces };
         // Пишем напрямую в формате zustand persist: перезагрузка ниже не должна обогнать асинхронный persist
-        await StorageAdapter.set(STORAGE_KEYS.DASHBOARD, { state, version: 2 });
+        await StorageAdapter.set(STORAGE_KEYS.DASHBOARD, { state, version: 3 });
         useDashboardStore.setState(state);
       } else if (Object.keys(imported.mapping).length > 0) {
-        useDashboardStore.setState({ instances: linkedInstances });
+        useDashboardStore.setState({ spaces: linkedSpaces });
       }
 
       if (parsed.theme) {
@@ -152,7 +159,10 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
           <p className="text-xs text-fg-muted">
             {t('backup.exportDesc')}
           </p>
-          <Button size="sm" variant="primary" icon={<Download className="w-4 h-4" />} onClick={() => void handleExport()}>
+          <Button size="sm" variant="primary" icon={<Download className="w-4 h-4" />} onClick={() => runLogged(handleExport().catch(() => {
+            setStatus('error');
+            setErrorMsg(t('backup.exportError'));
+          }), 'storage')}>
             {t('backup.download')}
           </Button>
         </div>

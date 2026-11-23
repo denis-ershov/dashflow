@@ -11,12 +11,14 @@ import {
   Search,
   Lock,
   Unlock,
+  Layers,
 } from 'lucide-react';
 import { Tooltip } from '@/ui/primitives';
 import { useTranslation } from '@/core/i18n';
 
 /** Панель или режим, который сейчас открыт кнопкой дока — подсвечивается как активный */
-export type DockPanel = 'addWidget' | 'marketplace' | 'appearance' | 'audio' | 'settings';
+export type DockPanel =
+  'spaces' | 'addWidget' | 'marketplace' | 'appearance' | 'audio' | 'settings';
 
 export interface FloatingDockProps {
   layoutMode: 'zen' | 'modular' | 'canvas';
@@ -28,6 +30,7 @@ export interface FloatingDockProps {
   onOpenAudio?: () => void;
   onOpenSettings: () => void;
   onOpenCommandPalette: () => void;
+  onOpenSpaces?: () => void;
   isEditMode?: boolean;
   onToggleEditMode?: () => void;
   isAudioPlaying?: boolean;
@@ -45,8 +48,6 @@ interface DockButtonProps {
   tone?: DockButtonTone;
   /** Для кнопок-переключателей: aria-pressed */
   pressed?: boolean;
-  /** Классы обёртки, например чтобы скрыть кнопку на узких экранах */
-  wrapperClassName?: string;
 }
 
 const TONE_CLASSES: Record<DockButtonTone, string> = {
@@ -63,9 +64,8 @@ const DockButton: React.FC<DockButtonProps> = ({
   onClick,
   tone = 'default',
   pressed,
-  wrapperClassName,
 }) => (
-  <div className={cn('flex', wrapperClassName)}>
+  <div className="flex">
     <Tooltip content={tooltip}>
       <button
         type="button"
@@ -98,6 +98,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
   onOpenAudio,
   onOpenSettings,
   onOpenCommandPalette,
+  onOpenSpaces,
   isEditMode = false,
   onToggleEditMode,
   isAudioPlaying = false,
@@ -115,8 +116,8 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
       aria-label={t('dock.label')}
       className={cn(
         'fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-(--z-rail,30)',
-        'glass-pill p-1 sm:p-1.5 flex items-center gap-0.5 sm:gap-1 shadow-3 select-none',
-        'max-w-[calc(100vw-1.5rem)]',
+        'glass-pill max-sm:rounded-xl! p-1 sm:p-1.5 flex flex-wrap items-center justify-center gap-0.5 sm:gap-1 shadow-3 select-none',
+        'w-max max-w-[calc(100%-1rem)]',
         className,
       )}
     >
@@ -130,6 +131,15 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
       />
 
       <DockDivider />
+
+      {onOpenSpaces && (
+        <DockButton
+          label={t('spaces.title')}
+          icon={<Layers className={ICON} />}
+          onClick={onOpenSpaces}
+          tone={toneFor('spaces')}
+        />
+      )}
 
       <DockButton
         label={t('dock.addWidget')}
@@ -148,13 +158,11 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
         />
       )}
 
-      {/* Палитра команд рассчитана на клавиатуру (Ctrl+K) — на телефоне не нужна и не помещается */}
       <DockButton
         label={t('dock.commandPalette')}
         tooltip={t('dock.commandPaletteHint')}
         icon={<Search className={ICON} />}
         onClick={onOpenCommandPalette}
-        wrapperClassName="hidden sm:flex"
       />
 
       <DockButton

@@ -117,4 +117,17 @@ describe('Диспетчер команд', () => {
     expect(listener).toHaveBeenCalledTimes(4);
     unsubscribe();
   });
+
+  it('отменяет указанную запись один раз и оставляет более новое действие в истории', async () => {
+    const { dispatcher, log } = counterSetup();
+    const first = await dispatcher.dispatch('counter.add', 1);
+    const second = await dispatcher.dispatch('counter.add', 2);
+
+    expect(first.historyId).toBeDefined();
+    expect(await dispatcher.undo(first.historyId)).toBe(true);
+    expect(await dispatcher.undo(first.historyId)).toBe(false);
+    expect(dispatcher.peek()?.id).toBe(second.historyId);
+    expect(await dispatcher.undo()).toBe(true);
+    expect(log).toEqual(['add 1', 'add 2', 'undo 1', 'undo 2']);
+  });
 });

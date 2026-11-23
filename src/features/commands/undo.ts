@@ -20,9 +20,12 @@ import { toast, useToastStore } from '@/ui/primitives/Toast';
 const tr = (key: TranslationKey, params?: InterpolationParams) =>
   t(key, params, useI18nStore.getState().language);
 
-export async function undoLast(dispatcher: Dispatcher = commandBus): Promise<void> {
+export async function undoLast(
+  dispatcher: Dispatcher = commandBus,
+  historyId?: number,
+): Promise<void> {
   try {
-    if (await dispatcher.undo()) toast.info(tr('commands.undone'));
+    if (await dispatcher.undo(historyId)) toast.info(tr('commands.undone'));
   } catch (error) {
     if (error instanceof UndoConflictError) {
       toast.warning(tr('commands.undoConflict'));
@@ -44,24 +47,26 @@ export async function dispatchWithUndoToast<R>(
   dispatcher: Dispatcher = commandBus,
 ): Promise<CommandOutcome<R>> {
   const outcome = await dispatcher.dispatch<R>(type, payload, options);
-  if (outcome.undo && outcome.label) {
-    useToastStore.getState().addToast({
-      message: tr(outcome.label.key as TranslationKey, outcome.label.params),
-      type: 'success',
-      duration: 6000,
-      action: { label: tr('commands.undo'), onClick: () => void undoLast(dispatcher) },
-    });
+  if (outcome.historyId !== undefined && outcome.label) {
+    showUndoToast(
+      tr(outcome.label.key as TranslationKey, outcome.label.params),
+      outcome.historyId,
+      dispatcher,
+    );
   }
   return outcome;
 }
 
-/** Тост «Отменить» для серии действий, склеенной в истории в один шаг (coalesceKey) */
-export function showUndoToast(message: string, dispatcher: Dispatcher = commandBus): void {
+export function showUndoToast(
+  message: string,
+  historyId: number,
+  dispatcher: Dispatcher = commandBus,
+): void {
   useToastStore.getState().addToast({
     message,
     type: 'success',
     duration: 6000,
-    action: { label: tr('commands.undo'), onClick: () => void undoLast(dispatcher) },
+    action: { label: tr('commands.undo'), onClick: () => void undoLast(dispatcher, historyId) },
   });
 }
 
@@ -73,10 +78,12 @@ export async function deleteManyWithUndo(
   dispatcher: Dispatcher = commandBus,
 ): Promise<void> {
   if (ids.length === 0) return;
-  const coalesceKey = `delete-many-${Date.now()}`;
-  for (const id of ids) await dispatcher.dispatch('item.delete', { id }, { coalesceKey });
-  showUndoToast(
-    tp('commands.deletedMany', ids.length, undefined, useI18nStore.getState().language),
-    dispatcher,
-  );
+  const outcome = await dispatcher.dispatch<number>('item.deleteMany', { ids });
+  if (outcome.historyId !== undefined) {
+    showUndoToast(
+      tp('commands.deletedMany', outcome.result, undefined, useI18nStore.getState().language),
+      outcome.historyId,
+      dispatcher,
+    );
+  }
 }

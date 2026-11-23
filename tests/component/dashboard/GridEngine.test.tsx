@@ -1,8 +1,10 @@
+import { configureDashboard, getActiveSpace } from '../../helpers/dashboard';
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { GridEngine } from '@/features/dashboard/components/GridEngine';
 import { useDashboardStore } from '@/stores/useDashboardStore';
+import { ToastContainer, useToastStore } from '@/ui/primitives/Toast';
 import { registerBuiltInWidgets } from '@/widgets/built-in';
 import { at } from '../../helpers/at';
 
@@ -44,7 +46,7 @@ describe('GridEngine Component', () => {
       ],
     };
 
-    useDashboardStore.setState({
+    configureDashboard({
       baseColumns: 12,
       gap: 16,
       isEditMode: false,
@@ -70,7 +72,7 @@ describe('GridEngine Component', () => {
   });
 
   it('должен отображать EmptyState при отсутствии виджетов на дашборде', () => {
-    useDashboardStore.setState({
+    configureDashboard({
       instances: [],
       layouts: { xl: [], lg: [], md: [], sm: [], xs: [] },
     });
@@ -85,15 +87,31 @@ describe('GridEngine Component', () => {
     expect(useDashboardStore.getState().activeModal).toBe('addWidget');
   });
 
-  it('в режиме правки должен позволять удалять виджеты', () => {
+  it('удаляет два виджета и возвращает тот, к которому относится нажатый тост', async () => {
     useDashboardStore.setState({ isEditMode: true });
+    useToastStore.setState({ toasts: [] });
+    const before = getActiveSpace();
 
-    render(<GridEngine />);
+    render(
+      <>
+        <GridEngine />
+        <ToastContainer />
+      </>,
+    );
 
     const removeButtons = screen.getAllByRole('button', { name: /удалить виджет/i });
     expect(removeButtons.length).toBe(2);
 
     fireEvent.click(at(removeButtons, 0));
-    expect(useDashboardStore.getState().instances.length).toBe(1);
+    const firstUndo = await screen.findByRole('button', { name: 'Отменить' });
+    fireEvent.click(screen.getByRole('button', { name: /удалить виджет/i }));
+    await waitFor(() => expect(getActiveSpace().instances).toEqual([]));
+    expect(screen.getAllByRole('button', { name: 'Отменить' })).toHaveLength(2);
+    fireEvent.click(firstUndo);
+    await waitFor(() => {
+      expect(getActiveSpace().instances).toEqual([before.instances[0]]);
+      expect(getActiveSpace().layouts.xl).toEqual([before.layouts.xl[0]]);
+      expect(getActiveSpace().layouts.sm).toEqual([before.layouts.sm[0]]);
+    });
   });
 });

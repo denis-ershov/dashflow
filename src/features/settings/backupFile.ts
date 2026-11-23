@@ -71,7 +71,7 @@ export async function importWorkspaceItems(options: {
   let mapping: Record<string, LegacyMappingEntry> = {};
   let skipped = 0;
 
-  const isLegacyFile = fileItems.length === 0 && fileBoards.length === 0;
+  const isLegacyFile = !Array.isArray(file.items) && !Array.isArray(file.boards);
   if (isLegacyFile && file.content !== undefined) {
     const instances: LegacyInstance[] = options.instances.map(({ instanceId, widgetId }) => ({
       instanceId,

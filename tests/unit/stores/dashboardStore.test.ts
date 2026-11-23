@@ -1,20 +1,26 @@
+import {
+  activeSpaceOf,
+  createDefaultDashboardState,
+  StorageAdapter,
+  STORAGE_KEYS,
+} from '@/core/storage';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useDashboardStore, pickPersistedDashboard } from '@/stores/useDashboardStore';
 import { at } from '../../helpers/at';
 
-describe('useDashboardStore (v2)', () => {
+describe('useDashboardStore (v3)', () => {
   beforeEach(() => {
     localStorage.clear();
     useDashboardStore.getState().resetDashboard();
   });
 
-  it('должен инициализироваться с дефолтными 5 виджетами и раскладками v2', () => {
+  it('должен инициализироваться с дефолтными 5 виджетами и раскладками v3', () => {
     const state = useDashboardStore.getState();
-    expect(state.version).toBe(2);
-    expect(state.baseColumns).toBe(12);
-    expect(state.instances).toHaveLength(5);
-    expect(state.layouts.xl).toHaveLength(5);
-    expect(state.layouts.sm).toHaveLength(5);
+    expect(state.version).toBe(3);
+    expect(activeSpaceOf(state).baseColumns).toBe(12);
+    expect(activeSpaceOf(state).instances).toHaveLength(5);
+    expect(activeSpaceOf(state).layouts.xl).toHaveLength(5);
+    expect(activeSpaceOf(state).layouts.sm).toHaveLength(5);
   });
 
   it('должен добавлять новый виджет и рассчитывать позицию в раскладках без наложений', () => {
@@ -22,18 +28,18 @@ describe('useDashboardStore (v2)', () => {
     store.addWidget('pomodoro', 4, 3);
 
     const updated = useDashboardStore.getState();
-    expect(updated.instances).toHaveLength(6);
-    const added = updated.instances.find((w) => w.widgetId === 'pomodoro');
+    expect(activeSpaceOf(updated).instances).toHaveLength(6);
+    const added = activeSpaceOf(updated).instances.find((w) => w.widgetId === 'pomodoro');
     expect(added).toBeDefined();
 
-    expect(updated.layouts.xl).toHaveLength(6);
-    expect(updated.layouts.xl.some((l) => l.i === added?.instanceId)).toBe(true);
+    expect(activeSpaceOf(updated).layouts.xl).toHaveLength(6);
+    expect(activeSpaceOf(updated).layouts.xl.some((l) => l.i === added?.instanceId)).toBe(true);
 
     // Добавляем еще 2 виджета и проверяем отсутствие коллизий на всех раскладках
     store.addWidget('quotes', 4, 3);
     store.addWidget('notes', 6, 4);
 
-    const xlLayout = useDashboardStore.getState().layouts.xl;
+    const xlLayout = activeSpaceOf(useDashboardStore.getState()).layouts.xl;
     expect(xlLayout).toHaveLength(8);
 
     for (let i = 0; i < xlLayout.length; i++) {
@@ -53,30 +59,34 @@ describe('useDashboardStore (v2)', () => {
 
   it('должен удалять виджет из instances и всех раскладок layouts', () => {
     const store = useDashboardStore.getState();
-    const firstInstanceId = at(store.instances, 0).instanceId;
+    const firstInstanceId = at(activeSpaceOf(store).instances, 0).instanceId;
 
     store.removeWidget(firstInstanceId);
 
     const updated = useDashboardStore.getState();
-    expect(updated.instances).toHaveLength(4);
-    expect(updated.instances.some((w) => w.instanceId === firstInstanceId)).toBe(false);
-    expect(updated.layouts.xl.some((l) => l.i === firstInstanceId)).toBe(false);
+    expect(activeSpaceOf(updated).instances).toHaveLength(4);
+    expect(activeSpaceOf(updated).instances.some((w) => w.instanceId === firstInstanceId)).toBe(
+      false,
+    );
+    expect(activeSpaceOf(updated).layouts.xl.some((l) => l.i === firstInstanceId)).toBe(false);
   });
 
   it('должен обновлять настройки конкретного экземпляра виджета', () => {
     const store = useDashboardStore.getState();
-    const firstInstanceId = at(store.instances, 0).instanceId;
+    const firstInstanceId = at(activeSpaceOf(store).instances, 0).instanceId;
 
     store.updateWidgetSettings(firstInstanceId, { customOption: 42 });
 
     const updated = useDashboardStore.getState();
-    const updatedInstance = updated.instances.find((w) => w.instanceId === firstInstanceId);
+    const updatedInstance = activeSpaceOf(updated).instances.find(
+      (w) => w.instanceId === firstInstanceId,
+    );
     expect(updatedInstance?.settings).toEqual({ customOption: 42 });
   });
 
   it('должен обновлять раскладку для конкретного брейкпоинта', () => {
     const store = useDashboardStore.getState();
-    const newXlLayout = store.layouts.xl.map((item, idx) => ({
+    const newXlLayout = activeSpaceOf(store).layouts.xl.map((item, idx) => ({
       ...item,
       x: idx * 2,
     }));
@@ -84,8 +94,8 @@ describe('useDashboardStore (v2)', () => {
     store.updateLayout('xl', newXlLayout);
 
     const updated = useDashboardStore.getState();
-    expect(updated.layouts.xl[0]?.x).toBe(0);
-    expect(updated.layouts.xl[1]?.x).toBe(2);
+    expect(activeSpaceOf(updated).layouts.xl[0]?.x).toBe(0);
+    expect(activeSpaceOf(updated).layouts.xl[1]?.x).toBe(2);
   });
 
   it('должен переключать режим редактирования', () => {
@@ -94,6 +104,54 @@ describe('useDashboardStore (v2)', () => {
 
     store.toggleEditMode();
     expect(useDashboardStore.getState().isEditMode).toBe(true);
+  });
+
+  it('переключает независимые сетки и сохраняет настройки уже скрытого виджета', () => {
+    const store = useDashboardStore.getState();
+    const homeId = store.activeSpaceId;
+    const instance = at(activeSpaceOf(store).instances, 0);
+    expect(store.createSpace('   ')).toBe(false);
+    expect(store.createSpace(' Работа ')).toBe(true);
+    const work = activeSpaceOf(useDashboardStore.getState());
+    expect(work.title).toBe('Работа');
+    expect(work.instances).toHaveLength(0);
+    store.setBaseColumns(16);
+    store.addWidget('notes');
+    store.updateWidgetSettings(instance.instanceId, { fromPendingBinding: true });
+    store.switchSpace(homeId);
+    const home = activeSpaceOf(useDashboardStore.getState());
+    expect(home.baseColumns).toBe(12);
+    expect(at(home.instances, 0).settings).toEqual({ fromPendingBinding: true });
+    store.switchSpace(work.id);
+    expect(activeSpaceOf(useDashboardStore.getState()).baseColumns).toBe(16);
+    expect(activeSpaceOf(useDashboardStore.getState()).instances).toHaveLength(1);
+  });
+
+  it('при удалении активного пространства выбирает оставшееся и сохраняет последнее', () => {
+    const store = useDashboardStore.getState();
+    store.createSpace('Работа');
+    const workId = useDashboardStore.getState().activeSpaceId;
+    store.removeSpace(workId);
+    store.removeSpace(store.activeSpaceId);
+    const state = useDashboardStore.getState();
+    expect(state.spaces.map((space) => space.id)).toEqual([store.activeSpaceId]);
+    expect(state.activeSpaceId).toBe(store.activeSpaceId);
+  });
+
+  it('сначала сохраняет резервную копию v2, затем переносит пользовательскую раскладку', async () => {
+    const state = createDefaultDashboardState();
+    const mobile = at(state.layouts.sm, 0);
+    state.layouts.sm = [{ ...mobile, y: 7 }, ...state.layouts.sm.slice(1)];
+    const previous = { state, version: 2 };
+    await StorageAdapter.set(STORAGE_KEYS.DASHBOARD, previous);
+    await useDashboardStore.persist.rehydrate();
+    expect(await StorageAdapter.get(STORAGE_KEYS.DASHBOARD_BACKUP_V2, null)).toEqual(
+      JSON.parse(JSON.stringify(previous)),
+    );
+    const migrated = useDashboardStore.getState();
+    expect(migrated.version).toBe(3);
+    expect(activeSpaceOf(migrated).layouts.sm[0]?.y).toBe(7);
+    expect(await StorageAdapter.get(STORAGE_KEYS.DASHBOARD, null)).toMatchObject({ version: 3 });
   });
 });
 
@@ -116,16 +174,7 @@ describe('useDashboardStore: что переживает перезагрузк�
     >;
 
     expect(Object.keys(persisted).sort()).toEqual(
-      [
-        'baseColumns',
-        'gap',
-        'heroSettings',
-        'instances',
-        'layoutMode',
-        'layouts',
-        'speedDialLinks',
-        'version',
-      ].sort(),
+      ['activeSpaceId', 'heroSettings', 'layoutMode', 'spaces', 'speedDialLinks', 'version'].sort(),
     );
   });
 
@@ -133,15 +182,15 @@ describe('useDashboardStore: что переживает перезагрузк�
     const current = useDashboardStore.getState();
     const legacyPersisted = {
       ...pickPersistedDashboard(current),
-      gap: 24,
+      spaces: current.spaces.map((space) => ({ ...space, gap: 24 })),
       activeModal: 'settings',
       isEditMode: true,
       widgets: [{ instanceId: 'x', widgetId: 'clock', x: 0, y: 0, w: 1, h: 1 }],
     };
 
-    const merged = options().merge!(legacyPersisted, current) as unknown as Record<string, unknown>;
+    const merged = options().merge!(legacyPersisted, current);
 
-    expect(merged.gap).toBe(24);
+    expect(activeSpaceOf(merged).gap).toBe(24);
     expect(merged.activeModal).toBeNull();
     expect(merged.isEditMode).toBe(false);
     expect(merged).not.toHaveProperty('widgets');

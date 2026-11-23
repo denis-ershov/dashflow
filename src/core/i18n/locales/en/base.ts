@@ -108,6 +108,7 @@ export const base: LocaleShape<typeof ruBase> = {
   },
   backup: {
     title: 'Configuration Import & Export',
+    exportError: 'The backup could not be exported.',
     exportTitle: 'Export Dashboard State',
     exportDesc:
       'Save your widget layout, theme, notes, tasks, habits and quick links to a JSON file to move them to another device.',

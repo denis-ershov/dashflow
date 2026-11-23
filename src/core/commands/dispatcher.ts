@@ -4,6 +4,7 @@ import type {
   CommandDefinition,
   CommandOutcome,
   DispatchOptions,
+  DispatchOutcome,
   HistoryEntry,
 } from './types';
 
@@ -38,6 +39,7 @@ export function createDispatcher(options: DispatcherOptions) {
     options.commands.map((command) => [command.type, command as unknown as AnyCommand]),
   );
   const history: HistoryEntry[] = [];
+  let nextHistoryId = 0;
   const listeners = new Set<Listener>();
   // Отмены выполняются строго по одной: двойное Ctrl+Z не должно отменять параллельно
   let queue: Promise<unknown> = Promise.resolve();
@@ -60,9 +62,11 @@ export function createDispatcher(options: DispatcherOptions) {
         await earlier();
       };
       last.at = now();
-      return;
+      return last.id;
     }
+    const id = ++nextHistoryId;
     history.push({
+      id,
       type,
       label: outcome.label,
       undo: outcome.undo,
@@ -70,6 +74,7 @@ export function createDispatcher(options: DispatcherOptions) {
       at: now(),
     });
     if (history.length > HISTORY_LIMIT) history.shift();
+    return id;
   }
 
   function enqueue<T>(task: () => Promise<T>): Promise<T> {
@@ -84,7 +89,7 @@ export function createDispatcher(options: DispatcherOptions) {
       type: string,
       payload: unknown,
       dispatchOptions: DispatchOptions = {},
-    ): Promise<CommandOutcome<R>> {
+    ): Promise<DispatchOutcome<R>> {
       const command = registry.get(type);
       if (!command) return Promise.reject(new UnknownCommandError(type));
       let validated: unknown;
@@ -96,16 +101,21 @@ export function createDispatcher(options: DispatcherOptions) {
       }
       return enqueue(async () => {
         const outcome = await command.execute(validated, options.context);
-        remember(type, outcome, dispatchOptions);
+        const historyId = remember(type, outcome, dispatchOptions);
         emit();
-        return outcome as CommandOutcome<R>;
+        return { ...outcome, historyId } as DispatchOutcome<R>;
       });
     },
 
-    /** Отменяет последнее действие; false — отменять нечего */
-    undo(): Promise<boolean> {
+    /** Отменяет выбранное или последнее действие; false — такой записи уже нет. */
+    undo(historyId?: number): Promise<boolean> {
       return enqueue(async () => {
-        const entry = history.pop();
+        const index =
+          historyId === undefined
+            ? history.length - 1
+            : history.findIndex((entry) => entry.id === historyId);
+        if (index < 0) return false;
+        const [entry] = history.splice(index, 1);
         if (!entry) return false;
         try {
           await entry.undo();

@@ -1,15 +1,15 @@
+import { configureDashboard, getActiveSpace } from '../../helpers/dashboard';
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { WidgetSettingsDrawer } from '@/features/dashboard/components/WidgetSettingsDrawer';
-import { useDashboardStore } from '@/stores/useDashboardStore';
 import { registerBuiltInWidgets } from '@/widgets/built-in';
 import { at } from '../../helpers/at';
 
 describe('WidgetSettingsDrawer Component', () => {
   beforeEach(() => {
     registerBuiltInWidgets();
-    useDashboardStore.setState({
+    configureDashboard({
       instances: [
         {
           instanceId: 'clock-1',
@@ -38,9 +38,7 @@ describe('WidgetSettingsDrawer Component', () => {
 
     fireEvent.click(at(switches, 0));
 
-    const updatedInstance = useDashboardStore
-      .getState()
-      .instances.find((i) => i.instanceId === 'clock-1');
+    const updatedInstance = getActiveSpace().instances.find((i) => i.instanceId === 'clock-1');
     expect(updatedInstance?.settings).toBeDefined();
   });
 

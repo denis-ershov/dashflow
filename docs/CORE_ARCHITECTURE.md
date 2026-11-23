@@ -46,7 +46,7 @@
 ### 2.1. Хранилище (`src/core/storage/`)
 - `StorageAdapter`: единый фасад к `chrome.storage.local` с fallback на `localStorage` в dev-среде.
 - Реестр строгих ключей `STORAGE_KEYS` (без magic strings).
-- Движок миграций `runDashboardMigrations` и версионирование схемы (`version: 2`).
+- `dashboardMigrations.ts` читает старый плоский формат, а `dashboardSpaces.ts` переносит его в снимок v3. Содержимое Item остаётся в отдельной IndexedDB.
 
 ### 2.2. Локализация (`src/core/i18n/`)
 - Поддержка русского (`ru`) и английского (`en`) языков.
@@ -81,6 +81,7 @@
 - Единый реестр поисковиков `SEARCH_ENGINES` (10 шт.) для поиска в Hero, виджета «Поиск» и типа `HeroSettings.defaultSearchEngine`.
 - `resolveSearchTarget` — адрес открывается напрямую (только http/https), остальное — в выбранный поисковик; `openSearchTarget` открывает новую вкладку с `noopener,noreferrer`.
 - `useSlashHotkey` — фокус в поле поиска по «/», если пользователь не печатает в другом поле.
+- Глобальный поиск по локальному рабочему пространству выполняется в командной палитре. Поток данных и навигация описаны в [архитектуре раскладки](LAYOUT_AND_NAVIGATION_ARCHITECTURE.md#6-пространства-и-глобальный-поиск).
 
 ---
 
@@ -98,6 +99,7 @@
 - [ADR-013: Responsive Grid Layout (NavRail заменён FloatingDock)](file:///e:/DEV/Project/dashflow/docs/adr/ADR-013-responsive-grid-and-nav-rail.md)
 - [ADR-014: Declarative Plugins & Sandbox Bridge](file:///e:/DEV/Project/dashflow/docs/adr/ADR-014-declarative-plugins-and-sandbox-bridge.md)
 - [ADR-015: Permissions Consent Flow](file:///e:/DEV/Project/dashflow/docs/adr/ADR-015-permissions-consent-flow.md)
+- [ADR-019 — пространства дашборда и локальный поиск](adr/ADR-019-dashboard-spaces-and-search.md)
 
 ---
 

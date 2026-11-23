@@ -1,39 +1,47 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { useSyncExternalStore } from 'react';
+import { t } from '@/core/i18n';
+import { toast } from '@/ui/primitives/Toast';
 import {
   StorageAdapter,
   STORAGE_KEYS,
-  migrateDashboardState,
+  BREAKPOINTS,
+  BREAKPOINT_COLUMNS,
+  migrateDashboardSnapshot,
+  SPACE_TITLE_LIMIT,
   deriveResponsiveLayouts,
-  createDefaultDashboardState,
+  createDefaultDashboardSnapshot,
   findFirstAvailablePosition,
+  isRectangleColliding,
   resolveLayoutCollisions,
   type Breakpoint,
   type BaseColumns,
   type LayoutItem,
-  type ResponsiveLayouts,
+  type DashboardSnapshot,
+  type DashboardSpace,
   type ActiveModal,
   type HeroSettings,
   type SpeedDialLink,
 } from '@/core/storage';
-import type { WidgetInstance } from '@/core/widget';
 
 export type { ActiveModal };
 
 export type LayoutMode = 'zen' | 'modular' | 'canvas';
 
-export interface DashboardState {
-  version: 2;
+interface DashboardRemoval {
+  title: string;
+  restore: () => boolean;
+}
+
+export interface DashboardState extends DashboardSnapshot {
   isEditMode: boolean;
-  layoutMode: LayoutMode;
-  heroSettings: HeroSettings;
-  speedDialLinks: SpeedDialLink[];
   isCommandPaletteOpen: boolean;
-  baseColumns: BaseColumns;
-  gap: number;
   activeModal: ActiveModal;
-  instances: WidgetInstance[];
-  layouts: ResponsiveLayouts;
+
+  createSpace: (title: string) => boolean;
+  switchSpace: (id: string) => void;
+  removeSpace: (id: string) => DashboardRemoval | undefined;
 
   // Actions
   toggleEditMode: () => void;
@@ -41,7 +49,7 @@ export interface DashboardState {
   setLayoutMode: (mode: LayoutMode) => void;
   updateHeroSettings: (settings: Partial<HeroSettings>) => void;
   addSpeedDialLink: (link: Omit<SpeedDialLink, 'id'>) => void;
-  removeSpeedDialLink: (id: string) => void;
+  removeSpeedDialLink: (id: string) => DashboardRemoval | undefined;
   updateSpeedDialLink: (id: string, link: Partial<SpeedDialLink>) => void;
   setCommandPaletteOpen: (val: boolean) => void;
   setBaseColumns: (cols: BaseColumns) => void;
@@ -54,44 +62,166 @@ export interface DashboardState {
     defaultH?: number,
     initialSettings?: Record<string, unknown>,
   ) => void;
-  removeWidget: (instanceId: string) => void;
+  removeWidget: (instanceId: string, spaceId?: string) => DashboardRemoval | undefined;
   updateWidgetSettings: (instanceId: string, settings: Record<string, unknown>) => void;
   updateLayout: (breakpoint: Breakpoint, items: LayoutItem[]) => void;
   resetDashboard: () => void;
 }
 
-/**
- * Поля, которые переживают перезагрузку вкладки. Состояние UI (открытая модалка,
- * режим правки, палитра команд) намеренно не сохраняется.
- */
-const PERSISTED_KEYS = [
-  'version',
-  'baseColumns',
-  'gap',
-  'layoutMode',
-  'heroSettings',
-  'speedDialLinks',
-  'instances',
-  'layouts',
-] as const satisfies ReadonlyArray<keyof DashboardState>;
+export function pickPersistedDashboard({
+  version,
+  activeSpaceId,
+  spaces,
+  layoutMode,
+  heroSettings,
+  speedDialLinks,
+}: DashboardState): DashboardSnapshot {
+  return { version, activeSpaceId, spaces, layoutMode, heroSettings, speedDialLinks };
+}
 
-export type PersistedDashboardState = Pick<DashboardState, (typeof PERSISTED_KEYS)[number]>;
+function updateSpace(
+  state: DashboardState,
+  id: string,
+  update: (space: DashboardSpace) => Partial<DashboardSpace>,
+) {
+  return {
+    spaces: state.spaces.map((space) => (space.id === id ? { ...space, ...update(space) } : space)),
+  };
+}
 
-/** Выбирает из произвольного объекта только сохраняемые поля дашборда */
-export function pickPersistedDashboard(source: unknown): Partial<PersistedDashboardState> {
-  if (!source || typeof source !== 'object') return {};
-  const result: Record<string, unknown> = {};
-  for (const key of PERSISTED_KEYS) {
-    if (key in source) result[key] = (source as Record<string, unknown>)[key];
+function updateActiveSpace(
+  state: DashboardState,
+  update: (space: DashboardSpace) => Partial<DashboardSpace>,
+) {
+  return updateSpace(state, state.activeSpaceId, update);
+}
+
+function detachEntry<T extends object>(items: T[], id: string, identify: (item: T) => string) {
+  const index = items.findIndex((item) => identify(item) === id);
+  const entry = items[index];
+  if (!entry) return;
+  const next = items[index + 1];
+  const previous = items[index - 1];
+  const nextId = next && identify(next);
+  const previousId = previous && identify(previous);
+  return {
+    entry,
+    remaining: items.filter((item) => identify(item) !== id),
+    insert: (current: T[], restored = entry) => {
+      const nextIndex = current.findIndex((item) => identify(item) === nextId);
+      const previousIndex = current.findIndex((item) => identify(item) === previousId);
+      const at = nextIndex >= 0 ? nextIndex : previousIndex >= 0 ? previousIndex + 1 : index;
+      return [...current.slice(0, at), restored, ...current.slice(at)];
+    },
+  };
+}
+
+const BREAKPOINT_KEYS = Object.keys(BREAKPOINTS) as Breakpoint[];
+
+function fitRestoredWidget(item: LayoutItem, existing: LayoutItem[], columns: number): LayoutItem {
+  const w = Math.min(item.w, columns);
+  const next = { ...item, w, x: Math.min(item.x, columns - w) };
+  if (next.minW !== undefined) next.minW = Math.min(next.minW, columns);
+  if (next.maxW !== undefined) next.maxW = Math.min(next.maxW, columns);
+  // При занятой позиции сдвигаем вниз только возвращаемый виджет.
+  for (const placed of [...existing].sort((a, b) => a.y - b.y)) {
+    if (isRectangleColliding(next, placed)) next.y = placed.y + placed.h;
   }
-  return result;
+  return next;
+}
+
+const CLOSED_DASHBOARD_UI = { isEditMode: false, isCommandPaletteOpen: false, activeModal: null };
+let lastDashboardWrite: string | null = null;
+
+type HydrationStatus = 'loading' | 'ready' | 'error';
+let hydrationStatus: HydrationStatus = 'loading';
+const hydrationListeners = new Set<() => void>();
+
+function subscribeHydration(listener: () => void) {
+  hydrationListeners.add(listener);
+  return () => hydrationListeners.delete(listener);
+}
+
+function setHydrationStatus(status: HydrationStatus) {
+  hydrationStatus = status;
+  hydrationListeners.forEach((listener) => listener());
+}
+
+export function useDashboardHydration() {
+  return useSyncExternalStore(subscribeHydration, () => hydrationStatus);
+}
+
+export async function waitForDashboard(): Promise<void> {
+  if (hydrationStatus === 'loading') {
+    await new Promise<void>((resolve) => {
+      const unsubscribe = subscribeHydration(() => {
+        if (hydrationStatus === 'loading') return;
+        unsubscribe();
+        resolve();
+      });
+    });
+  }
+  if (hydrationStatus === 'error') throw new Error('Dashboard hydration failed');
 }
 
 export const useDashboardStore = create<DashboardState>()(
   persist(
-    (set) => ({
-      ...createDefaultDashboardState(),
-      isCommandPaletteOpen: false,
+    (set, get) => ({
+      ...createDefaultDashboardSnapshot(),
+      ...CLOSED_DASHBOARD_UI,
+
+      createSpace: (title) => {
+        const name = title.trim().slice(0, SPACE_TITLE_LIMIT);
+        if (!name) return false;
+        const id = crypto.randomUUID();
+        const space: DashboardSpace = {
+          id,
+          title: name,
+          instances: [],
+          layouts: deriveResponsiveLayouts([]),
+          baseColumns: 12,
+          gap: 16,
+        };
+        set((state) => ({
+          ...CLOSED_DASHBOARD_UI,
+          spaces: [...state.spaces, space],
+          activeSpaceId: id,
+        }));
+        return true;
+      },
+      switchSpace: (id) => {
+        const state = get();
+        if (id === state.activeSpaceId || !state.spaces.some((space) => space.id === id)) return;
+        set({ ...CLOSED_DASHBOARD_UI, activeSpaceId: id });
+      },
+      removeSpace: (id) => {
+        const state = get();
+        if (state.spaces.length <= 1) return;
+        const removed = detachEntry(state.spaces, id, (space) => space.id);
+        if (!removed) return;
+        const { entry, remaining, insert } = removed;
+        const next = remaining[0];
+        if (!next) return;
+        if (id === state.activeSpaceId) {
+          set({ ...CLOSED_DASHBOARD_UI, spaces: remaining, activeSpaceId: next.id });
+        } else {
+          set({ spaces: remaining });
+        }
+        return {
+          title: entry.title,
+          restore: () => {
+            const { spaces } = get();
+            const ids = new Set(entry.instances.map((widget) => widget.instanceId));
+            const conflicts = spaces.some(
+              (space) =>
+                space.id === id || space.instances.some(({ instanceId }) => ids.has(instanceId)),
+            );
+            if (conflicts) return false;
+            set({ spaces: insert(spaces) });
+            return true;
+          },
+        };
+      },
 
       toggleEditMode: () => set((state) => ({ isEditMode: !state.isEditMode })),
       setEditMode: (val) => set({ isEditMode: val }),
@@ -107,101 +237,183 @@ export const useDashboardStore = create<DashboardState>()(
             { ...link, id: `sd-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` },
           ],
         })),
-      removeSpeedDialLink: (id) =>
-        set((state) => ({
-          speedDialLinks: state.speedDialLinks.filter((l) => l.id !== id),
-        })),
+      removeSpeedDialLink: (id) => {
+        const removed = detachEntry(get().speedDialLinks, id, (link) => link.id);
+        if (!removed) return;
+        const { entry, remaining, insert } = removed;
+        set({ speedDialLinks: remaining });
+        return {
+          title: entry.title,
+          restore: () => {
+            const { speedDialLinks } = get();
+            if (speedDialLinks.some((link) => link.id === id)) return false;
+            set({ speedDialLinks: insert(speedDialLinks) });
+            return true;
+          },
+        };
+      },
       updateSpeedDialLink: (id, link) =>
         set((state) => ({
           speedDialLinks: state.speedDialLinks.map((l) => (l.id === id ? { ...l, ...link } : l)),
         })),
       setCommandPaletteOpen: (val) => set({ isCommandPaletteOpen: val }),
       setBaseColumns: (cols) =>
-        set((state) => ({
-          baseColumns: cols,
-          layouts: deriveResponsiveLayouts(state.layouts.xl, cols),
-        })),
-      setGap: (gap) => set({ gap }),
+        set((state) =>
+          updateActiveSpace(state, (space) => ({
+            baseColumns: cols,
+            layouts: deriveResponsiveLayouts(space.layouts.xl, cols),
+          })),
+        ),
+      setGap: (gap) => set((state) => updateActiveSpace(state, () => ({ gap }))),
       setActiveModal: (modal) => set({ activeModal: modal }),
 
       addWidget: (widgetId, defaultW = 4, defaultH = 3, initialSettings = {}) =>
-        set((state) => {
-          const instanceId = `${widgetId}-${Date.now()}`;
-          const cols = state.baseColumns;
-          const currentXl = state.layouts.xl || [];
+        set((state) =>
+          updateActiveSpace(state, (space) => {
+            const instanceId = `${widgetId}-${crypto.randomUUID()}`;
+            const cols = space.baseColumns;
+            const currentXl = space.layouts.xl;
+            const { x, y } = findFirstAvailablePosition(currentXl, cols, defaultW, defaultH);
+            const newLayoutItem: LayoutItem = {
+              i: instanceId,
+              x,
+              y,
+              w: Math.min(defaultW, cols),
+              h: defaultH,
+            };
+            return {
+              instances: [...space.instances, { instanceId, widgetId, settings: initialSettings }],
+              layouts: deriveResponsiveLayouts([...currentXl, newLayoutItem], cols),
+            };
+          }),
+        ),
 
-          // Математически гарантированная первая свободная позиция без наложений
-          const { x, y } = findFirstAvailablePosition(currentXl, cols, defaultW, defaultH);
-          const newLayoutItem: LayoutItem = {
-            i: instanceId,
-            x,
-            y,
-            w: Math.min(defaultW, cols),
-            h: defaultH,
-          };
+      removeWidget: (instanceId, spaceId = get().activeSpaceId) => {
+        const state = get();
+        const space = state.spaces.find((space) => space.id === spaceId);
+        if (!space) return;
+        const removed = detachEntry(space.instances, instanceId, (widget) => widget.instanceId);
+        if (!removed) return;
+        const { entry, remaining, insert } = removed;
+        const layouts = { ...space.layouts };
+        const positions = BREAKPOINT_KEYS.flatMap((bp) => {
+          const position = detachEntry(layouts[bp], instanceId, (item) => item.i);
+          if (!position) return [];
+          layouts[bp] = position.remaining;
+          return [{ bp, item: position.entry, insertPosition: position.insert }];
+        });
+        set(updateSpace(state, spaceId, () => ({ instances: remaining, layouts })));
+        return {
+          title: entry.widgetId,
+          restore: () => {
+            const current = get();
+            const target = current.spaces.find((space) => space.id === spaceId);
+            if (
+              !target ||
+              current.spaces.some((space) =>
+                space.instances.some((widget) => widget.instanceId === instanceId),
+              )
+            )
+              return false;
+            const layouts = { ...target.layouts };
+            for (const { bp, item, insertPosition } of positions) {
+              const existing = layouts[bp].filter((item) => item.i !== instanceId);
+              const fitted = fitRestoredWidget(
+                item,
+                existing,
+                BREAKPOINT_COLUMNS[target.baseColumns][bp],
+              );
+              layouts[bp] = insertPosition(existing, fitted);
+            }
+            set(
+              updateSpace(current, spaceId, () => ({
+                instances: insert(target.instances),
+                layouts,
+              })),
+            );
+            return true;
+          },
+        };
+      },
 
-          return {
-            instances: [...state.instances, { instanceId, widgetId, settings: initialSettings }],
-            layouts: deriveResponsiveLayouts([...currentXl, newLayoutItem], cols),
-          };
-        }),
-
-      removeWidget: (instanceId) =>
-        set((state) => {
-          const removeFilter = (items: LayoutItem[]) => items.filter((item) => item.i !== instanceId);
-          return {
-            instances: state.instances.filter((w) => w.instanceId !== instanceId),
-            layouts: {
-              xl: removeFilter(state.layouts.xl),
-              lg: removeFilter(state.layouts.lg),
-              md: removeFilter(state.layouts.md),
-              sm: removeFilter(state.layouts.sm),
-              xs: removeFilter(state.layouts.xs),
-            },
-          };
-        }),
-
-      updateWidgetSettings: (instanceId, newSettings) =>
+      updateWidgetSettings: (instanceId, newSettings) => {
+        const space = get().spaces.find((space) =>
+          space.instances.some((instance) => instance.instanceId === instanceId),
+        );
+        if (!space) return;
         set((state) => ({
-          instances: state.instances.map((w) =>
-            w.instanceId === instanceId ? { ...w, settings: { ...w.settings, ...newSettings } } : w,
+          spaces: state.spaces.map((entry) =>
+            entry === space
+              ? {
+                  ...entry,
+                  instances: entry.instances.map((instance) =>
+                    instance.instanceId === instanceId
+                      ? { ...instance, settings: { ...instance.settings, ...newSettings } }
+                      : instance,
+                  ),
+                }
+              : entry,
           ),
-        })),
+        }));
+      },
 
       updateLayout: (breakpoint, items) =>
-        set((state) => ({
-          layouts: {
-            ...state.layouts,
-            [breakpoint]: resolveLayoutCollisions(items, state.baseColumns),
-          },
-        })),
+        set((state) =>
+          updateActiveSpace(state, (space) => ({
+            layouts: {
+              ...space.layouts,
+              [breakpoint]: resolveLayoutCollisions(items, space.baseColumns),
+            },
+          })),
+        ),
 
-      resetDashboard: () => set({ ...createDefaultDashboardState() }),
+      resetDashboard: () => set({ ...createDefaultDashboardSnapshot(), ...CLOSED_DASHBOARD_UI }),
     }),
     {
       name: STORAGE_KEYS.DASHBOARD,
-      version: 2,
-      partialize: (state) => pickPersistedDashboard(state),
-      // Старые версии сохраняли и состояние UI (activeModal, isEditMode, widgets) —
-      // при чтении принимаем только сохраняемые поля, чтобы модалка не открывалась после перезагрузки
-      merge: (persisted, current) => ({ ...current, ...pickPersistedDashboard(persisted) }),
-      migrate: (persistedState: unknown) => {
-        // Резервное копирование состояния v1 перед миграцией (Правило 51)
-        if (persistedState && typeof persistedState === 'object' && !('version' in persistedState)) {
-          void StorageAdapter.set(STORAGE_KEYS.DASHBOARD_BACKUP_V1, persistedState);
+      version: 3,
+      partialize: pickPersistedDashboard,
+      onRehydrateStorage: () => {
+        setHydrationStatus('loading');
+        return (_state, error) => setHydrationStatus(error ? 'error' : 'ready');
+      },
+      merge: (persisted, current) =>
+        persisted === undefined ? current : { ...current, ...migrateDashboardSnapshot(persisted) },
+      migrate: async (persistedState: unknown, version) => {
+        if (version === 2) {
+          const backup = await StorageAdapter.get(STORAGE_KEYS.DASHBOARD_BACKUP_V2, null);
+          if (!backup) {
+            await StorageAdapter.set(STORAGE_KEYS.DASHBOARD_BACKUP_V2, {
+              state: persistedState,
+              version,
+            });
+          }
+        } else if (
+          version < 2 &&
+          persistedState &&
+          typeof persistedState === 'object' &&
+          !('version' in persistedState)
+        ) {
+          await StorageAdapter.set(STORAGE_KEYS.DASHBOARD_BACKUP_V1, persistedState);
         }
-        return pickPersistedDashboard(migrateDashboardState(persistedState));
+        return migrateDashboardSnapshot(persistedState);
       },
       storage: createJSONStorage(() => ({
         getItem: async (name) => {
           const val = await StorageAdapter.get(name, null);
-          return val ? JSON.stringify(val) : null;
+          lastDashboardWrite = val ? JSON.stringify(val) : null;
+          return lastDashboardWrite;
         },
         setItem: async (name, value) => {
+          if (value === lastDashboardWrite) return;
+          lastDashboardWrite = value;
           try {
             await StorageAdapter.set(name, JSON.parse(value));
-          } catch {
-            // Ошибки квот обрабатываются в StorageAdapter
+          } catch (error) {
+            if (lastDashboardWrite === value) lastDashboardWrite = null;
+            // Миграция считается завершённой только после записи нового снимка.
+            if (hydrationStatus === 'loading') throw error;
+            toast.error(t('spaces.saveError'));
           }
         },
         removeItem: async (name) => {

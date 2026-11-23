@@ -1,13 +1,13 @@
+import { configureDashboard, getActiveSpace } from '../../helpers/dashboard';
 import { describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { SettingsModal } from '@/features/settings/components/SettingsModal';
-import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useAppStore } from '@/stores/useAppStore';
 
 describe('SettingsModal Component', () => {
   beforeEach(() => {
-    useDashboardStore.setState({ activeModal: 'settings', baseColumns: 12, gap: 16 });
+    configureDashboard({ activeModal: 'settings', baseColumns: 12, gap: 16 });
     useAppStore.setState({ language: 'ru', animationsEnabled: true });
   });
 
@@ -29,6 +29,6 @@ describe('SettingsModal Component', () => {
     render(<SettingsModal />);
     const col16Button = screen.getByText('16 колонок');
     fireEvent.click(col16Button);
-    expect(useDashboardStore.getState().baseColumns).toBe(16);
+    expect(getActiveSpace().baseColumns).toBe(16);
   });
 });

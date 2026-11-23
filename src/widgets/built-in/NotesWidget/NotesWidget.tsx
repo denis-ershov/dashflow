@@ -235,6 +235,7 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
       ) : mode === 'edit' ? (
         <textarea
           aria-label={t('notes.text')}
+          data-search-item={note.item.id}
           value={content}
           onChange={handleChange}
           style={{ fontSize: `${fontSize}px` }}
@@ -246,7 +247,13 @@ export const NotesWidget: React.FC<WidgetProps<NotesSettings>> = ({
           )}
         />
       ) : (
-        <div className={cn('w-full flex-1 min-h-0 overflow-y-auto pr-1', fontClass)}>
+        <div
+          aria-label={t('notes.previewMode')}
+          role="region"
+          data-search-item={note.item.id}
+          tabIndex={-1}
+          className={cn('w-full flex-1 min-h-0 overflow-y-auto pr-1', fontClass)}
+        >
           {renderMarkdownPreview(content)}
         </div>
       )}

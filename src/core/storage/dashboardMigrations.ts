@@ -4,13 +4,14 @@ import type { WidgetInstance } from '@/core/widget/types';
 export type Breakpoint = 'xl' | 'lg' | 'md' | 'sm' | 'xs';
 export type BaseColumns = 12 | 16 | 24;
 
-export type ActiveModal = 'addWidget' | 'settings' | 'appearance' | 'marketplace' | null;
+export type ActiveModal = 'addWidget' | 'settings' | 'appearance' | 'marketplace' | 'spaces' | null;
 
 const ACTIVE_MODALS: ReadonlySet<string> = new Set([
   'addWidget',
   'settings',
   'appearance',
   'marketplace',
+  'spaces',
 ]);
 
 /** Устаревшие ключи модалок из ранних версий, сводятся к актуальным. */
