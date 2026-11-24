@@ -1,17 +1,20 @@
 import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { useAppStore } from '@/stores/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
-import { useDashboardHydration, useDashboardStore } from '@/stores/useDashboardStore';
+import {
+  pickPersistedDashboard,
+  useDashboardHydration,
+  useDashboardStore,
+} from '@/stores/useDashboardStore';
 import { useTranslation } from '@/core/i18n';
-import { activeLayoutModeOf } from '@/core/storage';
+import { activeHeroSettingsOf, activeLayoutModeOf } from '@/core/storage';
 import { GridEngine } from '@/features/dashboard/components/GridEngine';
-import { CommandPalette } from '@/features/dashboard/components/CommandPalette';
+import { useCommandPaletteHotkey } from '@/features/dashboard/hooks/useCommandPaletteHotkey';
 import { useSpaceHotkeys } from '@/features/dashboard/hooks/useSpaceHotkeys';
 import { WallpaperBackground } from '@/features/appearance/WallpaperBackground';
 import { HeroSection } from '@/features/hero';
-import { SpeedDialGrid, AddLinkModal } from '@/features/speedDial';
+import { SpeedDialGrid } from '@/features/speedDial/SpeedDialGrid';
 import { FloatingDock, type DockPanel } from '@/features/dock';
-import { AmbientSoundDrawer } from '@/features/audio';
 import { useAudioStore } from '@/core/audio';
 import { useFeatureFlags } from '@/core/featureFlags';
 import { useThemeStore } from '@/core/theme/themeStore';
@@ -21,6 +24,11 @@ import { Button } from '@/ui/primitives';
 import { crashLogger } from '@/core/observability';
 import { useUndoHotkey } from '@/features/commands/useUndoHotkey';
 import { deleteDashboardEntity } from '@/features/commands/deleteDashboardEntity';
+import { StartupLayoutSkeleton } from '@/features/dashboard/StartupLayoutSkeleton';
+import {
+  readStartupLayoutCache,
+  writeStartupLayoutCache,
+} from '@/features/dashboard/startupLayoutCache';
 
 const SpacesModal = lazy(() =>
   import('@/features/dashboard/components/SpacesModal').then(({ SpacesModal }) => ({ default: SpacesModal })),
@@ -45,6 +53,27 @@ const AssignAgentDialog = lazy(() =>
     default: AssignAgentDialog,
   })),
 );
+const CommandPalette = lazy(() =>
+  import('@/features/dashboard/components/CommandPalette').then(({ CommandPalette }) => ({
+    default: CommandPalette,
+  })),
+);
+const AddLinkModal = lazy(() =>
+  import('@/features/speedDial/AddLinkModal').then(({ AddLinkModal }) => ({
+    default: AddLinkModal,
+  })),
+);
+const AmbientSoundDrawer = lazy(() =>
+  import('@/features/audio/AmbientSoundDrawer').then(({ AmbientSoundDrawer }) => ({
+    default: AmbientSoundDrawer,
+  })),
+);
+
+function CommandPalettePanel() {
+  const open = useDashboardStore((state) => state.isCommandPaletteOpen);
+  useCommandPaletteHotkey();
+  return <DeferredPanel open={open}><CommandPalette /></DeferredPanel>;
+}
 
 /** Загружает панель при первом открытии и сохраняет её состояние при закрытии. */
 function DeferredPanel({ open, children }: { open: boolean; children: React.ReactNode }) {
@@ -89,7 +118,7 @@ function DashboardContent() {
       setActiveModal: s.setActiveModal,
       layoutMode: activeLayoutModeOf(s),
       setLayoutMode: s.setLayoutMode,
-      heroSettings: s.heroSettings,
+      heroSettings: activeHeroSettingsOf(s),
       updateHeroSettings: s.updateHeroSettings,
       speedDialLinks: s.speedDialLinks,
       addSpeedDialLink: s.addSpeedDialLink,
@@ -109,6 +138,7 @@ function DashboardContent() {
   const [isAudioDrawerOpen, setIsAudioDrawerOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [onboardingCheckComplete, setOnboardingCheckComplete] = useState(false);
+  const [startupLayout] = useState(() => readStartupLayoutCache());
 
   useEffect(() => {
     let active = true;
@@ -127,6 +157,13 @@ function DashboardContent() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (dashboardStatus !== 'ready' || !onboardingCheckComplete || isOnboardingOpen) return;
+    const updateCache = () => writeStartupLayoutCache(pickPersistedDashboard(useDashboardStore.getState()));
+    updateCache();
+    return useDashboardStore.subscribe(updateCache);
+  }, [dashboardStatus, onboardingCheckComplete, isOnboardingOpen]);
 
   // Ctrl+Z / Cmd+Z вне полей ввода — отмена последнего действия с данными
   useUndoHotkey();
@@ -192,6 +229,9 @@ function DashboardContent() {
   }
 
   if (!isInitialized || dashboardStatus === 'loading' || !onboardingCheckComplete) {
+    if (dashboardStatus === 'loading' && onboardingCheckComplete && !isOnboardingOpen && startupLayout) {
+      return <StartupLayoutSkeleton layout={startupLayout} label={t('common.loading')} />;
+    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-canvas text-fg">
         <div className="flex flex-col items-center gap-4">
@@ -265,7 +305,7 @@ function DashboardContent() {
       />
 
       {/* Модальные окна и оверлеи */}
-      <CommandPalette />
+      <CommandPalettePanel />
       <DeferredPanel open={activeModal === 'assignAgent'}>
         {activeModal === 'assignAgent' && <AssignAgentDialog onClose={() => setActiveModal(null)} />}
       </DeferredPanel>
@@ -279,15 +319,19 @@ function DashboardContent() {
           onClose={() => setActiveModal(null)}
         />
       </DeferredPanel>
-      <AddLinkModal
-        isOpen={isAddLinkOpen}
-        onClose={() => setIsAddLinkOpen(false)}
-        onAdd={addSpeedDialLink}
-      />
-      <AmbientSoundDrawer
-        isOpen={isAudioEnabled && isAudioDrawerOpen}
-        onClose={() => setIsAudioDrawerOpen(false)}
-      />
+      <DeferredPanel open={isAddLinkOpen}>
+        <AddLinkModal
+          isOpen={isAddLinkOpen}
+          onClose={() => setIsAddLinkOpen(false)}
+          onAdd={addSpeedDialLink}
+        />
+      </DeferredPanel>
+      <DeferredPanel open={isAudioEnabled && isAudioDrawerOpen}>
+        <AmbientSoundDrawer
+          isOpen={isAudioEnabled && isAudioDrawerOpen}
+          onClose={() => setIsAudioDrawerOpen(false)}
+        />
+      </DeferredPanel>
       <ToastContainer />
       <Suspense fallback={null}>
         {isOnboardingOpen && <OnboardingDialog onComplete={() => setIsOnboardingOpen(false)} />}

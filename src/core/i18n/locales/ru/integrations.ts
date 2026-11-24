@@ -1,0 +1,32 @@
+export const integrations = {
+  title: 'Интеграции',
+  connect: 'Подключите DashFlow Hub, чтобы увидеть состояние интеграций.',
+  configuration: 'Интеграции включаются в настройках Hub. Секреты хранятся на стороне Hub.',
+  loadError: 'Не удалось получить состояние интеграций или запустить синхронизацию.',
+  poll: 'Запустить синхронизацию',
+  lastSuccess: 'Последняя успешная синхронизация',
+  lastError: 'Последняя ошибка',
+  calendarSource: 'Календарь через Hub',
+  names: {
+    github: 'GitHub',
+    telegram: 'Telegram',
+    calendar: 'Календарь ICS',
+    mail: 'Дайджест почты',
+  },
+  states: {
+    disabled: 'Выключено',
+    idle: 'Ожидание',
+    polling: 'Синхронизация',
+    ok: 'Подключено',
+    error: 'Ошибка',
+  },
+  errors: {
+    CONFIGURATION: 'Проверьте настройки и секреты в Hub.',
+    UNAUTHORIZED: 'Сервис отклонил доступ.',
+    RATE_LIMITED: 'Сервис ограничил запросы. Hub повторит позже.',
+    UNAVAILABLE: 'Сервис недоступен.',
+    INVALID_RESPONSE: 'Сервис вернул неожиданный ответ.',
+    INCOMPLETE: 'Сервис вернул только часть данных.',
+    STORAGE: 'Hub не смог сохранить состояние.',
+  },
+} as const;

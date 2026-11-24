@@ -3,6 +3,7 @@ import { chmod, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { loadHubConfig } from './config.js';
+import { createIntegrationRuntime } from './connectors/runtime.js';
 import { openHubRepository } from './db/index.js';
 import { createHubServer } from './http/index.js';
 import { windowLimiter } from './http/access.js';
@@ -48,6 +49,11 @@ function option(args: string[], name: string): string | undefined {
 async function serve(): Promise<void> {
   const config = await loadHubConfig();
   const repository = await openConfiguredRepository(config.databasePath);
+  const integrations = createIntegrationRuntime({
+    settings: config.integrations,
+    repository,
+    databasePath: config.databasePath,
+  });
   let server: Awaited<ReturnType<typeof createHubServer>> | undefined;
   let resolveShutdown: (() => void) | undefined;
   const shutdown = new Promise<void>((resolve) => {
@@ -60,16 +66,20 @@ async function serve(): Promise<void> {
       extensionOrigins: config.extensionOrigins,
       writesPerMinute: config.writesPerMinute,
       mcpAllowedHosts: config.mcpAllowedHosts,
+      integrations,
+      webhookTemplates: config.webhookTemplates,
     });
     process.once('SIGINT', onSignal);
     process.once('SIGTERM', onSignal);
     const address = await server.listen({ host: config.host, port: config.port });
     process.stdout.write(`DashFlow Hub listening at ${address}\n`);
+    await integrations.start();
     await shutdown;
   } finally {
     process.removeListener('SIGINT', onSignal);
     process.removeListener('SIGTERM', onSignal);
     try {
+      await integrations.stop();
       if (server) await server.close();
     } finally {
       repository.close();

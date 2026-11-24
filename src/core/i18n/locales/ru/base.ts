@@ -62,6 +62,7 @@ export const base = {
     rssReader: 'RSS Лента',
     greeting: 'Умное приветствие',
     yearProgress: 'Прогресс времени',
+    nexusChat: 'Nexus Chat',
   },
   widgetDesc: {
     clock: 'Цифровые часы, дата и часовой пояс',
@@ -81,6 +82,7 @@ export const base = {
     rssReader: 'Чтение новостей из любимых RSS-каналов',
     greeting: 'Персональное приветствие в зависимости от времени суток',
     yearProgress: 'Визуальный трекер прогресса текущего дня, месяца и года',
+    nexusChat: 'Быстрый AI-чат через OpenStream Nexus Hub',
   },
   common: {
     save: 'Сохранить',

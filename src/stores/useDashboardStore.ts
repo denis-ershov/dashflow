@@ -10,7 +10,9 @@ import {
   BREAKPOINT_COLUMNS,
   migrateDashboardSnapshot,
   SPACE_TITLE_LIMIT,
+  activeHeroSettingsOf,
   activeSpaceOf,
+  normalizeSpaceWallpaper,
   deriveResponsiveLayouts,
   createDashboardSpace,
   createDefaultDashboardSnapshot,
@@ -26,6 +28,7 @@ import {
   type HeroSettings,
   type SpeedDialLink,
   type SpacePreset,
+  type SpaceWallpaper,
 } from '@/core/storage';
 
 export type { ActiveModal };
@@ -52,6 +55,7 @@ export interface DashboardState extends DashboardSnapshot {
   setEditMode: (val: boolean) => void;
   setLayoutMode: (mode: LayoutMode) => void;
   updateHeroSettings: (settings: Partial<HeroSettings>) => void;
+  setSpaceWallpaper: (value: SpaceWallpaper | undefined) => boolean;
   addSpeedDialLink: (link: Omit<SpeedDialLink, 'id'>) => void;
   removeSpeedDialLink: (id: string) => DashboardRemoval | undefined;
   updateSpeedDialLink: (id: string, link: Partial<SpeedDialLink>) => void;
@@ -251,9 +255,15 @@ export const useDashboardStore = create<DashboardState>()(
             : { layoutMode: mode },
         ),
       updateHeroSettings: (settings) =>
-        set((state) => ({
-          heroSettings: { ...state.heroSettings, ...settings },
-        })),
+        set((state) => updateActiveSpace(state, () => ({
+          heroSettings: { ...activeHeroSettingsOf(state), ...settings },
+        }))),
+      setSpaceWallpaper: (value) => {
+        const wallpaper = normalizeSpaceWallpaper(value);
+        if (value && !wallpaper) return false;
+        set((state) => updateActiveSpace(state, () => ({ wallpaper })));
+        return true;
+      },
       addSpeedDialLink: (link) =>
         set((state) => ({
           speedDialLinks: [

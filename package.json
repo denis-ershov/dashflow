@@ -1,6 +1,6 @@
 {
   "name": "dashflow",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Современный, адаптивный и расширяемый дашборд новой вкладки для браузера (React 19, Tailwind CSS 4, WXT, Manifest V3)",
   "private": true,
   "type": "module",

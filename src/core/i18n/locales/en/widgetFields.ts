@@ -686,5 +686,27 @@ export const widgetFields: LocaleShape<typeof ruWidgetFields> = {
         help: 'Days or hours left until the end of the period',
       },
     },
+    nexusChat: {
+      chatEndpointUrl: {
+        label: 'Nexus Hub URL',
+        help: 'Base Hub URL or endpoint (only https:// or http://localhost allowed)',
+        placeholder: 'https://hub.example.com',
+      },
+      adminUrl: {
+        label: 'Web Admin URL',
+        help: 'Link shown when quotas are paused (only https:// or http://localhost allowed)',
+        placeholder: 'https://admin.example.com',
+      },
+      bearerToken: {
+        label: 'Bearer Token',
+        help: 'Access token for chat API (never rendered in chat UI)',
+        placeholder: 'Enter access token',
+      },
+      model: {
+        label: 'Default model',
+        help: 'Model identifier for Nexus Hub routing',
+        placeholder: 'nexus-default',
+      },
+    },
   },
 };

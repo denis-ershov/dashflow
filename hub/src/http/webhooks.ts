@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { Actor, HubRepository } from '../db/index.js';
+import { applyWebhookTemplate, type WebhookTemplate } from '../connectors/webhookTemplate.js';
 import { denied, rateLimited, unauthorized, windowLimiter } from './access.js';
 import { createDraft, HttpError, idempotencyKey } from './validation.js';
 
@@ -13,6 +14,7 @@ export async function registerWebhooks(
   writesPerMinute: number,
   notify: () => void,
   identify: (request: FastifyRequest, actor: Actor) => void,
+  templates: ReadonlyMap<string, WebhookTemplate> = new Map(),
 ) {
   const allowIp = windowLimiter();
   const allowWebhook = windowLimiter();
@@ -68,9 +70,11 @@ export async function registerWebhooks(
             else resolve(parsed);
           });
         });
+        const template = templates.get(webhook.id);
+        const draft = createDraft(template ? applyWebhookTemplate(data, template) : data);
         const item = repository.createItem(
           actor,
-          { ...createDraft(data), status: 'inbox', boardId: undefined, order: undefined },
+          { ...draft, status: 'inbox', boardId: undefined, order: undefined },
           `webhook.${idempotencyKey(deliveryHeader)}`,
         );
         notify();

@@ -10,6 +10,7 @@ import { capture } from './capture';
 import { hub } from './hub';
 import { onboarding } from './onboarding';
 import { agents } from './agents';
+import { integrations } from './integrations';
 
 /** Русский словарь — канонический: из него выводится тип TranslationKey */
 export const ru = {
@@ -25,4 +26,5 @@ export const ru = {
   hub,
   onboarding,
   agents,
+  integrations,
 } as const;

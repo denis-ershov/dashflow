@@ -6,8 +6,11 @@ import { hasBrowserPermissions, originPatternFor } from '@/core/permissions/brow
 import type { Item } from '@/core/items/types';
 import {
   fetchHubAgents,
+  fetchHubCalendar,
+  fetchHubIntegrations,
   getHubEarlierItem,
   HubClientError,
+  pollHubIntegration,
   previewHubAgentRollback,
   redeemHubCode,
   revokeHubAgent,
@@ -23,6 +26,14 @@ import {
   type HubAgentRollbackPreview,
   type HubAgentRollbackResult,
 } from './agents';
+import {
+  HUB_CALENDAR_AGENDA,
+  HUB_INTEGRATION_POLL,
+  HUB_INTEGRATIONS,
+  INTEGRATION_IDS,
+  type HubIntegrationStatus,
+  type readHubCalendar,
+} from './integrations';
 import {
   HUB_CONNECTION_KEY,
   HUB_DISCONNECT,
@@ -55,6 +66,8 @@ type HubReply =
       agent?: HubAgentRecord;
       preview?: HubAgentRollbackPreview;
       result?: HubAgentRollbackResult;
+      integrations?: HubIntegrationStatus[];
+      snapshot?: ReturnType<typeof readHubCalendar>;
     }
   | { ok: false; issue: HubFailure };
 
@@ -236,6 +249,26 @@ export function startHubBackground() {
     }
   }
 
+  async function integrationRequest(type: string, id: unknown): Promise<HubReply> {
+    const connection = await readConnection();
+    if (!connection) return { ok: false, issue: 'unauthorized' };
+    try {
+      await assertHostPermission(connection.origin);
+      if (type === HUB_INTEGRATIONS) {
+        return { ok: true, integrations: await fetchHubIntegrations(connection) };
+      }
+      if (type === HUB_CALENDAR_AGENDA) {
+        return { ok: true, snapshot: await fetchHubCalendar(connection) };
+      }
+      const integration = INTEGRATION_IDS.find((candidate) => candidate === id);
+      if (!integration) return { ok: false, issue: 'data' };
+      await pollHubIntegration(connection, integration);
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, issue: issueOf(error) };
+    }
+  }
+
   async function configure(type: string, origin: unknown, code: unknown): Promise<HubReply> {
     if (controlsBusy) return { ok: false, issue: 'data' };
     controlsBusy = true;
@@ -294,6 +327,15 @@ export function startHubBackground() {
     request(value: unknown, sender: chrome.runtime.MessageSender): Promise<HubReply> | undefined {
       const message = asRecord(value);
       const { type, origin, code, id } = message;
+      if (
+        type === HUB_INTEGRATIONS ||
+        type === HUB_INTEGRATION_POLL ||
+        type === HUB_CALENDAR_AGENDA
+      ) {
+        return isWorkspace(sender)
+          ? integrationRequest(type, id)
+          : Promise.resolve({ ok: false, issue: 'permissions' });
+      }
       if (AGENT_REQUESTS.has(type)) {
         return isWorkspace(sender)
           ? manageAgent(message)

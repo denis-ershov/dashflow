@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -12,12 +13,14 @@ import { Inbox, Plus } from 'lucide-react';
 import { commandBus } from '@/core/commands';
 import { useTranslation, type TranslationKey } from '@/core/i18n';
 import { itemRepository, ItemValidationError, SOURCE_TYPES, useItems } from '@/core/items';
+import { REVEAL_WORKSPACE_ITEM } from '@/core/items/revealItem';
 import { parseQuickCapture, QUICK_CAPTURE_LIMIT } from '@/core/items/quickParse';
 import { ReminderList } from '@/features/reminders/ReminderList';
 import { EmptyState, ErrorState, Skeleton } from '@/ui/feedback';
 import { Button, Input } from '@/ui/primitives';
+import { VIRTUAL_ROWS_THRESHOLD } from '@/ui/hooks/useVirtualRows';
 import { InboxActionDialog } from './InboxActionDialog';
-import { InboxRows } from './InboxRows';
+import { InboxRows, type InboxRowsHandle } from './InboxRows';
 import {
   applyInboxAction,
   InboxBoardUnavailableError,
@@ -66,7 +69,9 @@ export function InboxWidget() {
   );
   const idPrefix = useId();
   const rowId = useCallback((itemId: string) => `${idPrefix}-${itemId}`, [idPrefix]);
+  const sectionRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const rowsRef = useRef<InboxRowsHandle>(null);
   const focusAfterRemoval = useRef<{ id: string; index: number } | null>(null);
   const busyRef = useRef(false);
   const [busy, setBusy] = useState<'capture' | 'action' | null>(null);
@@ -76,6 +81,7 @@ export function InboxWidget() {
   const [notice, setNotice] = useState<string>();
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [dialog, setDialog] = useState<DialogTarget | null>(null);
+  const [searchItem, setSearchItem] = useState<string>();
   const selectedIds = items.filter((item) => selected.has(item.id)).map((item) => item.id);
 
   useEffect(() => {
@@ -92,9 +98,32 @@ export function InboxWidget() {
     focusAfterRemoval.current = null;
     if (document.activeElement !== document.body) return;
     const next = items[Math.min(pending.index, items.length - 1)];
-    const row = next && document.getElementById(rowId(next.id));
-    (row || listRef.current)?.focus();
-  }, [dialog, items, rowId]);
+    if (!next || !rowsRef.current?.focusItem(next.id)) listRef.current?.focus();
+  }, [dialog, items]);
+
+  useLayoutEffect(() => {
+    const root = sectionRef.current;
+    if (!root) return;
+    const reveal = (event: Event) => {
+      if (!(event instanceof CustomEvent)) return;
+      const id: unknown = event.detail;
+      if (typeof id === 'string') setSearchItem(id);
+    };
+    root.addEventListener(REVEAL_WORKSPACE_ITEM, reveal);
+    return () => root.removeEventListener(REVEAL_WORKSPACE_ITEM, reveal);
+  }, []);
+
+  useEffect(() => {
+    if (!searchItem || loading) return;
+    if (!error && allItems.some(({ id }) => id === searchItem)) {
+      if (!items.some(({ id }) => id === searchItem)) {
+        setSource('all');
+        return;
+      }
+      rowsRef.current?.focusItem(searchItem);
+    }
+    setSearchItem(undefined);
+  }, [searchItem, allItems, items, loading, error]);
 
   const closeDialog = useCallback(() => {
     if (busyRef.current) return;
@@ -176,17 +205,22 @@ export function InboxWidget() {
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (dialog || busyRef.current || items.length === 0 || error || loading) return;
     const shortcut = inboxShortcut(event);
-    if (shortcut !== 'j' && shortcut !== 'k' && shortcut !== 'e' && shortcut !== 't') return;
+    const edge = items.length > VIRTUAL_ROWS_THRESHOLD && (shortcut === 'home' || shortcut === 'end');
+    if (!edge && shortcut !== 'j' && shortcut !== 'k' && shortcut !== 'e' && shortcut !== 't') return;
     const id = (event.target as HTMLElement).closest<HTMLElement>('[data-inbox-item]')?.dataset
       .inboxItem;
+    if (edge && !listRef.current?.contains(event.target as Node)) return;
     const index = items.findIndex((item) => item.id === id);
     event.preventDefault();
 
-    if (shortcut === 'j' || shortcut === 'k') {
+    if (edge || shortcut === 'j' || shortcut === 'k') {
       const offset = shortcut === 'j' ? 1 : -1;
-      const nextIndex = index < 0 && shortcut === 'k' ? items.length - 1 : index + offset;
+      const nextIndex =
+        shortcut === 'home' ? 0 : shortcut === 'end' || (index < 0 && shortcut === 'k')
+          ? items.length - 1
+          : index + offset;
       const next = items[Math.max(0, Math.min(nextIndex, items.length - 1))];
-      if (next) document.getElementById(rowId(next.id))?.focus();
+      if (next) rowsRef.current?.focusItem(next.id);
       return;
     }
     if (event.repeat) return;
@@ -202,6 +236,8 @@ export function InboxWidget() {
 
   return (
     <section
+      ref={sectionRef}
+      data-search-reveal=""
       aria-label={t('widgets.inbox')}
       className="flex h-full min-h-0 min-w-0 flex-col gap-2 p-2 sm:p-3"
       onKeyDown={handleKeyDown}
@@ -302,7 +338,7 @@ export function InboxWidget() {
         ref={listRef}
         role="region"
         aria-label={t('inbox.list')}
-        aria-keyshortcuts="J K E T"
+        aria-keyshortcuts={items.length > VIRTUAL_ROWS_THRESHOLD ? 'J K E T Home End' : 'J K E T'}
         aria-busy={loading}
         tabIndex={0}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl pe-1 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
@@ -325,12 +361,15 @@ export function InboxWidget() {
           />
         ) : (
           <InboxRows
+            ref={rowsRef}
+            scrollRef={listRef}
             items={items}
             rowId={rowId}
             selectedIds={selected}
             disabled={busy !== null}
             onToggle={toggleItem}
             onActions={(id) => openDialog('actions', [id])}
+            dialogItem={dialog?.ids[0]}
           />
         )}
       </div>

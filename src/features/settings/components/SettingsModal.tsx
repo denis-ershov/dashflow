@@ -1,4 +1,4 @@
-import { activeLayoutModeOf, activeSpaceOf } from '@/core/storage';
+import { activeHeroSettingsOf, activeLayoutModeOf, activeSpaceOf } from '@/core/storage';
 import React, { useState } from 'react';
 import { Modal } from '@/ui/overlays';
 import { useShallow } from 'zustand/react/shallow';
@@ -14,6 +14,7 @@ import type { HeroSettings } from '@/core/storage/dashboardMigrations';
 import { CaptureMenuSettings } from '@/features/capture/CaptureMenuSettings';
 import { HubSettings } from '@/features/hub/HubSettings';
 import { AgentsSettings } from '@/features/agents/AgentsSettings';
+import { IntegrationsSettings } from '@/features/hub/IntegrationsSettings';
 
 export const SettingsModal: React.FC = () => {
   const {
@@ -37,7 +38,7 @@ export const SettingsModal: React.FC = () => {
       setGap: s.setGap,
       layoutMode: activeLayoutModeOf(s),
       setLayoutMode: s.setLayoutMode,
-      heroSettings: s.heroSettings,
+      heroSettings: activeHeroSettingsOf(s),
       updateHeroSettings: s.updateHeroSettings,
     })),
   );
@@ -53,7 +54,7 @@ export const SettingsModal: React.FC = () => {
   );
   const { t, tp } = useTranslation();
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'general' | 'diagnostics' | 'agents'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'diagnostics' | 'agents' | 'integrations'>('general');
 
   const isOpen = activeModal === 'settings';
 
@@ -66,7 +67,7 @@ export const SettingsModal: React.FC = () => {
     >
       <div className="space-y-6">
         {/* Переключатель вкладок настроек */}
-        <div className="flex border-b border-line pb-2 gap-2">
+        <div className="flex flex-wrap border-b border-line pb-2 gap-2">
           <button
             type="button"
             onClick={() => setActiveTab('agents')}
@@ -103,9 +104,19 @@ export const SettingsModal: React.FC = () => {
             <Activity className="w-3.5 h-3.5" />
             <span>{t('layoutSettings.tabDiagnostics')}</span>
           </button>
+          <Button
+            size="sm"
+            variant={activeTab === 'integrations' ? 'primary' : 'ghost'}
+            aria-pressed={activeTab === 'integrations'}
+            onClick={() => setActiveTab('integrations')}
+          >
+            {t('integrations.title')}
+          </Button>
         </div>
 
-        {activeTab === 'agents' ? (
+        {activeTab === 'integrations' ? (
+          <IntegrationsSettings />
+        ) : activeTab === 'agents' ? (
           <AgentsSettings />
         ) : activeTab === 'diagnostics' ? (
           <DiagnosticsSection />

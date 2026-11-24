@@ -1,0 +1,27 @@
+export const integrations = {
+  title: 'Integrations',
+  connect: 'Connect DashFlow Hub to view integration status.',
+  configuration: 'Enable integrations in your Hub settings. Hub keeps their credentials.',
+  loadError: 'Could not load integrations or start a sync.',
+  poll: 'Start sync',
+  lastSuccess: 'Last successful sync',
+  lastError: 'Last error',
+  calendarSource: 'Calendar via Hub',
+  names: { github: 'GitHub', telegram: 'Telegram', calendar: 'ICS calendar', mail: 'Mail digest' },
+  states: {
+    disabled: 'Disabled',
+    idle: 'Waiting',
+    polling: 'Syncing',
+    ok: 'Connected',
+    error: 'Error',
+  },
+  errors: {
+    CONFIGURATION: 'Check Hub configuration and credentials.',
+    UNAUTHORIZED: 'The service denied access.',
+    RATE_LIMITED: 'The service limited requests. Hub will retry later.',
+    UNAVAILABLE: 'The service is unavailable.',
+    INVALID_RESPONSE: 'The service returned an unexpected response.',
+    INCOMPLETE: 'The service returned partial data.',
+    STORAGE: 'Hub could not save its state.',
+  },
+} as const;

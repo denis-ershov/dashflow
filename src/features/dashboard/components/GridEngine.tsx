@@ -157,14 +157,14 @@ export const GridEngine: React.FC = () => {
       {/* Панель редактора сетки в активном режиме редактирования */}
       {isEditMode && (
         <div className="mb-4 p-3 rounded-lg glass-card border border-warning/40 shadow-3 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-200 select-none">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-warning/15 text-warning text-xs font-semibold border border-warning/30">
               <Move className="w-3.5 h-3.5" />
               <span>{t('grid.editorTitle')}</span>
             </div>
 
             {/* Выбор колонок базовой сетки */}
-            <div className="flex items-center gap-1.5 bg-surface/80 p-1 rounded-xl border border-line text-xs">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5 bg-surface/80 p-1 rounded-xl border border-line text-xs">
               <span className="text-fg-muted px-1.5 font-medium flex items-center gap-1">
                 <Columns className="w-3.5 h-3.5" /> {t('grid.columns')}
               </span>
@@ -173,7 +173,7 @@ export const GridEngine: React.FC = () => {
                   key={cols}
                   type="button"
                   onClick={() => setBaseColumns(cols)}
-                  className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                  className={`min-h-11 min-w-11 px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
                     baseColumns === cols
                       ? 'bg-primary text-primary-fg shadow-1'
                       : 'text-fg-muted hover:text-fg hover:bg-surface-hover'
@@ -206,7 +206,7 @@ export const GridEngine: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               size="sm"
               variant="outline"

@@ -117,5 +117,51 @@ test.describe('доступность первого запуска на узк�
     }
     await expect(page.getByRole('dialog')).toHaveCount(0);
     expect(await page.evaluate(() => document.activeElement?.isConnected ?? false)).toBe(true);
+
+    const dock = page.getByRole('navigation', { name: 'Quick controls' });
+    const editGrid = dock.getByRole('button', { name: 'Edit grid', exact: true });
+    await editGrid.click();
+    await expect(dock.getByRole('button', { name: 'Finish editing', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    const pageMetrics = await page.evaluate(() => ({
+      viewportWidth: document.documentElement.clientWidth,
+      documentWidth: document.documentElement.scrollWidth,
+      bodyWidth: document.body.scrollWidth,
+    }));
+    expect(pageMetrics.documentWidth).toBeLessThanOrEqual(pageMetrics.viewportWidth);
+    expect(pageMetrics.bodyWidth).toBeLessThanOrEqual(pageMetrics.viewportWidth);
+
+    const progress = page.getByRole('button', { name: /Time progress: Year 2026/ });
+    await expect(progress).toBeVisible();
+    await expect(progress).toContainText('Year 2026');
+    await expect(progress).toContainText(/\d+(?:\.\d+)?%/);
+    const progressBox = await progress.boundingBox();
+    expect(progressBox).not.toBeNull();
+    expect(progressBox!.x).toBeGreaterThanOrEqual(0);
+    expect(progressBox!.x + progressBox!.width).toBeLessThanOrEqual(pageMetrics.viewportWidth);
+    expect(progressBox!.height).toBeGreaterThanOrEqual(44);
+    expect(progressBox!.width).toBeGreaterThanOrEqual(44);
+
+    const dockTargets = await dock.getByRole('button').evaluateAll((buttons) =>
+      buttons
+        .filter((button) => {
+          const style = getComputedStyle(button);
+          return style.display !== 'none' && style.visibility !== 'hidden';
+        })
+        .map((button) => {
+          const { left, right, width, height } = button.getBoundingClientRect();
+          return { left, right, width, height };
+        }),
+    );
+    expect(dockTargets.length).toBeGreaterThan(0);
+    expect(
+      dockTargets.filter(
+        ({ left, right, width, height }) =>
+          left < 0 || right > pageMetrics.viewportWidth || width < 44 || height < 44,
+      ),
+    ).toEqual([]);
   });
 });

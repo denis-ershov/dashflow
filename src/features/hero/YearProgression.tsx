@@ -34,7 +34,7 @@ export const YearProgression: React.FC<YearProgressionProps> = ({ className }) =
       onClick={handleNextMode}
       aria-label={t('hero.progressLabel', { label: active.label, percent: active.percent })}
       className={cn(
-        'glass-pill flex items-center gap-3 px-4 py-2 text-xs select-none cursor-pointer group min-h-11',
+        'glass-pill flex max-w-full flex-wrap items-center justify-center gap-3 px-4 py-2 text-xs select-none cursor-pointer group min-h-11',
         className,
       )}
     >

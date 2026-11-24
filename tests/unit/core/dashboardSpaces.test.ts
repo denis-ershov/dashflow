@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  activeHeroSettingsOf,
   activeLayoutModeOf,
   activeSpaceOf,
   createDashboardSpace,
@@ -69,5 +70,33 @@ describe('Формат пространств и экспорт 3.0', () => {
     });
     expect(activeSpaceOf(malformed).layoutMode).toBeUndefined();
     expect(activeLayoutModeOf(malformed)).toBe('canvas');
+  });
+
+  it('сохраняет оформление отдельно для каждого пространства и проверяет URL при импорте', () => {
+    const home = createDefaultDashboardSnapshot();
+    const work = createDashboardSpace('Работа', 'empty');
+    const snapshot = {
+      ...home,
+      activeSpaceId: work.id,
+      spaces: [
+        ...home.spaces,
+        {
+          ...work,
+          heroSettings: { ...home.heroSettings, showClock: false },
+          wallpaper: { url: 'https://images.example.org/background.png', scrim: 0.6 },
+        },
+      ],
+    };
+    const restored = migrateDashboardSnapshot(exportDashboardSnapshot(snapshot));
+    expect(activeHeroSettingsOf(restored).showClock).toBe(false);
+    expect(activeSpaceOf(restored).wallpaper).toEqual(snapshot.spaces[1]?.wallpaper);
+    expect(activeHeroSettingsOf({ ...restored, activeSpaceId: home.activeSpaceId }).showClock).toBe(
+      true,
+    );
+    const malformed = migrateDashboardSnapshot({
+      ...snapshot,
+      spaces: [{ ...work, wallpaper: { url: 'javascript:alert(42)', scrim: 42 } }],
+    });
+    expect(activeSpaceOf(malformed).wallpaper).toBeUndefined();
   });
 });

@@ -10,6 +10,7 @@ import { AgendaConnectionDialog } from './AgendaConnectionDialog';
 import { AgendaDayList } from './AgendaDayList';
 import { getAgendaDays, listAgendaEntries } from './agendaDays';
 import { useCalendarConnection } from './calendarConnection';
+import { useHubCalendar } from './useHubCalendar';
 
 const NO_EVENTS: CalendarEvent[] = [];
 
@@ -46,6 +47,7 @@ export function AgendaWidget() {
   const [showCalendar, setShowCalendar] = useState(false);
   const { items, loading, error, reload } = useItems(itemRepository);
   const connection = useCalendarConnection();
+  const hubCalendar = useHubCalendar(!connection.connected);
   const text = connection.state.status === 'ready' ? connection.state.text : undefined;
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
@@ -54,13 +56,13 @@ export function AgendaWidget() {
   const end = days.at(-1)?.end ?? today;
 
   const calendar = useMemo(() => {
-    if (text === undefined) return undefined;
+    if (text === undefined) return hubCalendar ?? undefined;
     try {
       return parseIcalendar(text, { start, end, zone });
     } catch {
       return null;
     }
-  }, [text, start, end, zone]);
+  }, [text, start, end, zone, hubCalendar]);
   const entries = useMemo(
     () => listAgendaEntries(items, calendar?.events ?? NO_EVENTS, start, end),
     [items, calendar, start, end],
@@ -123,6 +125,9 @@ export function AgendaWidget() {
       </div>
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pe-1">
         <AgendaCalendarStatus connection={connection} />
+        {hubCalendar && (
+          <p className="text-xs text-fg-muted">{t('integrations.calendarSource')}</p>
+        )}
         {loading && <Spinner />}
         {error && <ErrorState message={t('agenda.tasksError')} onRetry={reload} />}
         {calendar === null && (

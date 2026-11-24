@@ -49,6 +49,8 @@ When you pair DashFlow, the extension requests permission for the host you enter
 
 The device token stays in local extension storage and is excluded from JSON exports. Disconnecting stops sync and keeps the browser copy. You manage the Hub copy, its backups, and its version history separately.
 
+When you enable integrations, your Hub connects to the services you configure using your credentials. GitHub and ICS fetch data for your workspace. Telegram accepts selected chats and can send reminder titles to the chat you choose. The mail digest uses IMAP to retrieve the sender and subject of matching messages. Provider credentials stay in the Hub environment.
+
 ---
 
 ### 2. Network Requests to Third-Party Services

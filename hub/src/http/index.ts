@@ -1,9 +1,12 @@
 import Fastify, { type FastifyInstance } from 'fastify';
+import type { IntegrationRuntime } from '../connectors/runtime.js';
+import type { WebhookTemplate } from '../connectors/webhookTemplate.js';
 import websocket from '@fastify/websocket';
 import { HUB_BODY_LIMIT } from '@dashflow/shared';
 import { HubDbError, type HubRepository } from '../db/index.js';
 import { createMcpHttpHandler } from '../mcp/index.js';
 import { registerAgentRoutes } from './agents.js';
+import { registerIntegrationRoutes } from './integrations.js';
 import {
   actorFor,
   denied,
@@ -24,6 +27,8 @@ export interface HubServerOptions {
   extensionOrigins?: readonly string[];
   writesPerMinute?: number;
   mcpAllowedHosts?: readonly string[];
+  integrations?: IntegrationRuntime;
+  webhookTemplates?: ReadonlyMap<string, WebhookTemplate>;
 }
 
 const errorStatus = {
@@ -66,6 +71,8 @@ export async function createHubServer({
   extensionOrigins = [],
   writesPerMinute = 60,
   mcpAllowedHosts,
+  integrations,
+  webhookTemplates,
 }: HubServerOptions): Promise<FastifyInstance> {
   if (!Number.isSafeInteger(writesPerMinute) || writesPerMinute < 1 || writesPerMinute > 10_000) {
     throw new Error('Invalid write rate limit in Hub configuration');
@@ -129,6 +136,14 @@ export async function createHubServer({
 
   await app.register(websocket, { options: { maxPayload: 1024, perMessageDeflate: false } });
   const notify = registerStream(app, repository, origin.allows);
+  if (integrations) {
+    const unsubscribe = integrations.subscribe(notify);
+    app.addHook('onClose', (_app, done) => {
+      unsubscribe();
+      done();
+    });
+    registerIntegrationRoutes(app, integrations, access.requireScope);
+  }
   app.options('/v1/*', (request, reply) => origin.preflight(request, reply));
   app.get('/v1/health', () => ({ status: 'ok' }));
   app.post(
@@ -156,9 +171,14 @@ export async function createHubServer({
 
   registerRestRoutes(app, repository, access, notify);
   registerAgentRoutes(app, repository, access, notify);
-  await registerWebhooks(app, repository, writesPerMinute, notify, (request, identity) => {
-    access.identities.set(request, identity);
-  });
+  await registerWebhooks(
+    app,
+    repository,
+    writesPerMinute,
+    notify,
+    (request, identity) => access.identities.set(request, identity),
+    webhookTemplates,
+  );
   const mcp = createMcpHttpHandler({
     repository,
     allowedHosts: mcpAllowedHosts,

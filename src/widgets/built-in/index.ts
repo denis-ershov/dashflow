@@ -11,3 +11,4 @@ export * from './PomodoroWidget';
 export * from './QuotesWidget';
 export * from './SystemMonitorWidget';
 export * from './RssWidget';
+export * from './NexusChatWidget';

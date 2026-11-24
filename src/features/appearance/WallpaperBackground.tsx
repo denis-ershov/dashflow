@@ -1,12 +1,18 @@
 import React from 'react';
 import { useThemeStore } from '@/core/theme/themeStore';
+import { buildWallpaperStyle } from '@/core/theme/wallpaper';
+import { activeSpaceOf } from '@/core/storage';
+import { useDashboardStore } from '@/stores/useDashboardStore';
 
 /**
- * Изображение и затемнение берутся из --app-bg-image / --app-scrim, которые выставляет
- * applyWallpaper: там URL уже проверен (sanitizeWallpaperUrl), а scrim лежит в диапазоне 0..1.
+ * Явные обои пространства проходят ту же проверку, что и фон темы.
+ * Пространство без переопределения использует общие CSS-переменные темы.
  */
 export const WallpaperBackground: React.FC = () => {
-  const hasWallpaper = useThemeStore((state) => Boolean(state.wallpaperUrl));
+  const defaultWallpaper = useThemeStore((state) => state.wallpaperUrl);
+  const override = useDashboardStore((state) => activeSpaceOf(state).wallpaper);
+  const custom = override && buildWallpaperStyle(override.url, override.scrim);
+  const hasWallpaper = custom ? custom.bgImage !== 'none' : Boolean(defaultWallpaper);
 
   return (
     <div
@@ -17,12 +23,12 @@ export const WallpaperBackground: React.FC = () => {
       {hasWallpaper ? (
         <div
           className="absolute inset-0 bg-cover bg-center transition-all duration-normal ease-out"
-          style={{ backgroundImage: 'var(--app-bg-image)' }}
+          style={{ backgroundImage: custom?.bgImage ?? 'var(--app-bg-image)' }}
         >
           {/* Затемнение всего экрана по настройке пользователя */}
           <div
             className="absolute inset-0 bg-black transition-opacity duration-normal ease-linear"
-            style={{ opacity: 'var(--app-scrim)' }}
+            style={{ opacity: custom?.scrim ?? 'var(--app-scrim)' }}
           />
           {/* Локальная тень за Hero-зоной: приветствие и часы читаются даже на светлом небе */}
           <div className="absolute inset-0 wallpaper-hero-vignette" />

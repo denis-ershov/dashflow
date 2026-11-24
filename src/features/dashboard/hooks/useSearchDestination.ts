@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Item } from '@/core/items';
+import { REVEAL_WORKSPACE_ITEM } from '@/core/items/revealItem';
 import { isSafeHttpUrl } from '@/core/network/url';
 import { activeLayoutModeOf } from '@/core/storage';
 import { useDashboardStore } from '@/stores/useDashboardStore';
@@ -54,6 +55,7 @@ export function useSearchDestination() {
     if (!target) return;
     const widgetSelector = `[data-search-widget="${CSS.escape(target.instanceId)}"]`;
     let highlighted: HTMLElement | null = null;
+    let requested: HTMLElement | undefined;
     let timeout: ReturnType<typeof setTimeout>;
     const observer = new MutationObserver(reveal);
 
@@ -63,7 +65,14 @@ export function useSearchDestination() {
       const destination = target.item
         ? widget?.querySelector<HTMLElement>(`[data-search-item="${CSS.escape(target.item.id)}"]`)
         : widget;
-      if (!destination) return;
+      if (!destination) {
+        const endpoint = target.item && widget?.querySelector<HTMLElement>('[data-search-reveal]');
+        if (endpoint && endpoint !== requested) {
+          requested = endpoint;
+          endpoint.dispatchEvent(new CustomEvent(REVEAL_WORKSPACE_ITEM, { detail: target.item?.id }));
+        }
+        return;
+      }
       observer.disconnect();
       clearTimeout(timeout);
       highlighted = destination;

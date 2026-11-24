@@ -426,6 +426,66 @@ paths:
         '401': { description: Bearer token required }
         '403': { description: Host or Origin rejected }
         '429': { description: Request limit exceeded }
+  /v1/integrations:
+    get:
+      tags: [Integrations]
+      operationId: listIntegrations
+      x-required-scopes: [sync]
+      responses:
+        '200':
+          description: Status metadata for the integrations configured on this Hub
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [integrations]
+                properties:
+                  integrations:
+                    type: array
+                    items: { $ref: '#/components/schemas/IntegrationStatus' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+  /v1/integrations/{id}/poll:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, enum: [github, telegram, calendar, mail] }
+    post:
+      tags: [Integrations]
+      operationId: requestIntegrationPoll
+      x-required-scopes: [sync]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, maxProperties: 0 }
+      responses:
+        '202':
+          description: Poll accepted, respecting the connector retry schedule
+          content:
+            application/json:
+              schema: { type: object, required: [status], properties: { status: { const: accepted } } }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /v1/calendar/agenda:
+    get:
+      tags: [Integrations]
+      operationId: getCalendarAgenda
+      x-required-scopes: [sync]
+      responses:
+        '200':
+          description: Current bounded calendar snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [snapshot]
+                properties:
+                  snapshot:
+                    oneOf:
+                      - { $ref: '#/components/schemas/CalendarSnapshot' }
+                      - { type: 'null' }
+        '403': { $ref: '#/components/responses/Error' }
   /v1/changes:
     get:
       tags: [Sync]
@@ -602,6 +662,43 @@ components:
       properties:
         since: { type: string, format: date-time }
         until: { type: string, format: date-time }
+    IntegrationStatus:
+      type: object
+      required: [id, state, lastAttemptAt, lastSuccessAt, lastError, retryAt, nextPollAt]
+      properties:
+        id: { type: string, enum: [github, telegram, calendar, mail] }
+        state: { type: string, enum: [disabled, idle, polling, ok, error] }
+        lastAttemptAt: { type: [string, 'null'], format: date-time }
+        lastSuccessAt: { type: [string, 'null'], format: date-time }
+        retryAt: { type: [string, 'null'], format: date-time }
+        nextPollAt: { type: [string, 'null'], format: date-time }
+        lastError: { type: [string, 'null'] }
+    CalendarSnapshot:
+      type: object
+      required: [updatedAt, window, events, unsupported, truncated]
+      properties:
+        updatedAt: { type: string, format: date-time }
+        window:
+          type: object
+          required: [start, end, zone]
+          properties:
+            start: { type: integer, description: Epoch milliseconds }
+            end: { type: integer, description: Epoch milliseconds }
+            zone: { type: string }
+        events:
+          type: array
+          maxItems: 1000
+          items:
+            type: object
+            required: [id, title, start, end, allDay]
+            properties:
+              id: { type: string }
+              title: { type: string, maxLength: 300 }
+              start: { type: integer, description: Epoch milliseconds }
+              end: { type: integer, description: Epoch milliseconds }
+              allDay: { type: boolean }
+        unsupported: { type: integer, minimum: 0 }
+        truncated: { type: boolean }
     Source:
       type: object
       required: [type, id, name]

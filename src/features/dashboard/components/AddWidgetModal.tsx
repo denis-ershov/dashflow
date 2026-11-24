@@ -19,6 +19,7 @@ import {
   Boxes,
   Sparkles,
   Calendar,
+  MessageSquare,
 } from 'lucide-react';
 import { Modal } from '@/ui/overlays/Modal';
 import { useShallow } from 'zustand/react/shallow';
@@ -50,6 +51,7 @@ const WIDGET_ICONS: Record<string, React.ReactNode> = {
   quotes: <Quote className="w-5 h-5 text-primary" />,
   systemMonitor: <Cpu className="w-5 h-5 text-success" />,
   rssReader: <Rss className="w-5 h-5 text-warning" />,
+  nexusChat: <MessageSquare className="w-5 h-5 text-primary" />,
 };
 
 const CATEGORIES: ReadonlyArray<WidgetCategory | 'all'> = [

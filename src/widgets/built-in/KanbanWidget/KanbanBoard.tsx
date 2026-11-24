@@ -14,7 +14,7 @@ import { useTranslation, type TranslationKey } from '@/core/i18n';
 import { itemRepository, ItemConflictError, useItems, type Board, type Item } from '@/core/items';
 import { ErrorState, Skeleton } from '@/ui/feedback';
 import { KanbanCard, cardDropId } from './KanbanCard';
-import { KanbanLane } from './KanbanLane';
+import { KanbanLane, type KanbanLaneApi } from './KanbanLane';
 import { KanbanDetails } from './KanbanDetails';
 import {
   collectLanes,
@@ -53,6 +53,8 @@ export function KanbanBoard({ board }: { board: Board }) {
   const lanes = useMemo(() => collectLanes(board, items), [board, items]);
   const prefix = useId();
   const sectionRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const laneApis = useRef(new Map<string, KanbanLaneApi>());
   const pointerItem = useRef<Item>(null);
   const moving = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -79,17 +81,26 @@ export function KanbanBoard({ board }: { board: Board }) {
     index: number,
   ) => t(key, { title: item.title, column: columnName(lane), position: formatNumber(index + 1) });
 
+  const registerLaneApi = useCallback((id: string, api?: KanbanLaneApi) => {
+    if (api) laneApis.current.set(id, api);
+    else laneApis.current.delete(id);
+  }, []);
+
   useEffect(() => {
     if (!focus) return;
     const item = items.find(({ id }) => id === focus.itemId);
     if (item && focus.version !== undefined && item.version < focus.version) return;
-    sectionRef.current
-      ?.querySelector<HTMLButtonElement>(
-        `[data-kanban-item="${focus.itemId}"][data-kanban-action="${focus.action}"]`,
-      )
-      ?.focus();
+    const lane = item && lanes.find(({ items: laneItems }) => laneItems.some(({ id }) => id === item.id));
+    const focused = lane ? laneApis.current.get(lane.column.id)?.focusItem(focus.itemId, focus.action) : false;
+    if (!focused) {
+      sectionRef.current
+        ?.querySelector<HTMLButtonElement>(
+          `[data-kanban-item="${CSS.escape(focus.itemId)}"][data-kanban-action="${focus.action}"]`,
+        )
+        ?.focus();
+    }
     setFocus(undefined);
-  }, [focus, items]);
+  }, [focus, items, lanes]);
 
   const move = async (
     item: Item,
@@ -275,7 +286,7 @@ export function KanbanBoard({ board }: { board: Board }) {
           else setNotice(t(event.over ? 'kanban.unchanged' : 'kanban.cancelled'));
         }}
       >
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pe-1">
+        <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain pe-1">
           <div className="grid items-start gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] @max-sm:grid-cols-1">
             {lanes.map((lane) => (
               <KanbanLane
@@ -284,6 +295,9 @@ export function KanbanBoard({ board }: { board: Board }) {
                 headingId={headingId(lane.column.id)}
                 collapsed={collapsed.has(lane.column.id)}
                 highlighted={keyboard?.target.laneId === lane.column.id}
+                scrollRef={scrollRef}
+                pinnedItem={keyboard?.item.id ?? pointer?.id}
+                onApi={registerLaneApi}
                 onToggle={() => {
                   setCollapsed((previous) => {
                     const next = new Set(previous);
@@ -291,13 +305,16 @@ export function KanbanBoard({ board }: { board: Board }) {
                     return next;
                   });
                 }}
-                renderCard={(item) => (
+                renderCard={(item, position, style) => (
                   <KanbanCard
                     key={item.id}
                     item={item}
                     disabled={busy || Boolean(keyboard && keyboard.item.id !== item.id)}
                     dragging={keyboard?.item.id === item.id}
                     instructionsId={`${prefix}-instructions`}
+                    position={position}
+                    count={position === undefined ? undefined : lane.items.length}
+                    style={style}
                     onDragKey={(event) => handleDragKey(event, item, lane)}
                     onBlur={() => {
                       if (keyboard?.item.id === item.id) cancelKeyboard();

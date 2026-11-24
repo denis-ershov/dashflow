@@ -7,7 +7,7 @@ import globals from 'globals';
 
 export default tseslint.config(
   {
-    ignores: ['.wxt/', '.output/', '**/dist/', 'node_modules/'],
+    ignores: ['.wxt/', '.output/', '**/dist/', 'node_modules/', 'test-results/'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,

@@ -65,6 +65,7 @@ export const base: LocaleShape<typeof ruBase> = {
     rssReader: 'RSS Reader',
     greeting: 'Smart Greeting',
     yearProgress: 'Time & Year Progress',
+    nexusChat: 'Nexus Chat',
   },
   widgetDesc: {
     clock: 'Digital clock, date, and time zone',
@@ -84,6 +85,7 @@ export const base: LocaleShape<typeof ruBase> = {
     rssReader: 'Read news feeds from your favourite RSS sources',
     greeting: 'Personalized greeting dynamically adapted to time of day',
     yearProgress: 'Visual tracker for day, month, and year progression',
+    nexusChat: 'Quick AI chat powered by OpenStream Nexus Hub',
   },
   common: {
     save: 'Save',

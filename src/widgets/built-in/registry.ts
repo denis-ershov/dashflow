@@ -18,6 +18,7 @@ import { systemMonitorManifest } from './SystemMonitorWidget/manifest';
 import { rssManifest } from './RssWidget/manifest';
 import { greetingManifest } from './GreetingWidget/manifest';
 import { yearProgressManifest } from './YearProgressWidget/manifest';
+import { nexusChatManifest } from './NexusChatWidget/manifest';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const BUILT_IN_MANIFESTS: Array<WidgetDefinition<any>> = [
@@ -39,6 +40,7 @@ export const BUILT_IN_MANIFESTS: Array<WidgetDefinition<any>> = [
   quotesManifest,
   systemMonitorManifest,
   rssManifest,
+  nexusChatManifest,
 ];
 
 /**

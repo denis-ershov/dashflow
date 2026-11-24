@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Image as ImageIcon, Trash2, Check } from 'lucide-react';
 import { cn } from '@/ui/lib/cn';
 import { useThemeStore } from '@/core/theme/themeStore';
+import { activeSpaceOf } from '@/core/storage';
+import { useDashboardStore } from '@/stores/useDashboardStore';
 import { Slider } from '@/ui/primitives/Slider';
 import { Input } from '@/ui/primitives/Input';
 import { Button } from '@/ui/primitives/Button';
@@ -47,17 +49,22 @@ const WALLPAPER_PRESETS: ReadonlyArray<{ id: WallpaperPresetId; url: string }> =
 
 export const WallpaperPicker: React.FC = () => {
   const { t } = useTranslation();
-  const wallpaperUrl = useThemeStore((state) => state.wallpaperUrl);
-  const scrim = useThemeStore((state) => state.scrim);
-  const setWallpaper = useThemeStore((state) => state.setWallpaper);
-  const setScrim = useThemeStore((state) => state.setScrim);
+  const defaultWallpaper = useThemeStore((state) => state.wallpaperUrl);
+  const defaultScrim = useThemeStore((state) => state.scrim);
+  const override = useDashboardStore((state) => activeSpaceOf(state).wallpaper);
+  const saveWallpaper = useDashboardStore((state) => state.setSpaceWallpaper);
+  const wallpaperUrl = override ? override.url : defaultWallpaper;
+  const scrim = override?.scrim ?? defaultScrim;
+  const setWallpaper = (url: string | null) => saveWallpaper({ url, scrim });
 
   const [customUrl, setCustomUrl] = useState('');
+  const [invalidUrl, setInvalidUrl] = useState(false);
 
   const handleApplyCustom = () => {
     if (customUrl.trim()) {
-      setWallpaper(customUrl.trim());
-      setCustomUrl('');
+      const saved = setWallpaper(customUrl.trim());
+      setInvalidUrl(!saved);
+      if (saved) setCustomUrl('');
     }
   };
 
@@ -67,6 +74,7 @@ export const WallpaperPicker: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <p className="text-sm text-fg-muted">{t('wallpaper.spaceHint')}</p>
       {/* Готовые обои */}
       <div>
         <div className="flex items-center gap-2 mb-3">
@@ -118,13 +126,17 @@ export const WallpaperPicker: React.FC = () => {
         <label htmlFor="custom-wallpaper-url" className="text-xs font-semibold text-fg">
           {t('wallpaper.customUrl')}
         </label>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Input
             id="custom-wallpaper-url"
             placeholder="https://images.unsplash.com/photo-..."
             value={customUrl}
-            onChange={(e) => setCustomUrl(e.target.value)}
-            className="flex-1"
+            onChange={(e) => {
+              setCustomUrl(e.target.value);
+              setInvalidUrl(false);
+            }}
+            error={invalidUrl ? t('wallpaper.invalidUrl') : undefined}
+            className="min-w-0 flex-1"
           />
           <Button
             type="button"
@@ -146,11 +158,18 @@ export const WallpaperPicker: React.FC = () => {
           max={90}
           step={5}
           value={Math.round(scrim * 100)}
-          onChange={(val) => setScrim(val / 100)}
+          onChange={(val) => {
+            saveWallpaper({ url: wallpaperUrl, scrim: val / 100 });
+          }}
         />
 
-        {wallpaperUrl && (
-          <div className="flex justify-end pt-2">
+        <div className="flex flex-wrap justify-end gap-2 pt-2">
+          {override && (
+            <Button variant="secondary" size="sm" onClick={() => saveWallpaper(undefined)}>
+              {t('wallpaper.useDefault')}
+            </Button>
+          )}
+          {wallpaperUrl && (
             <Button
               type="button"
               variant="ghost"
@@ -160,8 +179,8 @@ export const WallpaperPicker: React.FC = () => {
             >
               {t('wallpaper.remove')}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

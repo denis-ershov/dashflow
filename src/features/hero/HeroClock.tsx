@@ -25,8 +25,8 @@ export const HeroClock: React.FC<HeroClockProps> = ({
 
   const styleVariants = {
     digital: (
-      <div className="flex flex-col items-center">
-        <div className="flex items-baseline gap-2 font-display font-semibold tracking-tight text-fg tabular-nums select-none text-6xl md:text-7xl lg:text-8xl">
+      <div className="flex max-w-full flex-col items-center">
+        <div className="flex max-w-full flex-wrap items-baseline justify-center gap-1 sm:gap-2 font-display font-semibold tracking-tight text-fg tabular-nums select-none text-5xl sm:text-6xl md:text-7xl lg:text-8xl">
           <span>{hours}</span>
           <span className="text-primary animate-pulse">:</span>
           <span>{minutes}</span>
@@ -44,8 +44,8 @@ export const HeroClock: React.FC<HeroClockProps> = ({
       </div>
     ),
     minimal: (
-      <div className="flex flex-col items-center">
-        <div className="flex items-center gap-1 font-light tracking-wide text-fg select-none text-5xl md:text-6xl lg:text-7xl">
+      <div className="flex max-w-full flex-col items-center">
+        <div className="flex max-w-full flex-wrap items-center justify-center gap-1 font-light tracking-wide text-fg select-none text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
           <span>{hours}</span>
           <span className="text-fg-dim opacity-70">:</span>
           <span>{minutes}</span>
@@ -56,8 +56,8 @@ export const HeroClock: React.FC<HeroClockProps> = ({
       </div>
     ),
     serif: (
-      <div className="flex flex-col items-center">
-        <div className="flex items-baseline gap-2 font-serif font-normal tracking-normal text-fg tabular-nums select-none text-6xl md:text-7xl lg:text-8xl">
+      <div className="flex max-w-full flex-col items-center">
+        <div className="flex max-w-full flex-wrap items-baseline justify-center gap-1 sm:gap-2 font-serif font-normal tracking-normal text-fg tabular-nums select-none text-5xl sm:text-6xl md:text-7xl lg:text-8xl">
           <span>{hours}</span>
           <span className="text-primary/70">:</span>
           <span>{minutes}</span>
@@ -73,7 +73,7 @@ export const HeroClock: React.FC<HeroClockProps> = ({
       </div>
     ),
     flip: (
-      <div className="flex items-center gap-3 select-none">
+      <div className="flex max-w-full flex-wrap items-center justify-center gap-2 sm:gap-3 select-none">
         <div className="glass-panel px-4 py-3 rounded-lg shadow-2 text-center min-w-17.5 md:min-w-22.5">
           <span className="text-4xl md:text-6xl font-display font-bold text-fg tracking-tight">
             {hours}

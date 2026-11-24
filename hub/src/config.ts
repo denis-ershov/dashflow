@@ -2,6 +2,8 @@ import { chmod, lstat, mkdir, open, readFile } from 'node:fs/promises';
 import { isIP } from 'node:net';
 import { homedir } from 'node:os';
 import path from 'node:path';
+import { parseConnectorSettings, type ConnectorSettings } from './connectors/settings.js';
+import { parseWebhookTemplates, type WebhookTemplate } from './connectors/webhookTemplate.js';
 
 export interface HubConfig {
   host: string;
@@ -10,6 +12,8 @@ export interface HubConfig {
   extensionOrigins: string[];
   writesPerMinute: number;
   mcpAllowedHosts?: string[];
+  integrations?: ConnectorSettings;
+  webhookTemplates?: ReadonlyMap<string, WebhookTemplate>;
 }
 
 export interface LoadConfigOptions {
@@ -114,6 +118,8 @@ function parseConfigFile(value: unknown, baseDirectory: string): Partial<HubConf
     'extensionOrigins',
     'writesPerMinute',
     'mcpAllowedHosts',
+    'integrations',
+    'webhookTemplates',
   ]);
   for (const key of Object.keys(value)) {
     if (!knownKeys.has(key)) throw new Error(`Unknown config key: ${key}`);
@@ -132,6 +138,12 @@ function parseConfigFile(value: unknown, baseDirectory: string): Partial<HubConf
   }
   if (value.mcpAllowedHosts !== undefined) {
     config.mcpAllowedHosts = parseMcpHosts(value.mcpAllowedHosts, 'mcpAllowedHosts');
+  }
+  if (value.integrations !== undefined) {
+    config.integrations = parseConnectorSettings(value.integrations);
+  }
+  if (value.webhookTemplates !== undefined) {
+    config.webhookTemplates = parseWebhookTemplates(value.webhookTemplates);
   }
   return config;
 }

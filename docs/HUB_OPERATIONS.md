@@ -190,6 +190,8 @@ docker logs -f dashflow-hub
 
 Hub с поддержкой MCP запускает локальный stdio-процесс командой `dashflow-hub mcp`. Передайте `DASHFLOW_HUB_TOKEN` через окружение клиента и при необходимости установите `DASHFLOW_HUB_MCP_LOCALE=ru`. Для HTTP endpoint `/mcp` используется Bearer. Если клиент обращается через HTTPS-прокси, внесите точный внешний Host в `mcpAllowedHosts` или `DASHFLOW_HUB_MCP_HOSTS`. [Транспорты и области доступа](MCP_ARCHITECTURE.md)
 
+Коннекторы настраиваются через `integrations` в JSON и секреты в окружении службы. Их журнал состояния находится рядом с базой. При переносе Hub сохраняйте файлы SQLite и состояние доставки, а параметры доступа перенесите через хранилище секретов. [Настройка интеграций](INTEGRATIONS.md)
+
 Публикация npm или Docker-образа требует отдельного релизного решения и проверки:
 
 - `npm run pack:hub` собирает `.output/dashflow-hub-0.2.0.tgz` с CLI, OpenAPI, лицензией, этим руководством и сборкой общей библиотеки. Пакет можно установить в отдельном проекте через `npm install /путь/к/dashflow-hub-0.2.0.tgz` и запустить командой `npx dashflow-hub`.

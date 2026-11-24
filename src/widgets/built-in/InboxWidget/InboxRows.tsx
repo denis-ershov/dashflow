@@ -1,8 +1,16 @@
-import { useMemo } from 'react';
+import {
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type RefObject,
+} from 'react';
 import { Bell, Bot, CalendarDays, Ellipsis, FileInput, Flag, Plug, UserRound } from 'lucide-react';
 import { useTranslation } from '@/core/i18n';
 import type { Item, ItemSourceType } from '@/core/items';
 import { Button } from '@/ui/primitives';
+import { useVirtualRows, VIRTUAL_ROWS_THRESHOLD } from '@/ui/hooks/useVirtualRows';
 import { groupByLocalDay } from './inboxDates';
 
 const SOURCE_ICONS = {
@@ -76,9 +84,12 @@ interface InboxRowProps {
   disabled: boolean;
   onToggle: (id: string) => void;
   onActions: (id: string) => void;
+  position?: number;
+  count?: number;
+  style?: CSSProperties;
 }
 
-function InboxRow({ item, id, selected, disabled, onToggle, onActions }: InboxRowProps) {
+function InboxRow({ item, id, selected, disabled, onToggle, onActions, position, count, style }: InboxRowProps) {
   const { t } = useTranslation();
 
   return (
@@ -86,6 +97,10 @@ function InboxRow({ item, id, selected, disabled, onToggle, onActions }: InboxRo
       id={id}
       data-inbox-item={item.id}
       data-search-item={item.id}
+      data-virtual-row={style ? item.id : undefined}
+      aria-posinset={position}
+      aria-setsize={count}
+      style={style}
       tabIndex={-1}
       className="flex min-w-0 items-start rounded-xl border border-line bg-surface/60 p-1 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary has-checked:border-primary/60"
     >
@@ -128,15 +143,94 @@ function InboxRow({ item, id, selected, disabled, onToggle, onActions }: InboxRo
   );
 }
 
-type InboxRowsProps = Omit<InboxRowProps, 'item' | 'id' | 'selected'> & {
+export interface InboxRowsHandle {
+  focusItem: (id: string) => boolean;
+}
+
+type InboxRowsProps = Omit<InboxRowProps, 'item' | 'id' | 'selected' | 'position' | 'count' | 'style'> & {
   items: Item[];
   rowId: (itemId: string) => string;
   selectedIds: ReadonlySet<string>;
+  scrollRef: RefObject<HTMLDivElement | null>;
+  ref: RefObject<InboxRowsHandle | null>;
+  dialogItem?: string;
 };
 
-export function InboxRows({ items, rowId, selectedIds, ...rowProps }: InboxRowsProps) {
-  const { formatDate } = useTranslation();
+export function InboxRows({ items, rowId, selectedIds, scrollRef, ref, dialogItem, ...rowProps }: InboxRowsProps) {
+  const { formatDate, t } = useTranslation();
   const groups = useMemo(() => groupByLocalDay(items), [items]);
+  const virtual = items.length > VIRTUAL_ROWS_THRESHOLD;
+  const entries = useMemo(() => {
+    if (!virtual) return [];
+    let position = 0;
+    return Array.from(groups).flatMap(([day, group]) => [
+      { key: `day:${day}`, day, date: group.date, estimate: 25, gap: 4, type: 'day' as const },
+      ...group.items.map((item) => ({
+        key: item.id, item, position: ++position, estimate: 67, gap: 6, type: 'item' as const,
+      })),
+    ]);
+  }, [groups, virtual]);
+  const [focused, setFocused] = useState<string>();
+  const [pending, setPending] = useState<string>();
+  const rows = useVirtualRows({ rows: entries, scrollRef, enabled: virtual, pinned: [focused, pending, dialogItem] });
+
+  useImperativeHandle(ref, () => ({
+    focusItem(id) {
+      if (!items.some((item) => item.id === id)) return false;
+      if (virtual) {
+        rows.reveal(id);
+        setPending(id);
+      } else {
+        document.getElementById(rowId(id))?.focus();
+      }
+      return true;
+    },
+  }));
+
+  const revealRow = rows.reveal;
+  useLayoutEffect(() => {
+    if (!pending) return;
+    const node = document.getElementById(rowId(pending));
+    if (!node) return;
+    revealRow(pending);
+    node.focus({ preventScroll: true });
+    setPending(undefined);
+  }, [pending, rowId, revealRow, rows.range]);
+
+  if (virtual) return (
+    <ul
+      ref={rows.listRef}
+      style={rows.listStyle}
+      aria-label={t('inbox.list')}
+      onFocusCapture={(event) => setFocused((event.target as HTMLElement).closest<HTMLElement>('[data-inbox-item]')?.dataset.inboxItem)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setFocused(undefined);
+      }}
+    >
+      {rows.range.map((index) => {
+        const entry = entries[index];
+        if (!entry) return null;
+        const style = rows.rowStyle(index);
+        if (entry.type === 'day') return (
+          <li key={entry.key} role="presentation" style={style} data-virtual-row={entry.key}>
+            <h4 className="px-1 text-xs font-semibold text-fg-muted">
+              <time dateTime={entry.day}>{formatDate(entry.date, dayFormat)}</time>
+            </h4>
+          </li>
+        );
+        return <InboxRow
+          key={entry.key}
+          item={entry.item}
+          id={rowId(entry.key)}
+          selected={selectedIds.has(entry.key)}
+          position={entry.position}
+          count={items.length}
+          style={style}
+          {...rowProps}
+        />;
+      })}
+    </ul>
+  );
 
   return (
     <div className="space-y-3">

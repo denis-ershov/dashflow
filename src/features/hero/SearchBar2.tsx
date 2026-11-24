@@ -76,7 +76,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
       <form
         onSubmit={handleSubmit}
         className={cn(
-          'glass-panel flex items-center gap-2 p-1.5 pl-2 min-h-13 rounded-full border shadow-2 transition-all duration-normal',
+          'glass-panel flex items-center gap-2 p-1.5 pl-2 min-h-13 rounded-full border shadow-2 transition-all duration-normal max-[380px]:grid max-[380px]:grid-cols-[minmax(0,1fr)_auto]',
           'border-line hover:border-line-hover',
           'focus-within:border-primary focus-within:shadow-[0_0_24px_var(--dashflow-primary-glow)]',
         )}
@@ -87,11 +87,11 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
             type="button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             aria-label={t('search.chooseEngine', { name: activeName })}
-            className="flex items-center gap-2 px-3 py-2 rounded-full bg-surface hover:bg-surface-hover text-fg text-xs font-medium border border-line transition-colors min-h-10 cursor-pointer relative before:absolute before:-inset-1 before:content-['']"
+            className="flex items-center gap-2 px-3 py-2 rounded-full bg-surface hover:bg-surface-hover text-fg text-xs font-medium border border-line transition-colors min-h-10 cursor-pointer relative before:absolute before:-inset-1 before:content-[''] max-[380px]:h-11 max-[380px]:w-11 max-[380px]:min-w-11 max-[380px]:px-0 max-[380px]:justify-center"
           >
             {activeEngine.icon}
             <span className="hidden sm:inline">{activeName}</span>
-            <ChevronDown className="w-4 h-4 text-fg-muted" />
+            <ChevronDown className="w-4 h-4 text-fg-muted max-[380px]:hidden" />
           </button>
 
           {/* Выпадающее меню поисковиков */}
@@ -121,7 +121,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
         </div>
 
         {/* Поле ввода */}
-        <div className="relative flex-1 flex items-center">
+        <div className="relative flex-1 flex min-w-0 items-center max-[380px]:col-span-2 max-[380px]:row-start-2">
           <input
             ref={inputRef}
             type="text"
@@ -148,7 +148,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
         </div>
 
         {/* Кнопка поиска / горячая клавиша */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 max-[380px]:col-start-2 max-[380px]:row-start-1 max-[380px]:justify-self-end">
           {!query && (
             <kbd className="hidden sm:inline-flex items-center justify-center px-2 py-1 text-xs font-mono font-medium text-fg-dim bg-surface rounded-md border border-line select-none">
               /

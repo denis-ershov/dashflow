@@ -26,6 +26,7 @@ describe('WidgetRegistry & Built-in Widgets', () => {
       'quotes',
       'systemMonitor',
       'rssReader',
+      'nexusChat',
     ];
 
     expect(all).toHaveLength(expectedIds.length);

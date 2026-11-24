@@ -687,5 +687,27 @@ export const widgetFields = {
         help: 'Текстовый счетчик оставшихся дней или часов до конца периода',
       },
     },
+    nexusChat: {
+      chatEndpointUrl: {
+        label: 'URL Nexus Hub',
+        help: 'Базовый адрес хаба или endpoint (только https:// или http://localhost)',
+        placeholder: 'https://hub.example.com',
+      },
+      adminUrl: {
+        label: 'URL веб-админки',
+        help: 'Ссылка для перехода при паузе квот (только https:// или http://localhost)',
+        placeholder: 'https://admin.example.com',
+      },
+      bearerToken: {
+        label: 'Bearer-токен',
+        help: 'Токен доступа к API чата (не отображается в окне чата)',
+        placeholder: 'Введите токен доступа',
+      },
+      model: {
+        label: 'Модель по умолчанию',
+        help: 'Идентификатор модели для маршрутизации в Nexus Hub',
+        placeholder: 'nexus-default',
+      },
+    },
   },
 } as const;

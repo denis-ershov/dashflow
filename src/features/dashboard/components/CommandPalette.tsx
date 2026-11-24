@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo, useId } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useId } from 'react';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useTranslation } from '@/core/i18n';
 import { Search, X } from 'lucide-react';
@@ -17,26 +17,6 @@ import {
 export function CommandPalette() {
   const open = useDashboardStore((state) => state.isCommandPaletteOpen);
   const { preview, closePreview, revealItem, revealWidget } = useSearchDestination();
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.defaultPrevented ||
-        event.repeat ||
-        event.altKey ||
-        event.shiftKey ||
-        !(event.ctrlKey || event.metaKey) ||
-        event.key.toLowerCase() !== 'k'
-      )
-        return;
-      const state = useDashboardStore.getState();
-      if (!state.isCommandPaletteOpen && document.querySelector('[aria-modal="true"]')) return;
-      event.preventDefault();
-      state.setCommandPaletteOpen(!state.isCommandPaletteOpen);
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
 
   return (
     <>

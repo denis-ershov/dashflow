@@ -1,13 +1,17 @@
 import { asArray, asNumber, asRecord, asString } from '@/core/network/jsonReaders';
+import { getSearchEngine } from '@/core/search';
+import { sanitizeWallpaperUrl, validateScrim } from '@/core/theme/wallpaper';
 import {
   BREAKPOINTS,
   BREAKPOINT_COLUMNS,
+  DEFAULT_HERO_SETTINGS,
   createDefaultDashboardState,
   deriveResponsiveLayouts,
   migrateDashboardState,
   type Breakpoint,
   type LayoutItem,
   type MigratedDashboardState,
+  type HeroSettings,
 } from './dashboardMigrations';
 
 export const DEFAULT_SPACE_ID = 'home';
@@ -23,6 +27,50 @@ export interface DashboardSpace extends Pick<
   title: string;
   icon?: string;
   layoutMode?: MigratedDashboardState['layoutMode'];
+  heroSettings?: HeroSettings;
+  wallpaper?: SpaceWallpaper;
+}
+
+export interface SpaceWallpaper {
+  url: string | null;
+  scrim: number;
+}
+
+const heroToggles = [
+  'showSeconds',
+  'showDate',
+  'showClock',
+  'showGreeting',
+  'showYearProgress',
+  'showSearchBar',
+  'showSpeedDial',
+] as const;
+const clockStyles = ['digital', 'minimal', 'serif', 'flip', 'mono'] as const;
+const alignments = ['left', 'center', 'right'] as const;
+
+function readSpaceHero(value: unknown): HeroSettings | undefined {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
+  const raw = asRecord(value);
+  const settings: HeroSettings = { ...DEFAULT_HERO_SETTINGS };
+  for (const key of heroToggles) {
+    const toggle = raw[key];
+    if (typeof toggle === 'boolean') settings[key] = toggle;
+  }
+  settings.clockStyle =
+    clockStyles.find((candidate) => candidate === raw.clockStyle) ?? settings.clockStyle;
+  settings.alignment =
+    alignments.find((candidate) => candidate === raw.alignment) ?? settings.alignment;
+  if (raw.timeFormat === '12h' || raw.timeFormat === '24h') settings.timeFormat = raw.timeFormat;
+  if (typeof raw.userName === 'string') settings.userName = raw.userName.slice(0, 100);
+  settings.defaultSearchEngine = getSearchEngine(asString(raw.defaultSearchEngine)).id;
+  return settings;
+}
+
+export function normalizeSpaceWallpaper(value: unknown): SpaceWallpaper | undefined {
+  const raw = asRecord(value);
+  const url = sanitizeWallpaperUrl(raw.url);
+  if (!url && raw.url !== null) return;
+  return { url, scrim: validateScrim(raw.scrim) };
 }
 
 export interface DashboardSnapshot extends Pick<
@@ -111,6 +159,8 @@ function readSpace(value: unknown, seenInstances: Set<string>): DashboardSpace |
     for (const bp of missing) layouts[bp] = derived[bp];
   }
   const { layoutMode } = raw;
+  const heroSettings = readSpaceHero(raw.heroSettings);
+  const wallpaper = normalizeSpaceWallpaper(raw.wallpaper);
   return {
     id,
     instances,
@@ -119,6 +169,8 @@ function readSpace(value: unknown, seenInstances: Set<string>): DashboardSpace |
     title: typeof raw.title === 'string' ? raw.title.trim().slice(0, SPACE_TITLE_LIMIT) : '',
     icon: asString(raw.icon)?.slice(0, 16),
     gap: Math.max(0, Math.min(64, asNumber(raw.gap) ?? 16)),
+    ...(heroSettings ? { heroSettings } : {}),
+    ...(wallpaper ? { wallpaper } : {}),
     ...(layoutMode === 'zen' || layoutMode === 'modular' || layoutMode === 'canvas'
       ? { layoutMode }
       : {}),
@@ -155,7 +207,14 @@ export function migrateDashboardSnapshot(value: unknown): DashboardSnapshot {
   }
 
   const home = readSpace(
-    { ...raw, id: DEFAULT_SPACE_ID, title: '', layoutMode: undefined },
+    {
+      ...raw,
+      id: DEFAULT_SPACE_ID,
+      title: '',
+      layoutMode: undefined,
+      heroSettings: undefined,
+      wallpaper: undefined,
+    },
     new Set(),
   );
   return initialSnapshot(legacy, home);
@@ -169,6 +228,10 @@ export function activeSpaceOf(state: DashboardSnapshot): DashboardSpace {
 
 export function activeLayoutModeOf(state: DashboardSnapshot): DashboardSnapshot['layoutMode'] {
   return activeSpaceOf(state).layoutMode ?? state.layoutMode;
+}
+
+export function activeHeroSettingsOf(state: DashboardSnapshot): HeroSettings {
+  return activeSpaceOf(state).heroSettings ?? state.heroSettings;
 }
 
 /** Экспорт 3.0: полный снимок и плоская копия активной сетки для импорта в 3.8. */

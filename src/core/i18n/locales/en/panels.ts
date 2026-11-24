@@ -126,6 +126,9 @@ export const panels: LocaleShape<typeof ruPanels> = {
     intro: 'Pick a ready-made theme. All themes meet WCAG 2.1 AA/AAA contrast requirements.',
   },
   wallpaper: {
+    spaceHint: 'Wallpaper and dimming are saved for the current space.',
+    useDefault: 'Use the default wallpaper',
+    invalidUrl: 'Check the image address.',
     collection: 'HD wallpapers',
     customUrl: 'Link to your own image',
     apply: 'Apply',

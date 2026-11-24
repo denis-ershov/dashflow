@@ -12,6 +12,7 @@ import { capture } from './capture';
 import { hub } from './hub';
 import { onboarding } from './onboarding';
 import { agents } from './agents';
+import { integrations } from './integrations';
 
 export const en: LocaleShape<typeof ru> = {
   ...base,
@@ -26,4 +27,5 @@ export const en: LocaleShape<typeof ru> = {
   hub,
   onboarding,
   agents,
+  integrations,
 };

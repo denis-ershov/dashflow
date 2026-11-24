@@ -8,6 +8,12 @@ import {
 } from '../../../packages/shared/src/sync';
 import { isHubToken, type HubConnection, type HubFailure } from './model';
 import { readHubAgent, readHubAgentPreview, readHubAgentRollback } from './agents';
+import {
+  INTEGRATION_IDS,
+  readHubCalendar,
+  readIntegrationStatus,
+  type IntegrationId,
+} from './integrations';
 
 export class HubClientError extends Error {
   constructor(readonly issue: HubFailure) {
@@ -91,6 +97,24 @@ export async function fetchHubAgents(connection: HubConnection) {
   );
   if (!Array.isArray(agents)) throw new HubClientError('data');
   return agents.map(readHubAgent);
+}
+
+export async function fetchHubIntegrations(connection: HubConnection) {
+  const raw = await requestHub(hubUrl(connection.origin, 'integrations'), connection.token);
+  const { integrations } = asRecord(raw);
+  if (!Array.isArray(integrations) || integrations.length > INTEGRATION_IDS.length) {
+    throw new HubClientError('data');
+  }
+  return integrations.map(readIntegrationStatus);
+}
+
+export async function pollHubIntegration(connection: HubConnection, id: IntegrationId) {
+  await requestHub(hubUrl(connection.origin, `integrations/${id}/poll`), connection.token, '{}');
+}
+
+export async function fetchHubCalendar(connection: HubConnection) {
+  const raw = await requestHub(hubUrl(connection.origin, 'calendar/agenda'), connection.token);
+  return readHubCalendar(asRecord(raw).snapshot);
 }
 
 export async function revokeHubAgent(connection: HubConnection, id: string) {

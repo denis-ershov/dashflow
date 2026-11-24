@@ -7,6 +7,28 @@
 
 ---
 
+## [4.2.0] - 2026-11-24
+
+### Этап 5. Интеграции Hub 0.3.0 и расширения
+
+- **Коннекторы Hub (5.1–5.4, 5.6):** подключены GitHub (Search API issues/PR/mentions), Telegram (разрешённые чаты → Inbox и отправка заголовков напоминаний), серверный календарь ICS (снимок для «Повестки» поверх общего парсера в `packages/shared/src/calendar/`), Email IMAP-дайджест (TLS, заголовки за сутки UTC) и шаблонизатор входящих вебхуков. Файлы — `hub/src/connectors/`, `hub/src/http/integrations.ts`, `hub/src/http/webhooks.ts`, `hub/src/config.ts`, `hub/src/cli.ts`, `hub/openapi.yaml`, `packages/shared/src/`, `hub/test/connectors*.test.ts`, `hub/test/integrationRoutes.test.ts`, `hub/test/webhookTemplate.test.ts`, `docs/*_CONNECTOR_ARCHITECTURE.md`, `docs/INTEGRATIONS.md`, `docs/API_ARCHITECTURE.md`, `PRIVACY*.md`.
+- **UI интеграций и календарь Hub:** в настройках расширения добавлен раздел «Интеграции» (статус коннекторов, ошибки, ручной запуск) и чтение серверного снимка календаря в `AgendaWidget`. Файлы — `src/core/hub/integrations.ts`, `src/core/hub/client.ts`, `src/core/hub/background.ts`, `src/features/hub/IntegrationsSettings.tsx`, `src/features/settings/components/SettingsModal.tsx`, `src/widgets/built-in/AgendaWidget/useHubCalendar.ts`, `src/core/i18n/locales/*/integrations.ts`.
+- **Виджет `NexusChatWidget`:** встроенный чат с настраиваемым endpoint, admin URL и моделью (с fallback на подключённый Hub), соблюдающий токены дизайн-системы и состояния empty/loading/error/quota_paused/offline. Файлы — `src/widgets/built-in/NexusChatWidget/`, `src/widgets/built-in/registry.ts`, `tests/component/widgets/NexusChatWidget.test.tsx`, словари ru/en.
+- **Обоснование:** перенести секреты внешних сервисов в локальный Hub, объединить парсинг ICS в `packages/shared` и дать пользователю контроль статуса интеграций из расширения. Миграций БД и breaking changes нет; откат — отключить коннекторы в конфиге Hub и вернуть коммит.
+
+### Этап 6.6–6.7. Обои/Hero по пространствам и доступность на 320 px
+
+- **Обои и Hero для каждого пространства:** пространства поддерживают собственные обои/затемнение и настройки Hero с fallback на глобальные значения темы. Файлы — `src/core/storage/dashboardSpaces.ts`, `src/stores/useDashboardStore.ts`, `src/features/appearance/WallpaperPicker.tsx`, `src/features/appearance/WallpaperBackground.tsx`, `tests/unit/core/dashboardSpaces.test.ts`, `tests/component/appearance/WallpaperPicker.test.tsx`.
+- **Доступность на узком экране (320 px, масштаб текста 200%):** адаптивная шкала `HeroClock` (`text-5xl sm:text-6xl` и `flex-wrap`) устраняет горизонтальное переполнение (327 → ≤ 320 px); расширен E2E-тест `tests/e2e/accessibility.spec.ts` (axe-core, фокус клавиатурой, размеры целей ≥ 44 px, 200% текст).
+- **Обоснование:** выполнить требования WCAG 2.1 AA (рефлоу при 200% масштабе и размеры интерактивных целей) и дать независимое оформление пространств. Миграций и breaking changes нет.
+
+### Этап 7.1, 7.4, 7.5. Замеры, первый кадр и виртуализация списков
+
+- **Baseline расширения (7.1):** добавлен opt-in скрипт профилирования Chromium без внешней сети (`scripts/profile-extension.mjs`, `docs/PERFORMANCE_BASELINE.md`), фиксирующий cold/warm LCP, первый интерактивный элемент, DOM и JS heap на 29 виджетах.
+- **Кеш стартовой раскладки (7.4):** снимок геометрии активного пространства в `localStorage` отображает скелетон-каркас до загрузки IndexedDB (`src/features/dashboard/startupLayoutCache.ts`, `src/features/dashboard/StartupLayoutSkeleton.tsx`, `src/entrypoints/newtab/App.tsx`, `tests/unit/dashboard/startupLayoutCache.test.ts`).
+- **Виртуализация списков (7.5):** общий хук `src/ui/hooks/useVirtualRows.ts` подключён в `InboxRows.tsx`, `KanbanLane.tsx` и `KanbanBoard.tsx` для списков свыше 100 элементов с сохранением клавиатурной навигации и фокуса.
+- **Обоснование:** ускорить первый кадр и сохранить плавность прокрутки на больших досках и лентах. Миграций и breaking changes нет.
+
 ## [4.1.0] - 2026-11-24
 
 ### Этап 4. MCP и работа с агентами

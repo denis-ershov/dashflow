@@ -1,6 +1,6 @@
 import { Bot, GripVertical } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
-import type { KeyboardEvent } from 'react';
+import type { CSSProperties, KeyboardEvent } from 'react';
 import { useTranslation } from '@/core/i18n';
 import type { Item } from '@/core/items';
 import { cn } from '@/ui/lib/cn';
@@ -48,6 +48,9 @@ interface KanbanCardProps {
   onOpen: () => void;
   onDragKey: (event: KeyboardEvent<HTMLButtonElement>) => void;
   onBlur: () => void;
+  position?: number;
+  count?: number;
+  style?: CSSProperties;
 }
 
 export function KanbanCard({
@@ -58,6 +61,9 @@ export function KanbanCard({
   onOpen,
   onDragKey,
   onBlur,
+  position,
+  count,
+  style,
 }: KanbanCardProps) {
   const { t } = useTranslation();
   const { setNodeRef, setActivatorNodeRef, listeners, isDragging } = useSortable({
@@ -68,6 +74,11 @@ export function KanbanCard({
   return (
     <li
       ref={setNodeRef}
+      data-kanban-row={item.id}
+      data-virtual-row={style ? item.id : undefined}
+      aria-posinset={position}
+      aria-setsize={count}
+      style={style}
       className={cn(
         'grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start rounded-xl border border-line bg-canvas p-1 shadow-sm',
         (isDragging || dragging) && 'border-primary bg-primary/5',
@@ -90,7 +101,7 @@ export function KanbanCard({
         className="touch-none cursor-grab text-fg-muted active:cursor-grabbing"
         aria-label={t('kanban.drag', { title: item.title })}
         aria-describedby={instructionsId}
-        aria-keyshortcuts="Space ArrowUp ArrowDown ArrowLeft ArrowRight Escape"
+        aria-keyshortcuts="Space ArrowUp ArrowDown ArrowLeft ArrowRight Home End Escape"
         aria-pressed={dragging || isDragging}
         aria-disabled={disabled}
         data-kanban-action="drag"
