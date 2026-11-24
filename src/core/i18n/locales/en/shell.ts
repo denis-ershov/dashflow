@@ -85,6 +85,12 @@ export const shell: LocaleShape<typeof ruShell> = {
     current: 'Current',
     name: 'Space name',
     create: 'New space',
+    preset: 'Layout preset',
+    presets: {
+      empty: { title: 'Empty' },
+      morning: { title: 'Morning', description: 'Greeting, daily digest, and agenda' },
+      focus: { title: 'Focus', description: 'One task list and a Pomodoro timer' },
+    },
     remove: 'Delete space: {{name}}',
     confirm: 'The widget layout will be removed. Workspace items will stay available in search.',
     loadError: 'The dashboard could not be loaded. Try again.',

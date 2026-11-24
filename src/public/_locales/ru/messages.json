@@ -6,5 +6,7 @@
   "extensionDescription": {
     "message": "Персональное рабочее пространство и Dashboard в новой вкладке браузера.",
     "description": "Описание расширения"
-  }
+  },
+  "quickCaptureCommand": { "message": "Быстрый захват во Входящие" },
+  "quickCaptureMenu": { "message": "Отправить в DashFlow" }
 }

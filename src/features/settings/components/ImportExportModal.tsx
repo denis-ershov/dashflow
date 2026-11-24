@@ -62,8 +62,10 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
       // Задачи, заметки, ссылки и доски рабочего пространства (с 3.0)
       items: workspace.items,
       boards: workspace.boards,
-      // Старые ключи виджетов (привычки и копия для отката на 3.8) — до 3.10.0
-      content: await collectUserContent(snapshot.spaces.flatMap((space) => space.instances.map((i) => i.instanceId))),
+      content: await collectUserContent(
+        snapshot.spaces.flatMap((space) => space.instances.map(({ instanceId }) => instanceId)),
+        ['habits'],
+      ),
     };
 
     const jsonStr = JSON.stringify(data, null, 2);
@@ -130,7 +132,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({ isOpen, on
 
       // Файлы до версии 2.2 содержимого не содержат — тогда ничего не трогаем
       if (parsed.content !== undefined) {
-        await restoreUserContent(parsed.content);
+        await restoreUserContent(parsed.content, ['habits']);
       }
 
       if (parsed.settings && typeof parsed.settings === 'object') {

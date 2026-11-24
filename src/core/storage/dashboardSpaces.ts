@@ -22,6 +22,7 @@ export interface DashboardSpace extends Pick<
   id: string;
   title: string;
   icon?: string;
+  layoutMode?: MigratedDashboardState['layoutMode'];
 }
 
 export interface DashboardSnapshot extends Pick<
@@ -109,6 +110,7 @@ function readSpace(value: unknown, seenInstances: Set<string>): DashboardSpace |
     const derived = deriveResponsiveLayouts(layouts.xl, baseColumns);
     for (const bp of missing) layouts[bp] = derived[bp];
   }
+  const { layoutMode } = raw;
   return {
     id,
     instances,
@@ -117,6 +119,9 @@ function readSpace(value: unknown, seenInstances: Set<string>): DashboardSpace |
     title: typeof raw.title === 'string' ? raw.title.trim().slice(0, SPACE_TITLE_LIMIT) : '',
     icon: asString(raw.icon)?.slice(0, 16),
     gap: Math.max(0, Math.min(64, asNumber(raw.gap) ?? 16)),
+    ...(layoutMode === 'zen' || layoutMode === 'modular' || layoutMode === 'canvas'
+      ? { layoutMode }
+      : {}),
   };
 }
 
@@ -149,7 +154,10 @@ export function migrateDashboardSnapshot(value: unknown): DashboardSnapshot {
     };
   }
 
-  const home = readSpace({ ...raw, id: DEFAULT_SPACE_ID, title: '' }, new Set());
+  const home = readSpace(
+    { ...raw, id: DEFAULT_SPACE_ID, title: '', layoutMode: undefined },
+    new Set(),
+  );
   return initialSnapshot(legacy, home);
 }
 
@@ -157,6 +165,10 @@ export function activeSpaceOf(state: DashboardSnapshot): DashboardSpace {
   const space = state.spaces.find(({ id }) => id === state.activeSpaceId);
   if (!space) throw new Error('Invalid activeSpaceId');
   return space;
+}
+
+export function activeLayoutModeOf(state: DashboardSnapshot): DashboardSnapshot['layoutMode'] {
+  return activeSpaceOf(state).layoutMode ?? state.layoutMode;
 }
 
 /** Экспорт 3.0: полный снимок и плоская копия активной сетки для импорта в 3.8. */

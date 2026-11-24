@@ -2,11 +2,11 @@ import { useCallback, useState, type FormEvent } from 'react';
 import { Check, LayoutGrid, Plus, Trash2 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useTranslation } from '@/core/i18n';
-import { SPACE_TITLE_LIMIT } from '@/core/storage';
+import { SPACE_PRESETS, SPACE_TITLE_LIMIT, type SpacePreset } from '@/core/storage';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { deleteDashboardEntity } from '@/features/commands/deleteDashboardEntity';
 import { Modal } from '@/ui/overlays';
-import { Button } from '@/ui/primitives';
+import { Button, Select } from '@/ui/primitives';
 
 function SpaceList() {
   const { t } = useTranslation();
@@ -92,26 +92,48 @@ function CreateSpaceForm() {
   const { t } = useTranslation();
   const createSpace = useDashboardStore((state) => state.createSpace);
   const [title, setTitle] = useState('');
+  const [preset, setPreset] = useState<SpacePreset>('empty');
+  const defaultTitle = preset === 'empty' ? '' : t(`spaces.presets.${preset}.title`);
+  const spaceTitle = title.trim() || defaultTitle;
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (createSpace(title)) setTitle('');
+    if (createSpace(spaceTitle, preset)) {
+      setTitle('');
+      setPreset('empty');
+    }
   };
   return (
     <form onSubmit={submit} className="mt-5 flex flex-col gap-2 border-t border-line pt-4">
+      <Select
+        label={t('spaces.preset')}
+        value={preset}
+        options={SPACE_PRESETS.map((value) => ({ value, label: t(`spaces.presets.${value}.title`) }))}
+        aria-describedby={preset === 'empty' ? undefined : 'space-preset-description'}
+        onChange={(event) => {
+          const selected = SPACE_PRESETS.find((value) => value === event.target.value);
+          if (selected) setPreset(selected);
+        }}
+      />
+      {preset !== 'empty' && (
+        <p id="space-preset-description" className="text-sm text-fg-muted">
+          {t(`spaces.presets.${preset}.description`)}
+        </p>
+      )}
       <label htmlFor="new-space-title" className="text-sm font-medium">
         {t('spaces.name')}
       </label>
       <input
         id="new-space-title"
         value={title}
+        placeholder={defaultTitle || undefined}
         maxLength={SPACE_TITLE_LIMIT}
-        required
+        required={preset === 'empty'}
         onChange={(event) => setTitle(event.target.value)}
         className="min-h-11 min-w-0 rounded-md border border-line bg-canvas px-3 text-sm focus-visible:outline-2 focus-visible:outline-primary"
       />
       <Button
         type="submit"
-        disabled={!title.trim()}
+        disabled={!spaceTitle}
         className="min-h-11 self-start"
         icon={<Plus size={16} />}
       >

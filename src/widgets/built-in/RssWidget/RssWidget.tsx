@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  ExternalLink,
   RefreshCw,
   SlidersHorizontal,
   Search,
@@ -24,52 +23,35 @@ import type {
   RssReadingMode,
   RssViewMode,
 } from './types';
-import { DEFAULT_FEEDS } from './presets';
-import { fetchAndParseFeed, formatRssTimeAgo } from './rssParser';
+
+
 import { ALL_FOLDERS, DEFAULT_FOLDER, isAllFolders } from './presets';
 import { useTranslation } from '@/core/i18n';
 import { originPatternsFor, useBrowserPermissions } from '@/core/permissions/browserPermissions';
 import { getRssCardClasses } from './rssStyles';
 import { RssFeedManagerModal } from './RssFeedManagerModal';
-import { runLogged } from '@/core/observability';
-import { displayHost } from '@/core/network';
+
+
+import { activeFeedSettings, articleLimit, readFeedSettings } from '@/core/feeds/subscriptions';
+import { RssArticleDialog } from './RssArticleDialog';
+import { RssArticleList } from './RssArticleList';
+import { useReadArticles, useRssArticles } from './useRssArticles';
 
 export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
   instanceId,
   settings,
 }) => {
   const updateWidgetSettings = useDashboardStore((s) => s.updateWidgetSettings);
-  const { t, tp, language } = useTranslation();
+  const { t, tp, formatNumber } = useTranslation();
   const folderLabel = (folder: string) =>
     folder === DEFAULT_FOLDER ? t('rss.defaultFolder') : folder;
 
   // Инициализация лент с поддержкой обратной совместимости
-  const initialFeeds: RssFeedConfig[] = useMemo(() => {
-    if (settings?.feeds && settings.feeds.length > 0) {
-      return settings.feeds;
-    }
-    if (settings?.feedUrls && settings.feedUrls.length > 0) {
-      return settings.feedUrls.map((url, idx) => ({
-        id: `feed-legacy-${idx}`,
-        name: displayHost(url),
-        url,
-        enabled: true,
-        folder: DEFAULT_FOLDER,
-      }));
-    }
-    if (settings?.feedUrl) {
-      return [
-        {
-          id: 'feed-legacy-single',
-          name: displayHost(settings.feedUrl),
-          url: settings.feedUrl,
-          enabled: true,
-          folder: DEFAULT_FOLDER,
-        },
-      ];
-    }
-    return DEFAULT_FEEDS;
-  }, [settings?.feeds, settings?.feedUrls, settings?.feedUrl]);
+  const initialFeeds = useMemo(
+    () => readFeedSettings(settings),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only feed settings affect subscriptions
+    [settings?.feeds, settings?.feedUrls, settings?.feedUrl],
+  );
 
   const [feeds, setFeeds] = useState<RssFeedConfig[]>(initialFeeds);
   useEffect(() => {
@@ -89,7 +71,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
   const viewMode: RssViewMode = settings?.viewMode || 'thumbnails';
   const cardStyle = settings?.cardStyle || 'glass';
   const borderRadius = settings?.borderRadius || 'md';
-  const itemCount = settings?.itemCount ?? 15;
+  const itemCount = articleLimit(settings?.itemCount);
   const showThumbnails = settings?.showThumbnails !== false;
   const showDescription = settings?.showDescription !== false;
   const showSource = settings?.showSource !== false;
@@ -99,15 +81,11 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
   const refreshInterval = settings?.refreshInterval ?? 30;
 
   // Локальные состояния
-  const [items, setItems] = useState<RssItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFeedManagerOpen, setIsFeedManagerOpen] = useState(false);
 
   // Выбранная вкладка ленты или папки
-  const [activeFeedId, setActiveFeedId] = useState<string>(
+  const [preferredFeedId, setActiveFeedId] = useState<string>(
     settings?.activeFeedId || feeds[0]?.id || '',
   );
   const [activeFolder, setActiveFolder] = useState<string>(
@@ -117,7 +95,8 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
   );
 
   // Активные (включенные) ленты
-  const activeFeeds = useMemo(() => feeds.filter((f) => f.enabled !== false), [feeds]);
+  const activeFeeds = useMemo(() => activeFeedSettings(feeds), [feeds]);
+  const activeFeedId = activeFeeds.some(({ id }) => id === preferredFeedId) ? preferredFeedId : activeFeeds[0]?.id;
 
   // Доступ выдаётся только к сайтам включённых лент (optional_host_permissions)
   const feedOrigins = useMemo(() => originPatternsFor(activeFeeds.map((f) => f.url)), [activeFeeds]);
@@ -141,59 +120,19 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
   );
 
   // Загрузка новостей
-  const loadFeeds = useCallback(async () => {
-    if (hasFeedAccess !== true) return;
-    if (activeFeeds.length === 0) {
-      setItems([]);
-      setLoading(false);
-      return;
-    }
+  const { items, loading, refreshing: isRefreshing, failures, refresh: refreshFeeds } =
+    useRssArticles(instanceId, activeFeeds, itemCount, hasFeedAccess, refreshInterval);
+  const { readIds, markRead } = useReadArticles();
+  const [openArticle, setOpenArticle] = useState<RssItem>();
+  const [readError, setReadError] = useState(false);
+  const closeReader = useCallback(() => setOpenArticle(undefined), []);
+  const openReader = useCallback((item: RssItem) => {
+    setReadError(false);
+    setOpenArticle(item);
+    void markRead(item.id).catch(() => setReadError(true));
+  }, [markRead]);
+  const unread = new Set(items.filter((item) => !readIds.has(item.id)).map((item) => item.id)).size;
 
-    try {
-      setIsRefreshing(true);
-      setError(null);
-
-      // Загружаем параллельно все активные фиды
-      const promises = activeFeeds.map((feed) =>
-        fetchAndParseFeed(feed, itemCount).catch((err) => {
-          console.warn(`[RssWidget] Failed to fetch feed ${feed.name}:`, err);
-          return [] as RssItem[];
-        }),
-      );
-
-      const results = await Promise.all(promises);
-      const combined = results.flat();
-
-      // Сортировка по времени публикации (новые сверху)
-      combined.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-
-      setItems(combined);
-    } catch {
-      setError(t('rss.loadError'));
-    } finally {
-      setLoading(false);
-      setIsRefreshing(false);
-    }
-  }, [activeFeeds, itemCount, hasFeedAccess, t]);
-
-  // Ошибки отдельных лент loadFeeds обрабатывает сам; здесь ловится только непредвиденное
-  const refreshFeeds = useCallback(() => {
-    runLogged(loadFeeds(), 'network', { widget: 'rss' });
-  }, [loadFeeds]);
-
-  useEffect(() => {
-    refreshFeeds();
-  }, [refreshFeeds]);
-
-  // Автообновление по интервалу
-  useEffect(() => {
-    if (!refreshInterval || refreshInterval <= 0) return;
-    const intervalMs = refreshInterval * 60 * 1000;
-    const timer = setInterval(refreshFeeds, intervalMs);
-    return () => clearInterval(timer);
-  }, [refreshInterval, refreshFeeds]);
-
-  // Сохранение отредактированных лент
   const handleSaveFeeds = (newFeeds: RssFeedConfig[]) => {
     setFeeds(newFeeds);
     if (instanceId) {
@@ -338,6 +277,11 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
         </div>
 
         {/* 2. Подпанель фильтрации: Вкладки лент или папок */}
+        {hasFeedAccess === true && items.length > 0 && (
+          <p className="text-xs font-medium text-fg-muted" aria-live="polite">
+            {tp('rss.unreadCount', unread, { count: formatNumber(unread) })}
+          </p>
+        )}
         {readingMode === 'feed-tabs' && activeFeeds.length > 0 && (
           <div className="flex items-center gap-1 overflow-x-auto pb-1 select-none scrollbar-none">
             {activeFeeds.map((feed) => (
@@ -399,7 +343,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
       </div>
 
       {/* 3. Содержимое: Список новостей или состояния */}
-      <div className="flex-1 overflow-y-auto min-h-0 pr-0.5 space-y-2">
+      <div className="min-h-0 flex-1 overflow-hidden">
         {hasFeedAccess === false && activeFeeds.length > 0 ? (
           <div className="p-1 min-h-full flex">
             <EmptyState
@@ -420,9 +364,9 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
             <Skeleton className="w-full h-16 rounded-xl" />
             <Skeleton className="w-full h-16 rounded-xl" />
           </div>
-        ) : error && items.length === 0 ? (
+        ) : failures === activeFeeds.length && activeFeeds.length > 0 && items.length === 0 ? (
           <div className="p-4 h-full flex flex-col items-center justify-center">
-            <ErrorState title={t('rss.errorTitle')} message={error} onRetry={refreshFeeds} />
+            <ErrorState title={t('rss.errorTitle')} message={t('rss.loadError')} onRetry={refreshFeeds} />
           </div>
         ) : activeFeeds.length === 0 ? (
           <div className="p-4 h-full flex flex-col items-center justify-center">
@@ -448,173 +392,30 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
             />
           </div>
         ) : (
-          /* Рендеринг различных макетов */
-          <div
-            className={cn(
-              viewMode === 'grid'
-                ? 'grid grid-cols-1 sm:grid-cols-2 gap-2'
-                : 'flex flex-col gap-2',
-            )}
-          >
-            {filteredItems.map((item, idx) => {
-              const isMagazineHero = viewMode === 'magazine' && idx === 0;
-
-              return (
-                <a
-                  key={item.id || `${item.link}-${idx}`}
-                  href={item.link}
-                  target={openInNewTab ? '_blank' : '_self'}
-                  rel="noopener noreferrer"
-                  referrerPolicy="no-referrer"
-                  className={cn(
-                    cardClass,
-                    isMagazineHero && 'col-span-full bg-surface-hover/80 border-primary/40',
-                  )}
-                >
-                  {/* Макет: Крупные карточки (cards) или Hero Журнала */}
-                  {(viewMode === 'cards' || isMagazineHero) && showThumbnails && item.thumbnail && (
-                    <div className="relative w-full h-36 rounded-lg overflow-hidden mb-2.5 bg-surface-hover border border-line/40">
-                      <img
-                        src={item.thumbnail}
-                        alt=""
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Макет: С миниатюрами (thumbnails) - горизонтальный ряд */}
-                  {viewMode === 'thumbnails' && !isMagazineHero && showThumbnails && item.thumbnail && (
-                    <div className="flex gap-3">
-                      <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-surface-hover border border-line/40">
-                        <img
-                          src={item.thumbnail}
-                          alt=""
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0 flex flex-col justify-between">
-                        <div className="space-y-1">
-                          <div className="flex items-start justify-between gap-1.5">
-                            <span className="text-xs font-semibold text-fg group-hover/item:text-primary line-clamp-2 transition-colors duration-200">
-                              {item.title}
-                            </span>
-                            <ExternalLink className="w-3.5 h-3.5 text-fg-muted opacity-0 group-hover/item:opacity-100 shrink-0 transition-opacity" />
-                          </div>
-                          {showDescription && item.description && (
-                            <p className="text-2xs text-fg-muted line-clamp-1">
-                              {item.description}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="flex items-center justify-between mt-1 text-2xs text-fg-muted">
-                          {showSource && (
-                            <span className={badgeClass}>
-                              {item.feedColor && (
-                                <span
-                                  className="w-1.5 h-1.5 rounded-full shrink-0"
-                                  style={{ backgroundColor: item.feedColor }}
-                                />
-                              )}
-                              <span className="truncate">{item.feedName}</span>
-                            </span>
-                          )}
-                          {showDate && (
-                            <span className="font-mono ml-auto">
-                              {formatRssTimeAgo(item.timestamp, item.pubDate, language)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Макет: Компактный список (compact) */}
-                  {viewMode === 'compact' && (
-                    <div className="flex items-center justify-between gap-2.5">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        {item.feedColor ? (
-                          <span
-                            className="w-2 h-2 rounded-full shrink-0 shadow-xs"
-                            style={{ backgroundColor: item.feedColor }}
-                          />
-                        ) : (
-                          <Rss className="w-3.5 h-3.5 text-primary shrink-0" />
-                        )}
-                        <span className="text-xs font-semibold text-fg group-hover/item:text-primary truncate transition-colors duration-200">
-                          {item.title}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0 text-2xs text-fg-muted">
-                        {showSource && (
-                          <span className="hidden sm:inline-block px-1.5 py-0.5 rounded-md bg-surface-hover/80 border border-line/40 font-medium truncate max-w-25">
-                            {item.feedName}
-                          </span>
-                        )}
-                        {showDate && (
-                          <span className="font-mono">
-                            {formatRssTimeAgo(item.timestamp, item.pubDate, language)}
-                          </span>
-                        )}
-                        <ExternalLink className="w-3.5 h-3.5 text-fg-muted opacity-0 group-hover/item:opacity-100 transition-opacity" />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Макеты: Cards, Grid, или Magazine без картинок */}
-                  {((viewMode === 'cards' || isMagazineHero || viewMode === 'grid') ||
-                    (viewMode === 'thumbnails' && (!showThumbnails || !item.thumbnail))) && (
-                    <div className="space-y-1.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="text-xs font-bold text-fg group-hover/item:text-primary line-clamp-2 transition-colors duration-200">
-                          {item.title}
-                        </span>
-                        <ExternalLink className="w-3.5 h-3.5 text-fg-muted opacity-0 group-hover/item:opacity-100 shrink-0 transition-opacity mt-0.5" />
-                      </div>
-
-                      {showDescription && item.description && (
-                        <p className="text-2xs text-fg-muted line-clamp-2 leading-relaxed">
-                          {item.description}
-                        </p>
-                      )}
-
-                      <div className="flex items-center justify-between pt-1 border-t border-line/40 text-2xs text-fg-muted">
-                        {showSource && (
-                          <span className={badgeClass}>
-                            {item.feedColor && (
-                              <span
-                                className="w-1.5 h-1.5 rounded-full shrink-0"
-                                style={{ backgroundColor: item.feedColor }}
-                              />
-                            )}
-                            <span className="truncate">{item.feedName}</span>
-                          </span>
-                        )}
-                        {showDate && (
-                          <span className="font-mono ml-auto">
-                            {formatRssTimeAgo(item.timestamp, item.pubDate, language)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </a>
-              );
-            })}
-          </div>
+          <RssArticleList
+            key={JSON.stringify([readingMode, activeFeedId, activeFolder, searchQuery, viewMode])}
+            items={filteredItems}
+            readIds={readIds}
+            onOpen={openReader}
+            viewMode={viewMode}
+            cardClass={cardClass}
+            badgeClass={badgeClass}
+            showThumbnails={showThumbnails}
+            showDescription={showDescription}
+            showSource={showSource}
+            showDate={showDate}
+          />
         )}
       </div>
 
       {/* 4. Модальное окно управления лентами */}
+      {openArticle && hasFeedAccess === true && <RssArticleDialog
+        key={openArticle.id}
+        item={openArticle}
+        openInNewTab={openInNewTab}
+        readError={readError}
+        onClose={closeReader}
+      />}
       <RssFeedManagerModal
         isOpen={isFeedManagerOpen}
         onClose={() => setIsFeedManagerOpen(false)}

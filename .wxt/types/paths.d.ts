@@ -8,6 +8,7 @@ declare module "wxt/browser" {
     | "/_locales/en/messages.json"
     | "/_locales/ru/messages.json"
     | "/background.js"
+    | "/capture.html"
     | "/icons/icon-128.png"
     | "/icons/icon-16.png"
     | "/icons/icon-32.png"
@@ -16,6 +17,7 @@ declare module "wxt/browser" {
     | "/icons/icon.png"
     | "/icons/icon.svg"
     | "/newtab.html"
+    | "/reminders.html"
   type HtmlPublicPath = Extract<PublicPath, `${string}.html`>
   export interface WxtRuntime {
     getURL(path: PublicPath): string;

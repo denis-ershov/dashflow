@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useId, useMemo, useCallback } from 'react';
 import { t, useI18nStore, useTranslation, type SupportedLanguage } from '@/core/i18n';
-import { Plus, Trash2, CheckCircle2, Circle, CheckCheck, Flame, Calendar, CheckSquare } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Circle, CheckCheck, Flame, Calendar, CheckSquare, ExternalLink } from 'lucide-react';
 import type { WidgetProps } from '@/core/widget';
 import { StorageAdapter } from '@/core/storage/StorageAdapter';
 import { STORAGE_KEYS } from '@/core/storage/keys';
@@ -10,6 +10,7 @@ import { cn } from '@/ui/lib/cn';
 import type { TodoItem, TodoPriority, TodoFilter, TodoSettings, HabitItem, TodoTab } from './types';
 import { runLogged } from '@/core/observability';
 import { toLocalDateKey } from '@/core/datetime';
+import { isSafeHttpUrl } from '@/core/network/url';
 import { itemRepository, useItems, type ItemDraft, type Item } from '@/core/items';
 import { commandBus } from '@/core/commands';
 import { deleteManyWithUndo, dispatchWithUndoToast } from '@/features/commands/undo';
@@ -17,7 +18,7 @@ import { legacyLabels } from '@/features/settings/backupFile';
 import { createSeeds, isFirstUseOf, useInstanceTarget } from '@/features/workspace/bindings';
 
 /**
- * Задачи хранятся как Item (kind: 'task') на доске экземпляра виджета, изменения идут через
+ * Записи хранятся как Item на доске экземпляра виджета, изменения идут через
  * команды (отмена, журнал). Привычки — в прежнем формате: у них своя модель «история по дням».
  */
 
@@ -45,7 +46,9 @@ async function createTaskBoard(): Promise<string> {
 
 const toTodo = (item: Item): TodoItem => ({
   id: item.id,
+  kind: item.kind,
   text: item.title,
+  url: item.url,
   completed: item.status === 'done',
   priority: item.priority ?? 'medium',
   createdAt: Date.parse(item.createdAt),
@@ -143,9 +146,12 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
 
   // Задачи: доска экземпляра → записи доски (обновляются из любой вкладки)
   const board = useInstanceTarget(instanceId, 'boardId', createTaskBoard);
-  const taskQuery = useMemo(() => ({ boardId: board.id ?? '', kind: 'task' as const }), [board.id]);
+  const taskQuery = useMemo(() => ({ boardId: board.id ?? '' }), [board.id]);
   const tasks = useItems(itemRepository, taskQuery, { enabled: board.id !== null });
-  const todos = useMemo(() => tasks.items.map(toTodo), [tasks.items]);
+  const todos = useMemo(
+    () => tasks.items.filter((item) => item.status !== 'inbox').map(toTodo),
+    [tasks.items],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -430,16 +436,34 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
                     ) : (
                       <Circle className={cn('w-4 h-4 shrink-0', priorityColorClass[todo.priority])} />
                     )}
-                    <span
-                      className={cn(
-                        'text-xs font-medium truncate',
-                        todo.completed ? 'text-fg-muted line-through' : 'text-fg',
+                    <span className="flex min-w-0 flex-col items-start">
+                      <span
+                        className={cn(
+                          'max-w-full truncate text-xs font-medium',
+                          todo.completed ? 'text-fg-muted line-through' : 'text-fg',
+                        )}
+                      >
+                        {todo.text}
+                      </span>
+                      {todo.kind !== 'task' && (
+                        <span className="text-xs text-fg-muted">
+                          {tr(`commandPalette.kinds.${todo.kind}`)}
+                        </span>
                       )}
-                    >
-                      {todo.text}
                     </span>
                   </button>
 
+                  {todo.kind !== 'task' && todo.url && isSafeHttpUrl(todo.url) && (
+                    <a
+                      href={todo.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={tr('todo.openMaterial', { title: todo.text })}
+                      className="grid size-11 shrink-0 place-items-center rounded-lg text-fg-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+                    >
+                      <ExternalLink aria-hidden="true" className="size-4" />
+                    </a>
+                  )}
                   <button
                     type="button"
                     aria-label={tr('todo.deleteTask', { text: todo.text })}

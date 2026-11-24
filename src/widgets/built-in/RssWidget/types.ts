@@ -9,7 +9,7 @@ export interface RssFeedConfig {
 }
 
 export interface RssItem {
-  id?: string;
+  id: string;
   title: string;
   link: string;
   pubDate?: string;
@@ -20,6 +20,7 @@ export interface RssItem {
   folder?: string;
   thumbnail?: string;
   description?: string;
+  readerText?: string;
   author?: string;
 }
 

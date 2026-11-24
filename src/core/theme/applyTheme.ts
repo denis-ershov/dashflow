@@ -126,6 +126,18 @@ export function applyMotionPreference(enabled: boolean): void {
   }
 }
 
+export type UiDensity = 'comfortable' | 'compact';
+
+/** Применяет глобальную плотность отступов, не связывая компоненты с состоянием приложения. */
+export function applyDensityPreference(density: UiDensity): void {
+  if (typeof document === 'undefined') return;
+  if (density === 'compact') {
+    document.documentElement.setAttribute('data-density', density);
+  } else {
+    document.documentElement.removeAttribute('data-density');
+  }
+}
+
 export interface FullAppearanceParams {
   theme?: ThemeTokens;
   customCss?: string;

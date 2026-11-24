@@ -13,6 +13,7 @@ import {
 import { runLogged } from '@/core/observability';
 import { legacyLabels } from '@/features/settings/backupFile';
 import { useDashboardStore, waitForDashboard } from '@/stores/useDashboardStore';
+import { archiveLegacyWidgetContent } from '@/core/items/legacyStorageArchive';
 
 /**
  * Привязка экземпляров виджетов к данным рабочего пространства (шаг 1.4).
@@ -64,6 +65,14 @@ export function ensureWorkspaceReady(): Promise<LegacyMigrationRecord> {
         labels: legacyLabels(useI18nStore.getState().language),
       });
       applyMapping(record.mapping);
+      runLogged(
+        archiveLegacyWidgetContent(
+          record,
+          instances.map(({ instanceId }) => instanceId),
+        ),
+        'storage',
+        { stage: 'archive-legacy-widget-content' },
+      );
       return record;
     })();
     // Сбой (например, квота) не кэшируется: следующая попытка повторит перенос

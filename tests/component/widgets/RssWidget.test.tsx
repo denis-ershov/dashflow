@@ -1,8 +1,10 @@
+import 'fake-indexeddb/auto';
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import { RssWidget } from '@/widgets/built-in/RssWidget/RssWidget';
 import { rssManifest } from '@/widgets/built-in/RssWidget/manifest';
+import { itemRepository } from '@/core/items';
 
 describe('RssWidget Component & Manifest', () => {
   beforeEach(() => {
@@ -36,10 +38,7 @@ describe('RssWidget Component & Manifest', () => {
         </channel>
       </rss>`;
 
-    vi.spyOn(global, 'fetch').mockResolvedValue({
-      ok: true,
-      text: () => Promise.resolve(mockXml),
-    } as Response);
+    vi.spyOn(global, 'fetch').mockImplementation(async () => new Response(mockXml));
 
     render(
       <RssWidget
@@ -86,10 +85,7 @@ describe('RssWidget Component & Manifest', () => {
         </channel>
       </rss>`;
 
-    vi.spyOn(global, 'fetch').mockResolvedValue({
-      ok: true,
-      text: () => Promise.resolve(mockXml),
-    } as Response);
+    vi.spyOn(global, 'fetch').mockImplementation(async () => new Response(mockXml));
 
     render(
       <RssWidget
@@ -131,10 +127,7 @@ describe('RssWidget Component & Manifest', () => {
         </channel>
       </rss>`;
 
-    vi.spyOn(global, 'fetch').mockResolvedValue({
-      ok: true,
-      text: () => Promise.resolve(maliciousXml),
-    } as Response);
+    vi.spyOn(global, 'fetch').mockImplementation(async () => new Response(maliciousXml));
 
     render(
       <RssWidget
@@ -156,7 +149,62 @@ describe('RssWidget Component & Manifest', () => {
       expect(screen.getByText('Вредоносная новость')).toBeInTheDocument();
     });
 
-    const linkEl = screen.getByText('Вредоносная новость').closest('a');
-    expect(linkEl).toHaveAttribute('href', '#');
+    fireEvent.click(screen.getByText('Вредоносная новость'));
+    expect(within(screen.getByRole('dialog')).queryByRole('link')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('0 непрочитанных статей')).toBeInTheDocument());
+  });
+
+  it('открывает описание из ленты и сохраняет статью во «Входящие» один раз', async () => {
+    const xml = `<rss><channel><item><title>Читалка</title><link>https://reader.test/one</link>
+      <description><![CDATA[<p>Текст из ленты</p><script>скрытое содержимое</script>]]></description>
+    </item></channel></rss>`;
+    const fetchFeed = vi.spyOn(global, 'fetch').mockImplementation(async () => new Response(xml));
+    render(
+      <RssWidget instanceId="reader-test" settings={{ feedUrl: 'https://reader.test/rss' }} />,
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: /читалка/i }));
+    let reader = within(screen.getByRole('dialog'));
+    expect(reader.getByText('Текст из ленты')).toBeInTheDocument();
+    expect(reader.queryByText('скрытое содержимое')).not.toBeInTheDocument();
+    fireEvent.click(reader.getByRole('button', { name: 'Прочитать позже' }));
+    await reader.findByText('Статья сохранена во «Входящих».');
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: /читалка/i }));
+    reader = within(screen.getByRole('dialog'));
+    fireEvent.click(reader.getByRole('button', { name: 'Прочитать позже' }));
+    await reader.findByText('Эта статья уже сохранена.');
+    expect(fetchFeed).toHaveBeenCalledTimes(1);
+    expect(await itemRepository.query({ kind: 'article', status: 'inbox' })).toEqual([
+      expect.objectContaining({
+        title: 'Читалка',
+        body: 'Текст из ленты',
+        url: 'https://reader.test/one',
+      }),
+    ]);
+  });
+
+  it('виртуализирует 1 000 статей и позволяет перейти к последней с клавиатуры', async () => {
+    const entries = Array.from(
+      { length: 1_000 },
+      (_, index) =>
+        `<item><title>Статья №${index + 1}!</title><link>https://long.test/${index}</link></item>`,
+    );
+    const xml = `<rss><channel>${entries.join('')}</channel></rss>`;
+    vi.spyOn(global, 'fetch').mockImplementation(async () => new Response(xml));
+    render(
+      <RssWidget
+        instanceId="virtual-test"
+        settings={{ feedUrl: 'https://long.test/rss', itemCount: 1_000 }}
+      />,
+    );
+
+    const first = await screen.findByRole('button', { name: /статья №1!/i });
+    expect(screen.getAllByRole('listitem').length).toBeLessThan(20);
+    expect(screen.queryByRole('button', { name: /статья №1000!/i })).not.toBeInTheDocument();
+    fireEvent.keyDown(first, { key: 'End' });
+    expect(await screen.findByRole('button', { name: /статья №1000!/i })).toHaveFocus();
   });
 });

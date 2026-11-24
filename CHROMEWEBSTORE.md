@@ -104,6 +104,8 @@ DashFlow превращает новую вкладку в настраивае�
 | Permission | Type | Justification |
 |------------|------|---------------|
 | `storage` | permissions | Saves the user's dashboard layout, theme, widget settings, tasks, habits, notes and quick links locally in the browser so they are there on every new tab. |
+| `alarms` | permissions | Schedules user-created reminders even when the dashboard tab is closed. |
+| `activeTab` | permissions | Supplies the title and URL of the current tab when the user invokes Quick Capture. |
 | `https://api.open-meteo.com/*` | host_permissions | The Weather widget downloads the forecast for the user's city from Open-Meteo. |
 | `https://geocoding-api.open-meteo.com/*` | host_permissions | The Weather widget's city search: turns the city name the user types into coordinates for the forecast. |
 | `https://api.bigdatacloud.net/*` | host_permissions | Shows the city name for the user's location in the Weather widget when automatic location is on. |
@@ -111,7 +113,9 @@ DashFlow превращает новую вкладку в настраивае�
 | `bookmarks` | optional_permissions | Requested only when the user clicks "Allow access" in the Bookmarks widget: shows browser bookmarks as tiles and lets the user add, rename and delete them from the dashboard. |
 | `tabs` | optional_permissions | Requested only when the user opens the "Open tabs" view of the Bookmarks widget: shows titles and addresses of open tabs and lets the user switch to them or save them as bookmarks. |
 | `sessions` | optional_permissions | Requested only when the user opens the "Recently closed" view of the Bookmarks widget: lists recently closed tabs and restores the one the user clicks. |
-| `https://*/*`, `http://*/*` | optional_host_permissions | Never granted as a whole. When the user adds an RSS feed and clicks "Allow access", DashFlow requests access only to that feed's site (e.g. `https://example.com/*`) to download the feed, which the site would otherwise block for an extension page. Pages of these sites are never read or modified. |
+| `notifications` | optional_permissions | Offered on the first reminder save. It allows local system notifications. Reminders remain available in the dashboard and toolbar badge if permission is denied. |
+| `contextMenus` | optional_permissions | Requested when the user enables the DashFlow menu. The menu can save a selected link, page, or text to the local Inbox. |
+| `https://*/*`, `http://*/*` | optional_host_permissions | DashFlow asks for access to the specific host of an RSS feed or HTTPS calendar the user adds. Access is used to fetch the feed or calendar file. |
 
 Не запрашиваются: `geolocation` (браузер сам спрашивает согласие при автоопределении города),
 `<all_urls>`, content scripts, `scripting`, `history`, `cookies`.

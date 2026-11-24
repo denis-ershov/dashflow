@@ -1,26 +1,6 @@
-import { test as base, expect, chromium, type BrowserContext } from '@playwright/test';
-import path from 'node:path';
+import { expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-
-const EXTENSION_PATH = path.resolve(process.cwd(), '.output/chrome-mv3');
-
-/** Контекст с загруженным расширением и его id из адреса сервис-воркера */
-const test = base.extend<{ context: BrowserContext; extensionId: string }>({
-  // eslint-disable-next-line no-empty-pattern
-  context: async ({}, provide) => {
-    const context = await chromium.launchPersistentContext('', {
-      channel: 'chromium',
-      locale: 'en-US',
-      args: [`--disable-extensions-except=${EXTENSION_PATH}`, `--load-extension=${EXTENSION_PATH}`],
-    });
-    await provide(context);
-    await context.close();
-  },
-  extensionId: async ({ context }, provide) => {
-    const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
-    await provide(new URL(worker.url()).host);
-  },
-});
+import { test } from './extensionFixture';
 
 test('новая вкладка рендерится без ошибок и переживает перезагрузку', async ({
   context,
@@ -49,7 +29,7 @@ test('новая вкладка рендерится без ошибок и пе
   expect(errors.filter((text) => !/Failed to load resource|net::ERR_/.test(text))).toEqual([]);
 });
 
-test('манифест запрашивает при установке только storage и хосты погоды', async ({
+test('манифест оставляет системные уведомления необязательным правом', async ({
   context,
   extensionId,
 }) => {
@@ -57,9 +37,18 @@ test('манифест запрашивает при установке толь
   await page.goto(`chrome-extension://${extensionId}/newtab.html`);
   const manifest = await page.evaluate(() => chrome.runtime.getManifest());
 
-  expect(manifest.permissions).toEqual(['storage']);
+  expect(manifest.permissions).toEqual(['storage', 'alarms', 'activeTab']);
   expect(manifest.host_permissions).not.toContain('https://*/*');
-  expect(manifest.optional_permissions).toEqual(['bookmarks', 'tabs', 'sessions']);
+  expect(manifest.optional_permissions).toEqual([
+    'bookmarks',
+    'tabs',
+    'sessions',
+    'notifications',
+    'contextMenus',
+  ]);
+  expect(manifest.commands?.['dashflow-quick-capture']).toMatchObject({
+    suggested_key: { default: 'Alt+N' },
+  });
   // Название берётся из _locales по языку браузера, а не остаётся ключом __MSG_
   expect(manifest.name).toMatch(/^DashFlow — /);
 });
@@ -283,7 +272,7 @@ test('мигрирует синтетический профиль 3.8 с зад
             ],
             layouts,
           },
-          version: 3,
+          version: 2,
         },
         dashflow_widget_todo_items: legacyTasks,
         dashflow_widget_notes_content: legacyNote,
@@ -392,6 +381,23 @@ test('мигрирует синтетический профиль 3.8 с зад
     }),
     habits: legacyHabits,
   });
+  await expect
+    .poll(() =>
+      worker.evaluate(async () => {
+        const values = await chrome.storage.local.get([
+          'dashflow_widget_todo_items',
+          'dashflow_widget_notes_content',
+          'dashflow_widget_quick_links',
+        ]);
+        return Object.keys(values);
+      }),
+    )
+    .toEqual([]);
+  const backup = await worker.evaluate(async () => {
+    const values = await chrome.storage.local.get('dashflow_backup_v2');
+    return values.dashflow_backup_v2;
+  });
+  expect(backup).toMatchObject({ version: 2, state: { version: 2 } });
 });
 
 test('удалённое пространство восстанавливается тостом без смены открытой сетки', async ({
@@ -419,4 +425,133 @@ test('удалённое пространство восстанавливает
   await expect(restored).toBeVisible();
   await restored.click();
   await expect(page.getByText('Your dashboard is empty')).toBeVisible();
+});
+
+test('Inbox принимает задачу с метаданными и открывает её из глобального поиска', async ({
+  context,
+  extensionId,
+}) => {
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${extensionId}/newtab.html`);
+  await page.keyboard.press('Control+k');
+  const search = page.getByRole('combobox', { name: 'Search workspace and commands' });
+  await search.fill('Inbox');
+  await page.getByRole('option', { name: /Add widget: Inbox/ }).click();
+
+  const inbox = page.getByRole('region', { name: 'Inbox', exact: true });
+  const input = inbox.getByRole('textbox', { name: 'New inbox item' });
+  await input.fill('Draft launch tomorrow 09:40 #roadmap !');
+  await input.press('Enter');
+  await expect(inbox.getByText('Draft launch', { exact: true })).toBeVisible();
+  await expect(inbox.getByText('#roadmap', { exact: true })).toBeVisible();
+
+  await page.keyboard.press('Control+k');
+  await search.fill('Draft launch');
+  await expect(page.getByRole('option', { name: /Draft launch/ })).toBeVisible();
+  await search.press('Enter');
+  await expect(inbox.locator('[data-search-highlight]')).toBeFocused();
+  await page.keyboard.press('e');
+  await expect(inbox.getByText('Draft launch', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect(inbox.getByText('Draft launch', { exact: true })).toBeVisible();
+});
+
+test('наступившее напоминание отмечается на иконке без открытой вкладки', async ({
+  context,
+  extensionId,
+}) => {
+  test.setTimeout(60_000);
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${extensionId}/newtab.html`);
+  await expect(page.getByRole('textbox', { name: 'New task' })).toBeEnabled();
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('dashflow_items');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error ?? new Error('Не удалось открыть базу Item'));
+    });
+    const now = new Date();
+    const tx = db.transaction('items', 'readwrite');
+    const committed = new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error ?? new Error('Не удалось сохранить напоминание'));
+    });
+    tx.objectStore('items').put({
+      id: 'e2e-reminder',
+      kind: 'task',
+      title: 'Review the launch plan',
+      status: 'todo',
+      order: 'a0',
+      tags: [],
+      remindAt: new Date(now.getTime() + 3_000).toISOString(),
+      source: { type: 'user', id: 'local', name: 'local' },
+      version: 1,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    });
+    await committed;
+    db.close();
+    await chrome.runtime.sendMessage({ type: 'dashflow:items-changed' });
+  });
+  await page.close();
+  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+  await expect
+    .poll(() => worker.evaluate(() => chrome.action.getBadgeText({})), { timeout: 45_000 })
+    .toBe('1');
+
+  const reminders = await context.newPage();
+  await reminders.goto(`chrome-extension://${extensionId}/reminders.html`);
+  await expect(reminders.getByText('Review the launch plan', { exact: true })).toBeVisible();
+  await reminders.getByRole('button', { name: 'In an hour', exact: true }).click();
+  await expect(reminders.getByText('Review the launch plan', { exact: true })).toHaveCount(0);
+  await expect.poll(() => worker.evaluate(() => chrome.action.getBadgeText({}))).toBe('');
+});
+
+test('утренний дайджест включает задачи на сегодня и сохраняет прочитанный выпуск', async ({
+  context,
+  extensionId,
+}) => {
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${extensionId}/newtab.html`);
+  const search = page.getByRole('combobox', { name: 'Search workspace and commands' });
+  await expect(page.getByTestId('grid-engine-container')).toBeVisible();
+  await page.keyboard.press('Control+k');
+  await search.fill('Inbox');
+  await page.getByRole('option', { name: /Add widget: Inbox/ }).click();
+  const input = page.getByRole('textbox', { name: 'New inbox item' });
+  await input.fill('Review milestones today 10:30');
+  await input.press('Enter');
+  await expect(page.getByText('Review milestones', { exact: true })).toBeVisible();
+
+  await page.keyboard.press('Control+k');
+  await search.fill('Digest');
+  await page.getByRole('option', { name: /Add widget: Digest/ }).click();
+  const digest = page.getByRole('group', { name: 'Digest', exact: true });
+  await digest.getByRole('button', { name: 'Create morning digest' }).click();
+  await expect(digest.getByText(/Review milestones/)).toBeVisible();
+  await digest.getByRole('button', { name: 'Mark as read' }).click();
+  await expect(digest.getByText('You’re all caught up.')).toBeVisible();
+  await expect(digest.getByText(/Morning ·/).first()).toBeVisible();
+});
+
+test('отдельное окно захвата сохраняет запись, доступную в глобальном поиске', async ({
+  context,
+  extensionId,
+}) => {
+  const capture = await context.newPage();
+  await capture.goto(`chrome-extension://${extensionId}/capture.html`);
+  await capture
+    .getByRole('textbox', { name: 'New Inbox item' })
+    .fill('Review contracts tomorrow 10:00 #work !');
+  await capture.getByRole('button', { name: 'Save to Inbox' }).click();
+  await expect(capture.getByText('Added to Inbox', { exact: true })).toBeVisible();
+
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${extensionId}/newtab.html`);
+  await expect(page.getByTestId('grid-engine-container')).toBeVisible();
+  await page.keyboard.press('Control+k');
+  await page
+    .getByRole('combobox', { name: 'Search workspace and commands' })
+    .fill('Review contracts');
+  await expect(page.getByRole('option', { name: /Review contracts/ })).toBeVisible();
 });

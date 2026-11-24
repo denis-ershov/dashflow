@@ -180,4 +180,26 @@ export class StorageAdapter {
       return null;
     }
   }
+
+  /** Изменяет одно значение IndexedDB без потери параллельной записи из другой вкладки. */
+  public static async updateLarge(
+    key: StorageKey,
+    update: (current: unknown) => unknown,
+  ): Promise<void> {
+    try {
+      const db = await this.getDB();
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      try {
+        const current: unknown = await tx.store.get(String(key));
+        await tx.store.put(update(current), String(key));
+        await tx.done;
+      } catch (error) {
+        await tx.done.catch(() => undefined);
+        throw error;
+      }
+    } catch (error: unknown) {
+      if (this.isQuotaError(error)) throw new StorageQuotaExceededError(error);
+      throw new StorageError(`Ошибка обновления значения "${String(key)}" в IndexedDB`, error);
+    }
+  }
 }

@@ -1,4 +1,4 @@
-import { activeSpaceOf } from '@/core/storage';
+import { activeLayoutModeOf, activeSpaceOf } from '@/core/storage';
 import React, { useState } from 'react';
 import { Modal } from '@/ui/overlays';
 import { useShallow } from 'zustand/react/shallow';
@@ -11,6 +11,7 @@ import { Globe, Layout, Sparkles, SlidersHorizontal, Activity } from 'lucide-rea
 import { DiagnosticsSection } from './DiagnosticsSection';
 import { runLogged } from '@/core/observability';
 import type { HeroSettings } from '@/core/storage/dashboardMigrations';
+import { CaptureMenuSettings } from '@/features/capture/CaptureMenuSettings';
 
 export const SettingsModal: React.FC = () => {
   const {
@@ -32,18 +33,20 @@ export const SettingsModal: React.FC = () => {
       setBaseColumns: s.setBaseColumns,
       gap: activeSpaceOf(s).gap,
       setGap: s.setGap,
-      layoutMode: s.layoutMode,
+      layoutMode: activeLayoutModeOf(s),
       setLayoutMode: s.setLayoutMode,
       heroSettings: s.heroSettings,
       updateHeroSettings: s.updateHeroSettings,
     })),
   );
-  const { language, setLanguage, animationsEnabled, setAnimationsEnabled } = useAppStore(
+  const { language, setLanguage, animationsEnabled, setAnimationsEnabled, density, setDensity } = useAppStore(
     useShallow((s) => ({
       language: s.language,
       setLanguage: s.setLanguage,
       animationsEnabled: s.animationsEnabled,
       setAnimationsEnabled: s.setAnimationsEnabled,
+      density: s.density,
+      setDensity: s.setDensity,
     })),
   );
   const { t, tp } = useTranslation();
@@ -313,6 +316,27 @@ export const SettingsModal: React.FC = () => {
               onChange={(value) => runLogged(setAnimationsEnabled(value), 'storage')}
             />
           </div>
+          <div className="space-y-2 pt-2">
+            <span className="text-xs font-medium text-fg">{t('settings.density')}</span>
+            <div className="grid grid-cols-2 gap-2">
+              {(['comfortable', 'compact'] as const).map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={density === value}
+                  onClick={() => runLogged(setDensity(value), 'storage')}
+                  className={`min-h-11 rounded-lg border px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-primary ${
+                    density === value
+                      ? 'border-primary/50 bg-primary/10 text-primary'
+                      : 'border-line text-fg-muted hover:bg-surface-hover hover:text-fg'
+                  }`}
+                >
+                  {t(`settings.densityOptions.${value}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+          {isOpen && <CaptureMenuSettings />}
         </div>
 
         {/* Секция 5: Импорт и Экспорт */}

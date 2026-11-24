@@ -1,10 +1,14 @@
+import type { ItemKind } from '@/core/items';
+
 export type TodoPriority = 'low' | 'medium' | 'high';
 export type TodoFilter = 'all' | 'active' | 'completed';
 export type TodoTab = 'todos' | 'habits';
 
 export interface TodoItem {
   id: string;
+  kind: ItemKind;
   text: string;
+  url?: string;
   completed: boolean;
   priority: TodoPriority;
   createdAt?: number;

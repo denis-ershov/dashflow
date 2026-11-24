@@ -1,6 +1,3 @@
-import { publishItemsChanged } from './events';
-import { createItemRepository } from './repository';
-
 export * from './types';
 export * from './ids';
 export * from './validation';
@@ -10,6 +7,4 @@ export * from './useItems';
 export * from './legacy';
 export * from './migration';
 export { ITEMS_DB_NAME } from './db';
-
-/** Репозиторий приложения: база dashflow_items, уведомления всем вкладкам и воркеру */
-export const itemRepository = createItemRepository({ notify: publishItemsChanged });
+export { itemRepository } from './instance';

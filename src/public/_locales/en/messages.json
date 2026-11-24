@@ -6,5 +6,7 @@
   "extensionDescription": {
     "message": "Personal customizable dashboard and productivity new tab page for your browser.",
     "description": "Extension description"
-  }
+  },
+  "quickCaptureCommand": { "message": "Quick capture to Inbox" },
+  "quickCaptureMenu": { "message": "Send to DashFlow" }
 }

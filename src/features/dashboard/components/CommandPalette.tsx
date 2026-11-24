@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, useId } from 'react';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { useTranslation } from '@/core/i18n';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { cn } from '@/ui/lib/cn';
 import { Modal, useFocusTrap } from '@/ui/overlays';
 import { isSafeHttpUrl } from '@/core/network/url';
@@ -153,10 +153,11 @@ function PaletteDialog({ revealItem, revealWidget }: PaletteActions) {
           <button
             type="button"
             aria-label={t('common.close')}
+            aria-keyshortcuts="Escape"
             onClick={close}
-            className="min-h-11 min-w-11 rounded-md text-xs text-fg-muted hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-primary"
+            className="grid size-11 shrink-0 place-items-center rounded-md text-fg-muted hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-primary"
           >
-            <span aria-hidden="true">Esc</span>
+            <X aria-hidden="true" className="size-5" />
           </button>
         </div>
         <div className="overflow-y-auto p-2">

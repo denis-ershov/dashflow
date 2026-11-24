@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Item } from '@/core/items';
 import { isSafeHttpUrl } from '@/core/network/url';
+import { activeLayoutModeOf } from '@/core/storage';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 
 interface WidgetTarget {
@@ -15,9 +16,9 @@ export function useSearchDestination() {
   const closePreview = useCallback(() => setPreview(null), []);
 
   const revealWidget = (next: WidgetTarget) => {
+    useDashboardStore.getState().switchSpace(next.spaceId);
     const state = useDashboardStore.getState();
-    state.switchSpace(next.spaceId);
-    if (state.layoutMode === 'zen') state.setLayoutMode('modular');
+    if (activeLayoutModeOf(state) === 'zen') state.setLayoutMode('modular');
     setTarget(next);
   };
 
@@ -34,8 +35,9 @@ export function useSearchDestination() {
     for (const space of ordered) {
       const widget = space.instances.find(
         ({ settings, widgetId }) =>
+          (item.status === 'inbox' && widgetId === 'inbox') ||
           (item.kind === 'note' && widgetId === 'notes' && settings.itemId === item.id) ||
-          (item.kind === 'task' &&
+          (item.status !== 'inbox' &&
             widgetId === 'todo' &&
             item.boardId &&
             settings.boardId === item.boardId),

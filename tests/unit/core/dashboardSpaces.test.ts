@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  activeLayoutModeOf,
   activeSpaceOf,
+  createDashboardSpace,
   createDefaultDashboardSnapshot,
   deriveResponsiveLayouts,
   exportDashboardSnapshot,
@@ -35,5 +37,37 @@ describe('Формат пространств и экспорт 3.0', () => {
     expect(activeSpaceOf(restored).id).toBe(home.id);
     expect(restored.spaces[1]?.instances).toEqual([]);
     expect(restored.spaces[1]?.layouts.xl).toEqual([]);
+  });
+
+  it('переносит оба шаблона вместе с режимом, идентификаторами и адаптивными сетками', () => {
+    const home = createDefaultDashboardSnapshot();
+    const morning = createDashboardSpace('Утро', 'morning');
+    const focus = createDashboardSpace('Фокус', 'focus');
+    const snapshot = {
+      ...home,
+      activeSpaceId: focus.id,
+      layoutMode: 'zen' as const,
+      spaces: [...home.spaces, morning, focus],
+    };
+    const restored = migrateDashboardSnapshot(
+      JSON.parse(JSON.stringify(exportDashboardSnapshot(snapshot))),
+    );
+    expect(restored).toEqual(snapshot);
+    expect(activeLayoutModeOf(restored)).toBe('canvas');
+  });
+
+  it('использует общий режим для старой плоской раскладки и повреждённого режима пространства', () => {
+    const snapshot = createDefaultDashboardSnapshot();
+    const home = activeSpaceOf(snapshot);
+    const legacy = migrateDashboardSnapshot({ ...home, version: 2, layoutMode: 'zen' });
+    expect(activeSpaceOf(legacy).layoutMode).toBeUndefined();
+    expect(activeLayoutModeOf(legacy)).toBe('zen');
+    const malformed = migrateDashboardSnapshot({
+      ...snapshot,
+      layoutMode: 'canvas',
+      spaces: [{ ...home, layoutMode: 'invalid' }],
+    });
+    expect(activeSpaceOf(malformed).layoutMode).toBeUndefined();
+    expect(activeLayoutModeOf(malformed)).toBe('canvas');
   });
 });

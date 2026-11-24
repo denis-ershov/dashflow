@@ -65,7 +65,7 @@ export const rssManifest: WidgetDefinition<RssSettings> = {
       type: 'slider',
       defaultValue: 15,
       min: 3,
-      max: 50,
+      max: 1000,
       step: 1,
       section: 'behavior',
       helperText: 'widgetFields.rssReader.itemCount.help',

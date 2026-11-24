@@ -92,6 +92,22 @@ describe('rssParser utils', () => {
     expect(items[0]?.description).toBe('Atom summary text');
   });
 
+  it('сохраняет идентификатор при изменении порядка и фрагмента исходной ссылки', () => {
+    const entry = (hash: string) => `<item><title>Статья</title><link>/one${hash}</link></item>`;
+    const extra = '<item><guid>other</guid><title>Другая статья</title></item>';
+    const read = (items: string) =>
+      parseRssXml(`<rss><channel>${items}</channel></rss>`, dummyFeed);
+    const first = read(entry('#first'))[0];
+    expect(read(extra + entry('#second'))[1]).toMatchObject({
+      id: first?.id,
+      link: 'https://habr.com/one',
+    });
+  });
+
+  it('отклоняет объявления DTD и сущностей', () => {
+    expect(() => parseRssXml('<!DOCTYPE rss><rss/>', dummyFeed)).toThrow();
+  });
+
   it('должен экспортировать и импортировать OPML подписки', () => {
     const feeds: RssFeedConfig[] = [
       {

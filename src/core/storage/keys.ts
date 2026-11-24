@@ -14,10 +14,16 @@ export const STORAGE_KEYS = {
   THEME_BACKUP_V1: 'dashflow_theme_backup_v1',
   /** Общие настройки приложения (язык, анимации, масштаб) */
   APP_SETTINGS: 'dashflow_app_settings',
+  /** Глобальная настройка плотности отступов интерфейса. */
+  APP_DENSITY: 'app_density',
   /** Пользовательские обои (IndexedDB) */
   WALLPAPER_BLOB: 'dashflow_wallpaper_blob',
   /** Кеш прогноза погоды (IndexedDB) */
   WEATHER_CACHE: 'dashflow_weather_cache',
+  /** Заголовки уже загруженных RSS-материалов для утреннего дайджеста. */
+  RSS_HEADLINES_CACHE: 'dashflow_rss_headlines',
+  /** Снимок прежних ключей на момент их переноса из активного хранилища. */
+  LEGACY_WIDGET_CONTENT_ARCHIVE: 'dashflow_legacy_widget_content_archive',
   /** Данные виджета Todo */
   TODO_ITEMS: 'dashflow_widget_todo_items',
   /** Данные трекера привычек */

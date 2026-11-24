@@ -32,7 +32,7 @@ describe('AddWidgetModal Component', () => {
     const searchInput = screen.getByRole('textbox', { name: /поиск виджетов/i });
     fireEvent.change(searchInput, { target: { value: 'погода' } });
 
-    expect(screen.getByText(/погода/i)).toBeInTheDocument();
+    expect(screen.getByText(/^погода$/i)).toBeInTheDocument();
     expect(screen.queryByText(/цифровые часы/i)).not.toBeInTheDocument();
   });
 

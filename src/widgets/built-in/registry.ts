@@ -4,6 +4,10 @@ import { clockManifest } from './ClockWidget/manifest';
 import { searchManifest } from './SearchWidget/manifest';
 import { weatherManifest } from './WeatherWidget/manifest';
 import { todoManifest } from './TodoWidget/manifest';
+import { inboxManifest } from './InboxWidget/manifest';
+import { digestManifest } from './DigestWidget/manifest';
+import { agendaManifest } from './AgendaWidget/manifest';
+import { kanbanManifest } from './KanbanWidget/manifest';
 import { notesManifest } from './NotesWidget/manifest';
 import { quickLinksManifest } from './QuickLinksWidget/manifest';
 import { bookmarksManifest } from './BookmarksWidget/manifest';
@@ -23,6 +27,10 @@ export const BUILT_IN_MANIFESTS: Array<WidgetDefinition<any>> = [
   yearProgressManifest,
   weatherManifest,
   todoManifest,
+  inboxManifest,
+  digestManifest,
+  agendaManifest,
+  kanbanManifest,
   notesManifest,
   quickLinksManifest,
   bookmarksManifest,

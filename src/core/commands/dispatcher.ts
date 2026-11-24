@@ -21,6 +21,10 @@ export class UnknownCommandError extends Error {
 
 type AnyCommand = CommandDefinition<unknown, unknown>;
 type Listener = () => void;
+interface CommandRequest {
+  type: string;
+  payload: unknown;
+}
 
 export interface DispatcherOptions {
   context: CommandContext;
@@ -83,6 +87,50 @@ export function createDispatcher(options: DispatcherOptions) {
     return run;
   }
 
+  function prepare({ type, payload }: CommandRequest) {
+    const command = registry.get(type);
+    if (!command) throw new UnknownCommandError(type);
+    const validated = command.validate(payload);
+    return () => command.execute(validated, options.context);
+  }
+
+  /**
+   * В группе могут успешно выполниться только некоторые команды.
+   * Группу нельзя прервать другой командой или отменой из этой вкладки.
+   */
+  async function executeGroup(requests: readonly CommandRequest[]) {
+    const applied: number[] = [];
+    const undos: (() => Promise<void>)[] = [];
+    for (const [index, request] of requests.entries()) {
+      try {
+        const outcome = await prepare(request)();
+        applied.push(index);
+        if (outcome.undo) undos.push(outcome.undo);
+      } catch {
+        // Вызывающий получает индексы выполненных команд и может повторить остальные.
+      }
+    }
+    const first = requests[0];
+    const historyId =
+      first && undos.length
+        ? remember(first.type, { result: undefined, undo: () => undoGroup(undos) }, {})
+        : undefined;
+    if (applied.length) emit();
+    return { applied, historyId };
+  }
+
+  async function undoGroup(undos: (() => Promise<void>)[]) {
+    const errors: unknown[] = [];
+    for (const undo of [...undos].reverse()) {
+      try {
+        await undo();
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+    if (errors.length) throw errors[0];
+  }
+
   return {
     /** Выполняет команду: проверка входа → действие → запись в историю */
     dispatch<R = unknown>(
@@ -90,21 +138,23 @@ export function createDispatcher(options: DispatcherOptions) {
       payload: unknown,
       dispatchOptions: DispatchOptions = {},
     ): Promise<DispatchOutcome<R>> {
-      const command = registry.get(type);
-      if (!command) return Promise.reject(new UnknownCommandError(type));
-      let validated: unknown;
+      let run: () => Promise<CommandOutcome<unknown>>;
       try {
-        validated = command.validate(payload);
+        run = prepare({ type, payload });
       } catch (error) {
         // Ошибка валидации — отклонённый промис, как и любая другая ошибка команды
         return Promise.reject(error instanceof Error ? error : new Error(String(error)));
       }
       return enqueue(async () => {
-        const outcome = await command.execute(validated, options.context);
+        const outcome = await run();
         const historyId = remember(type, outcome, dispatchOptions);
         emit();
         return { ...outcome, historyId } as DispatchOutcome<R>;
       });
+    },
+
+    dispatchGroup(requests: readonly CommandRequest[]) {
+      return enqueue(() => executeGroup(requests));
     },
 
     /** Отменяет выбранное или последнее действие; false — такой записи уже нет. */

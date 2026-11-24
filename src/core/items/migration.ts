@@ -13,8 +13,8 @@ import type { ItemSource } from './types';
  *
  * Идемпотентность: маркер `legacyMigration` пишется в meta той же транзакцией, что и
  * записи (importBatch), — либо перенесено всё и есть маркер, либо ничего. Повторный запуск
- * при наличии маркера ничего не делает. Старые ключи хранилища не удаляются до 3.10.0:
- * откат на 3.8 видит прежние данные.
+ * при наличии маркера ничего не делает. С версии 3.10 старые ключи архивируются
+ * отдельно после успешной миграции.
  */
 
 export const LEGACY_MIGRATION_KEY = 'legacyMigration';
@@ -77,11 +77,15 @@ export async function runLegacyMigration(
     boards: converted.boards.length,
     skipped: converted.skipped,
   };
-  await options.repository.importBatch({
+  const result = await options.repository.importBatch({
     items: converted.items,
     boards: converted.boards,
     source: MIGRATION_SOURCE,
-    meta: { key: LEGACY_MIGRATION_KEY, value: record },
+    meta: {
+      key: LEGACY_MIGRATION_KEY,
+      value: record,
+      keepExisting: isLegacyMigrationRecord,
+    },
   });
-  return record;
+  return isLegacyMigrationRecord(result.previousMeta) ? result.previousMeta : record;
 }

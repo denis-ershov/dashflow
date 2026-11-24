@@ -209,7 +209,7 @@ export const RssSettingsForm: React.FC<RssSettingsFormProps> = ({
           label={t('rss.form.itemCount')}
           value={settings.itemCount ?? 12}
           min={3}
-          max={50}
+          max={1000}
           step={1}
           onChange={(val) => updateSetting('itemCount', val)}
         />

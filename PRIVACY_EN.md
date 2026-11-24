@@ -64,6 +64,10 @@ No personal identity tokens, cookies, or account identifiers are attached to the
 In compliance with the Chrome Web Store and Mozilla Add-ons Developer Program Policies:
 
 - **`storage`**: Required to persist your dashboard layout, theme preferences, and widget content locally on your computer.
+- **`alarms`**: Schedules your reminders when the dashboard tab is closed. Reminder data stays in browser storage.
+- **`notifications`** *(optional)*: Offered when you first save a reminder. The browser can display the item's title through the system notification service. If you decline, reminders remain available in the dashboard and toolbar badge.
+- **`activeTab` and `contextMenus`**: When you invoke Quick Capture, DashFlow can read the current tab's title and address and lets you include them in a local Inbox item. The optional context menu saves the page, link, or selection you choose. It is disabled until you enable it.
+- **Calendar host access** *(optional)*: DashFlow requests access to the specific host of an ICS calendar you add. The calendar URL is stored in this browser profile outside the exported backup. Requests go to the selected calendar provider.
 - **`bookmarks`** *(optional, requested when you click "Allow access" in the widget)*: Lets the Bookmarks widget show and edit your browser bookmarks. Bookmarks are read on your device and never transmitted.
 - **`tabs`, `sessions`** *(optional, requested on click)*: Power the "Open tabs" and "Recently closed" views of the Bookmarks widget. Tab titles and addresses are shown on your device only; they are never transmitted or stored.
 - **Access to RSS feed sites** *(optional, requested on click)*: Granted only for the sites of feeds you add (e.g. `https://example.com/*`), solely to download those feeds. DashFlow never reads or changes pages on those sites.

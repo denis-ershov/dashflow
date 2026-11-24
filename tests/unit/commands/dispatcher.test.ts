@@ -130,4 +130,22 @@ describe('Диспетчер команд', () => {
     expect(await dispatcher.undo()).toBe(true);
     expect(log).toEqual(['add 1', 'add 2', 'undo 1', 'undo 2']);
   });
+
+  it('ставит группу в очередь целиком и включает в её отмену успешные команды', async () => {
+    const { dispatcher, log, value } = counterSetup();
+    const group = dispatcher.dispatchGroup([
+      { type: 'counter.add', payload: 1 },
+      { type: 'counter.add', payload: 'invalid' },
+      { type: 'counter.add', payload: 2 },
+    ]);
+    const later = dispatcher.dispatch('counter.add', 3);
+    const result = await group;
+    await later;
+    expect(result.applied).toEqual([0, 2]);
+    expect(log).toEqual(['add 1', 'add 2', 'add 3']);
+    await dispatcher.undo();
+    expect(await dispatcher.undo(result.historyId)).toBe(true);
+    expect(value()).toBe(0);
+    expect(log.slice(-3)).toEqual(['undo 3', 'undo 2', 'undo 1']);
+  });
 });

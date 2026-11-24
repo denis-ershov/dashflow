@@ -3,6 +3,10 @@ import { shell } from './shell';
 import { panels } from './panels';
 import { widgetFields } from './widgetFields';
 import { widgets } from './widgets';
+import { reminders } from './reminders';
+import { digest } from './digest';
+import { agenda } from './agenda';
+import { capture } from './capture';
 
 /** Русский словарь — канонический: из него выводится тип TranslationKey */
 export const ru = {
@@ -11,4 +15,8 @@ export const ru = {
   ...panels,
   ...widgetFields,
   ...widgets,
+  reminders,
+  digest,
+  agenda,
+  capture,
 } as const;

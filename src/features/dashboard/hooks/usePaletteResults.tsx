@@ -13,6 +13,7 @@ import {
 import { useShallow } from 'zustand/react/shallow';
 import { useTranslation } from '@/core/i18n';
 import type { Item } from '@/core/items';
+import { activeLayoutModeOf } from '@/core/storage';
 import { PRESETS } from '@/core/theme/presets';
 import { useThemeStore } from '@/core/theme/themeStore';
 import { WidgetRegistry } from '@/core/widget/registry';
@@ -36,11 +37,11 @@ export type PaletteResult = {
 function usePaletteCommands(): PaletteResult[] {
   const { t } = useTranslation();
   const { setActiveModal, addWidget, layoutMode, setLayoutMode } = useDashboardStore(
-    useShallow(({ setActiveModal, addWidget, layoutMode, setLayoutMode }) => ({
-      setActiveModal,
-      addWidget,
-      layoutMode,
-      setLayoutMode,
+    useShallow((state) => ({
+      setActiveModal: state.setActiveModal,
+      addWidget: state.addWidget,
+      layoutMode: activeLayoutModeOf(state),
+      setLayoutMode: state.setLayoutMode,
     })),
   );
   const setPreset = useThemeStore((state) => state.setPreset);

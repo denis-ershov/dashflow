@@ -10,7 +10,9 @@ import {
   BREAKPOINT_COLUMNS,
   migrateDashboardSnapshot,
   SPACE_TITLE_LIMIT,
+  activeSpaceOf,
   deriveResponsiveLayouts,
+  createDashboardSpace,
   createDefaultDashboardSnapshot,
   findFirstAvailablePosition,
   isRectangleColliding,
@@ -23,11 +25,12 @@ import {
   type ActiveModal,
   type HeroSettings,
   type SpeedDialLink,
+  type SpacePreset,
 } from '@/core/storage';
 
 export type { ActiveModal };
 
-export type LayoutMode = 'zen' | 'modular' | 'canvas';
+export type LayoutMode = DashboardSnapshot['layoutMode'];
 
 interface DashboardRemoval {
   title: string;
@@ -39,7 +42,7 @@ export interface DashboardState extends DashboardSnapshot {
   isCommandPaletteOpen: boolean;
   activeModal: ActiveModal;
 
-  createSpace: (title: string) => boolean;
+  createSpace: (title: string, preset?: SpacePreset) => boolean;
   switchSpace: (id: string) => void;
   removeSpace: (id: string) => DashboardRemoval | undefined;
 
@@ -170,22 +173,14 @@ export const useDashboardStore = create<DashboardState>()(
       ...createDefaultDashboardSnapshot(),
       ...CLOSED_DASHBOARD_UI,
 
-      createSpace: (title) => {
+      createSpace: (title, preset = 'empty') => {
         const name = title.trim().slice(0, SPACE_TITLE_LIMIT);
         if (!name) return false;
-        const id = crypto.randomUUID();
-        const space: DashboardSpace = {
-          id,
-          title: name,
-          instances: [],
-          layouts: deriveResponsiveLayouts([]),
-          baseColumns: 12,
-          gap: 16,
-        };
+        const space = createDashboardSpace(name, preset);
         set((state) => ({
           ...CLOSED_DASHBOARD_UI,
           spaces: [...state.spaces, space],
-          activeSpaceId: id,
+          activeSpaceId: space.id,
         }));
         return true;
       },
@@ -225,7 +220,12 @@ export const useDashboardStore = create<DashboardState>()(
 
       toggleEditMode: () => set((state) => ({ isEditMode: !state.isEditMode })),
       setEditMode: (val) => set({ isEditMode: val }),
-      setLayoutMode: (mode) => set({ layoutMode: mode }),
+      setLayoutMode: (mode) =>
+        set((state) =>
+          activeSpaceOf(state).layoutMode
+            ? updateActiveSpace(state, () => ({ layoutMode: mode }))
+            : { layoutMode: mode },
+        ),
       updateHeroSettings: (settings) =>
         set((state) => ({
           heroSettings: { ...state.heroSettings, ...settings },

@@ -1,9 +1,11 @@
 import { defineBackground } from 'wxt/utils/define-background';
-import {
-  fetchFeedText,
-  isBackgroundRequest,
-  type FetchRssFeedResponse,
-} from '@/core/network/feedProxy';
+import { startCaptureBackground } from '@/core/capture/background';
+import { ITEMS_CHANGED_MESSAGE } from '@/core/items/events';
+import { startReminderBackground } from '@/core/reminders/background';
+import { startDigestBackground } from '@/core/digest/background';
+import { GENERATE_DIGEST_MESSAGE } from '@/core/digest/model';
+import { isBackgroundRequest, type FetchRssFeedResponse } from '@/core/network/feedProxy';
+import { fetchPermittedFeedText, startRssBackground } from '@/core/feeds/background';
 
 /**
  * Обновление применяется, только когда не открыта ни одна вкладка DashFlow: немедленный
@@ -51,23 +53,45 @@ function handleMessage(
     return false;
   }
 
-  void (async () => {
-    sendResponse(await fetchFeedText(message.url));
-  })();
+  void fetchPermittedFeedText(message.url).then(sendResponse, () => {
+    sendResponse({ success: false, error: 'NETWORK' });
+  });
   return true; // ответ асинхронный
 }
 
 export default defineBackground(() => {
   if (typeof chrome === 'undefined') return;
 
-  // Клик по иконке расширения открывает новую вкладку с DashFlow
-  chrome.action?.onClicked.addListener(() => {
-    void chrome.tabs.create({});
-  });
+  const refreshReminders = startReminderBackground();
+  const generateDigest = startDigestBackground();
+  startRssBackground();
+  const readCaptureTicket = startCaptureBackground();
 
   chrome.runtime.onUpdateAvailable?.addListener(() => void markUpdatePending());
   // Для onRemoved право tabs не нужно: приходит только id вкладки
   chrome.tabs?.onRemoved.addListener(() => void reloadIfNoOpenTabs());
 
-  chrome.runtime.onMessage.addListener(handleMessage);
+  chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
+    const capture = readCaptureTicket(message, sender);
+    if (capture !== undefined) {
+      sendResponse(capture);
+      return false;
+    }
+    if (message === GENERATE_DIGEST_MESSAGE) {
+      if (sender.id !== chrome.runtime.id) return false;
+      void generateDigest().then((success) => sendResponse({ success }));
+      return true;
+    }
+    if (
+      typeof message === 'object' &&
+      message !== null &&
+      'type' in message &&
+      message.type === ITEMS_CHANGED_MESSAGE
+    ) {
+      if (sender.id !== chrome.runtime.id) return false;
+      void refreshReminders().then((success) => sendResponse({ success }));
+      return true;
+    }
+    return handleMessage(message, sender, sendResponse);
+  });
 });

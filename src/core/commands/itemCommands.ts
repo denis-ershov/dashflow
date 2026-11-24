@@ -1,17 +1,11 @@
+import { ItemConflictError, ItemNotFoundError, type ItemMoveTarget } from '@/core/items/repository';
 import {
   ItemValidationError,
-  ItemConflictError,
-  ItemNotFoundError,
   parseBoardDraft,
   parseItemDraft,
   parseItemPatch,
-  type Board,
-  type BoardDraft,
-  type Item,
-  type ItemDraft,
-  type ItemMoveTarget,
-  type ItemPatch,
-} from '@/core/items';
+} from '@/core/items/validation';
+import type { Board, BoardDraft, Item, ItemDraft, ItemPatch } from '@/core/items/types';
 import { asRecord } from '@/core/network/jsonReaders';
 import type { CommandContext, CommandDefinition, CommandOutcome } from './types';
 
@@ -75,10 +69,16 @@ async function updateWithUndo(
   ctx: CommandContext,
   id: string,
   patch: ItemPatch,
+  expectedVersion?: number,
 ): Promise<CommandOutcome<Item>> {
   const current = await ctx.repository.get(id);
   const before = current ? snapshot(current, patch) : {};
-  const updated = await ctx.repository.update(id, patch, ctx.source, current?.version);
+  const updated = await ctx.repository.update(
+    id,
+    patch,
+    ctx.source,
+    expectedVersion ?? current?.version,
+  );
   if (!current || updated.version === current.version) return { result: updated };
   return {
     result: updated,
@@ -91,6 +91,18 @@ interface IdPayload {
   id: string;
 }
 const readIdPayload = (payload: unknown): IdPayload => ({ id: readId(asRecord(payload).id) });
+
+interface VersionedIdPayload extends IdPayload {
+  expectedVersion?: number;
+}
+
+function readExpectedVersion(value: unknown): number | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1) {
+    throw new ItemValidationError('version', 'expectedVersion');
+  }
+  return value;
+}
 
 export const itemCreate: CommandDefinition<ItemDraft, Item> = {
   type: 'item.create',
@@ -109,13 +121,17 @@ export const itemCreate: CommandDefinition<ItemDraft, Item> = {
   },
 };
 
-export const itemUpdate: CommandDefinition<{ id: string; patch: ItemPatch }, Item> = {
+export const itemUpdate: CommandDefinition<VersionedIdPayload & { patch: ItemPatch }, Item> = {
   type: 'item.update',
   validate: (payload) => {
     const record = asRecord(payload);
-    return { id: readId(record.id), patch: parseItemPatch(record.patch) };
+    return {
+      id: readId(record.id),
+      patch: parseItemPatch(record.patch),
+      expectedVersion: readExpectedVersion(record.expectedVersion),
+    };
   },
-  execute: ({ id, patch }, ctx) => updateWithUndo(ctx, id, patch),
+  execute: ({ id, patch, expectedVersion }, ctx) => updateWithUndo(ctx, id, patch, expectedVersion),
 };
 
 interface MovePayload extends ItemMoveTarget {
@@ -127,15 +143,7 @@ export const itemMove: CommandDefinition<MovePayload, Item> = {
   validate: (payload) => {
     const record = asRecord(payload);
     const patch = parseItemPatch({ status: record.status, boardId: record.boardId });
-    const expectedVersion = record.expectedVersion;
-    if (
-      expectedVersion !== undefined &&
-      (typeof expectedVersion !== 'number' ||
-        !Number.isSafeInteger(expectedVersion) ||
-        expectedVersion < 1)
-    ) {
-      throw new ItemValidationError('version', 'expectedVersion');
-    }
+    const expectedVersion = readExpectedVersion(record.expectedVersion);
     return {
       id: readId(record.id),
       status: patch.status,
@@ -160,32 +168,53 @@ export const itemMove: CommandDefinition<MovePayload, Item> = {
   },
 };
 
-export const itemComplete: CommandDefinition<{ id: string; done: boolean }, Item> = {
+export const itemComplete: CommandDefinition<VersionedIdPayload & { done: boolean }, Item> = {
   type: 'item.complete',
   validate: (payload) => {
     const record = asRecord(payload);
     if (typeof record.done !== 'boolean') throw new ItemValidationError('flag', 'done');
-    return { id: readId(record.id), done: record.done };
+    return {
+      id: readId(record.id),
+      done: record.done,
+      expectedVersion: readExpectedVersion(record.expectedVersion),
+    };
   },
-  execute: ({ id, done }, ctx) => updateWithUndo(ctx, id, { status: done ? 'done' : 'todo' }),
+  execute: ({ id, done, expectedVersion }, ctx) =>
+    updateWithUndo(ctx, id, { status: done ? 'done' : 'todo' }, expectedVersion),
 };
 
-export const itemSnooze: CommandDefinition<{ id: string; until: string }, Item> = {
+export const itemSnooze: CommandDefinition<VersionedIdPayload & { until: string }, Item> = {
   type: 'item.snooze',
   validate: (payload) => {
     const record = asRecord(payload);
     const patch = parseItemPatch({ remindAt: record.until });
     if (!patch.remindAt) throw new ItemValidationError('date', 'until');
-    return { id: readId(record.id), until: patch.remindAt };
+    return {
+      id: readId(record.id),
+      until: patch.remindAt,
+      expectedVersion: readExpectedVersion(record.expectedVersion),
+    };
   },
-  execute: ({ id, until }, ctx) => updateWithUndo(ctx, id, { remindAt: until }),
+  execute: ({ id, until, expectedVersion }, ctx) =>
+    updateWithUndo(ctx, id, { remindAt: until }, expectedVersion),
 };
 
-export const itemArchive: CommandDefinition<IdPayload, Item> = {
+export const itemArchive: CommandDefinition<VersionedIdPayload, Item> = {
   type: 'item.archive',
-  validate: readIdPayload,
-  async execute({ id }, ctx) {
-    const outcome = await updateWithUndo(ctx, id, { archivedAt: new Date().toISOString() });
+  validate: (payload) => {
+    const record = asRecord(payload);
+    return {
+      ...readIdPayload(record),
+      expectedVersion: readExpectedVersion(record.expectedVersion),
+    };
+  },
+  async execute({ id, expectedVersion }, ctx) {
+    const outcome = await updateWithUndo(
+      ctx,
+      id,
+      { archivedAt: new Date().toISOString() },
+      expectedVersion,
+    );
     return {
       ...outcome,
       label: { key: 'commands.archived', params: { title: outcome.result.title } },

@@ -5,6 +5,10 @@ import { shell } from './shell';
 import { panels } from './panels';
 import { widgetFields } from './widgetFields';
 import { widgets } from './widgets';
+import { reminders } from './reminders';
+import { digest } from './digest';
+import { agenda } from './agenda';
+import { capture } from './capture';
 
 export const en: LocaleShape<typeof ru> = {
   ...base,
@@ -12,4 +16,8 @@ export const en: LocaleShape<typeof ru> = {
   ...panels,
   ...widgetFields,
   ...widgets,
+  reminders,
+  digest,
+  agenda,
+  capture,
 };

@@ -14,6 +14,7 @@ export interface ItemsChangedEvent {
 type Listener = (event: ItemsChangedEvent) => void;
 
 const CHANNEL_NAME = 'dashflow-items';
+export const ITEMS_CHANGED_MESSAGE = 'dashflow:items-changed';
 const listeners = new Set<Listener>();
 let channel: BroadcastChannel | null = null;
 
@@ -41,6 +42,21 @@ function getChannel(): BroadcastChannel | null {
 export function publishItemsChanged(event: ItemsChangedEvent): void {
   listeners.forEach((listener) => listener(event));
   getChannel()?.postMessage(event);
+  // BroadcastChannel синхронизирует открытые страницы, а runtime будит спящий воркер.
+  if (
+    typeof window !== 'undefined' &&
+    typeof globalThis.chrome?.runtime?.sendMessage === 'function' &&
+    event.itemIds.length
+  ) {
+    try {
+      chrome.runtime.sendMessage(
+        { type: ITEMS_CHANGED_MESSAGE },
+        () => void chrome.runtime.lastError,
+      );
+    } catch {
+      // Если контекст обновлён, новое расписание восстановится при запуске расширения.
+    }
+  }
 }
 
 /** Подписка на изменения из этой и других страниц; возвращает функцию отписки */

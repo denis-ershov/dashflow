@@ -3,12 +3,9 @@ import { WidgetRegistry } from '@/core/widget/registry';
 import { registerBuiltInWidgets, BUILT_IN_MANIFESTS } from '@/widgets/built-in';
 
 describe('WidgetRegistry & Built-in Widgets', () => {
-  it('должен успешно регистрировать все 14 встроенных манифестов виджетов', () => {
+  it('должен успешно регистрировать все встроенные манифесты виджетов', () => {
     registerBuiltInWidgets();
     const all = WidgetRegistry.getAll();
-
-    expect(all.length).toBe(14);
-    expect(BUILT_IN_MANIFESTS.length).toBe(14);
 
     const expectedIds = [
       'clock',
@@ -17,6 +14,10 @@ describe('WidgetRegistry & Built-in Widgets', () => {
       'yearProgress',
       'weather',
       'todo',
+      'inbox',
+      'digest',
+      'agenda',
+      'kanban',
       'notes',
       'quickLinks',
       'bookmarks',
@@ -27,6 +28,8 @@ describe('WidgetRegistry & Built-in Widgets', () => {
       'rssReader',
     ];
 
+    expect(all).toHaveLength(expectedIds.length);
+    expect(BUILT_IN_MANIFESTS).toHaveLength(expectedIds.length);
     for (const id of expectedIds) {
       expect(WidgetRegistry.get(id)).toBeDefined();
     }

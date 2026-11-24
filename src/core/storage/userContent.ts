@@ -102,10 +102,15 @@ export function isValidContent(kind: ContentKind, value: unknown): boolean {
 /** Читает содержимое виджетов для экспорта; отсутствующие ключи пропускаются */
 export async function collectUserContent(
   instanceIds: readonly string[],
+  kinds?: readonly ContentKind[],
 ): Promise<UserContentSnapshot> {
   const missing = Symbol('missing');
+  const keys = userContentKeys(instanceIds).filter((key) => {
+    const kind = contentKindOf(key);
+    return !kinds || (kind !== null && kinds.includes(kind));
+  });
   const entries = await Promise.all(
-    userContentKeys(instanceIds).map(async (key) => {
+    keys.map(async (key) => {
       const value = await StorageAdapter.get<unknown>(key, missing);
       return [key, value] as const;
     }),
@@ -123,13 +128,17 @@ export interface RestoreResult {
  * Восстанавливает содержимое из файла экспорта. Пишутся только известные ключи с валидными
  * значениями; всё остальное отбрасывается, чтобы файл не мог перезаписать произвольные настройки.
  */
-export async function restoreUserContent(snapshot: unknown): Promise<RestoreResult> {
+export async function restoreUserContent(
+  snapshot: unknown,
+  kinds?: readonly ContentKind[],
+): Promise<RestoreResult> {
   const result: RestoreResult = { restored: [], rejected: [] };
   if (!isObject(snapshot)) return result;
 
   const entries = Object.entries(snapshot).slice(0, USER_CONTENT_LIMITS.maxKeys);
   for (const [key, value] of entries) {
     const kind = contentKindOf(key);
+    if (kind && kinds && !kinds.includes(kind)) continue;
     if (!kind || !isValidContent(kind, value)) {
       result.rejected.push(key);
       continue;

@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { useAppStore } from '@/stores/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useDashboardHydration, useDashboardStore } from '@/stores/useDashboardStore';
 import { useTranslation } from '@/core/i18n';
+import { activeLayoutModeOf } from '@/core/storage';
 import { GridEngine } from '@/features/dashboard/components/GridEngine';
 import { CommandPalette } from '@/features/dashboard/components/CommandPalette';
-import { SpacesModal } from '@/features/dashboard/components/SpacesModal';
 import { useSpaceHotkeys } from '@/features/dashboard/hooks/useSpaceHotkeys';
-import { SettingsModal } from '@/features/settings/components/SettingsModal';
-import { AddWidgetModal } from '@/features/dashboard/components/AddWidgetModal';
-import { MarketplaceModal } from '@/features/marketplace/components/MarketplaceModal';
-import { AppearanceModal, WallpaperBackground } from '@/features/appearance';
+import { WallpaperBackground } from '@/features/appearance/WallpaperBackground';
 import { HeroSection } from '@/features/hero';
 import { SpeedDialGrid, AddLinkModal } from '@/features/speedDial';
 import { FloatingDock, type DockPanel } from '@/features/dock';
@@ -24,6 +21,39 @@ import { Button } from '@/ui/primitives';
 import { crashLogger } from '@/core/observability';
 import { useUndoHotkey } from '@/features/commands/useUndoHotkey';
 import { deleteDashboardEntity } from '@/features/commands/deleteDashboardEntity';
+
+const SpacesModal = lazy(() =>
+  import('@/features/dashboard/components/SpacesModal').then(({ SpacesModal }) => ({ default: SpacesModal })),
+);
+const SettingsModal = lazy(() =>
+  import('@/features/settings/components/SettingsModal').then(({ SettingsModal }) => ({ default: SettingsModal })),
+);
+const AddWidgetModal = lazy(() =>
+  import('@/features/dashboard/components/AddWidgetModal').then(({ AddWidgetModal }) => ({ default: AddWidgetModal })),
+);
+const MarketplaceModal = lazy(() =>
+  import('@/features/marketplace/components/MarketplaceModal').then(({ MarketplaceModal }) => ({ default: MarketplaceModal })),
+);
+const AppearanceModal = lazy(() =>
+  import('@/features/appearance/AppearanceModal').then(({ AppearanceModal }) => ({ default: AppearanceModal })),
+);
+
+/** Загружает панель при первом открытии и сохраняет её состояние при закрытии. */
+function DeferredPanel({ open, children }: { open: boolean; children: React.ReactNode }) {
+  const [visited, setVisited] = useState(false);
+  const { t } = useTranslation();
+  if (open && !visited) setVisited(true);
+  if (!open && !visited) return null;
+  return (
+    <Suspense fallback={
+      <div role="status" className="fixed inset-x-0 bottom-28 z-50 mx-auto w-fit rounded-lg bg-surface px-4 py-2 text-sm text-fg">
+        {t('common.loading')}
+      </div>
+    }>
+      {children}
+    </Suspense>
+  );
+}
 
 /** Модалки, у которых есть своя кнопка в доке */
 const DOCK_PANELS: ReadonlyArray<DockPanel> = ['spaces', 'addWidget', 'marketplace', 'appearance', 'settings'];
@@ -49,7 +79,7 @@ function DashboardContent() {
     useShallow((s) => ({
       activeModal: s.activeModal,
       setActiveModal: s.setActiveModal,
-      layoutMode: s.layoutMode,
+      layoutMode: activeLayoutModeOf(s),
       setLayoutMode: s.setLayoutMode,
       heroSettings: s.heroSettings,
       updateHeroSettings: s.updateHeroSettings,
@@ -146,7 +176,7 @@ function DashboardContent() {
       <div className="relative z-10 flex-1 flex flex-col w-full">
         {/* Центральная Hero-зона */}
         {showHero && (
-          <section className="w-full pt-8 pb-4">
+          <section className="w-full pt-[var(--density-hero-start)] pb-[var(--density-hero-end)]">
             <HeroSection
               settings={heroSettings}
               onEngineChange={(eng) => updateHeroSettings({ defaultSearchEngine: eng })}
@@ -163,7 +193,7 @@ function DashboardContent() {
 
         {/* Модульная сетка виджетов (режимы Modular и Pure Canvas) */}
         {showGrid && (
-          <main className="flex-1 w-full px-3 sm:px-6 py-4">
+          <main className="flex-1 w-full px-[var(--density-page-inline)] py-[var(--density-page-block)]">
             <GridEngine key={activeSpaceId} />
           </main>
         )}
@@ -192,14 +222,16 @@ function DashboardContent() {
 
       {/* Модальные окна и оверлеи */}
       <CommandPalette />
-      <SpacesModal />
-      <SettingsModal />
-      <AddWidgetModal />
-      <MarketplaceModal />
-      <AppearanceModal
-        isOpen={activeModal === 'appearance'}
-        onClose={() => setActiveModal(null)}
-      />
+      <DeferredPanel open={activeModal === 'spaces'}><SpacesModal /></DeferredPanel>
+      <DeferredPanel open={activeModal === 'settings'}><SettingsModal /></DeferredPanel>
+      <DeferredPanel open={activeModal === 'addWidget'}><AddWidgetModal /></DeferredPanel>
+      <DeferredPanel open={activeModal === 'marketplace'}><MarketplaceModal /></DeferredPanel>
+      <DeferredPanel open={activeModal === 'appearance'}>
+        <AppearanceModal
+          isOpen={activeModal === 'appearance'}
+          onClose={() => setActiveModal(null)}
+        />
+      </DeferredPanel>
       <AddLinkModal
         isOpen={isAddLinkOpen}
         onClose={() => setIsAddLinkOpen(false)}

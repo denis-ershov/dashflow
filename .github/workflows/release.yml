@@ -49,8 +49,14 @@ jobs:
       - name: E2E Smoke on Built Chrome Extension
         run: xvfb-run --auto-servernum npm run test:e2e
 
+      - name: New Tab Warm LCP Budget
+        run: xvfb-run --auto-servernum npm run perf:startup
+
       - name: Package Extension Archives
         run: npm run zip:all
+
+      - name: Extension Size Budgets
+        run: npm run perf:budget
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2

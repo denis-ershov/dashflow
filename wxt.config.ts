@@ -8,6 +8,7 @@ export default defineConfig({
   // С WXT 0.20 public по умолчанию в корне проекта; иконки и _locales лежат в src/public
   publicDir: 'src/public',
   modules: ['@wxt-dev/module-react'],
+  zip: { excludeSources: ['**/*.log'] },
   manifest: (env) => {
     const isDev = env.mode === 'development';
     // Сайты RSS-лент: доступ запрашивается по клику только к адресам лент пользователя
@@ -15,14 +16,20 @@ export default defineConfig({
     // Закладки, вкладки и недавно закрытые вкладки — тоже по запросу (browserPermissions.ts).
     // Геолокация в манифест не входит: она не может быть необязательной в Chrome,
     // а navigator.geolocation на странице расширения сам спрашивает пользователя.
-    const optionalApis = ['bookmarks', 'tabs', 'sessions'];
+    const optionalApis = ['bookmarks', 'tabs', 'sessions', 'notifications', 'contextMenus'];
 
     return {
       name: '__MSG_extensionName__',
       description: '__MSG_extensionDescription__',
       version: pkg.version,
       default_locale: 'en',
-      permissions: ['storage'],
+      permissions: ['storage', 'alarms', 'activeTab'],
+      commands: {
+        'dashflow-quick-capture': {
+          suggested_key: { default: 'Alt+N' },
+          description: '__MSG_quickCaptureCommand__',
+        },
+      },
       host_permissions: [
         'https://api.open-meteo.com/*',
         'https://geocoding-api.open-meteo.com/*',

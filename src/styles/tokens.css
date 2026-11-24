@@ -49,6 +49,31 @@
      нет: подписи и даты внутри font-display падают на системный шрифт. */
   --dashflow-font-display: 'Outfit Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --dashflow-font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', serif;
+
+  /* Плотность меняет только внешние отступы страницы; интерактивные размеры остаются прежними. */
+  --density-page-inline: 0.75rem;
+  --density-page-block: 1rem;
+  --density-hero-start: 2rem;
+  --density-hero-end: 1rem;
+}
+
+@media (min-width: 40rem) {
+  :root {
+    --density-page-inline: 1.5rem;
+  }
+}
+
+:root[data-density='compact'] {
+  --density-page-inline: 0.5rem;
+  --density-page-block: 0.75rem;
+  --density-hero-start: 1.5rem;
+  --density-hero-end: 0.75rem;
+}
+
+@media (min-width: 40rem) {
+  :root[data-density='compact'] {
+    --density-page-inline: 1rem;
+  }
 }
 
 /**

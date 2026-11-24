@@ -187,6 +187,26 @@ describe('Миграция при запуске', () => {
     expect(await repo.query({ includeArchived: true })).toHaveLength(3);
   });
 
+  it('две вкладки используют один маркер и не создают дубликаты', async () => {
+    const bothReading = Promise.withResolvers<void>();
+    let reads = 0;
+    const readSnapshot = async () => {
+      reads++;
+      if (reads === 2) bothReading.resolve();
+      await bothReading.promise;
+      return { [TODO]: todos, [NOTES]: 'заметка' };
+    };
+    const options = { repository: repo, instances, labels, now, readSnapshot };
+    const [first, second] = await Promise.all([
+      runLegacyMigration(options),
+      runLegacyMigration(options),
+    ]);
+    expect(second).toEqual(first);
+    expect(first).toMatchObject({ items: 3, boards: 1 });
+    expect(await repo.query({ includeArchived: true })).toHaveLength(3);
+    expect(await repo.listBoards()).toHaveLength(1);
+  });
+
   it('ошибка записи не оставляет ни данных, ни маркера — следующий запуск повторит', async () => {
     const broken = vi
       .spyOn(repo, 'importBatch')

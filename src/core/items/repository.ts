@@ -235,6 +235,14 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
       return (await db()).get('items', id);
     },
 
+    /** Только активные записи с напоминанием, в порядке индекса remindAt. */
+    async listScheduledReminders(): Promise<Item[]> {
+      const indexed = await (await db()).getAllFromIndex('items', 'remindAt');
+      return indexed.filter(
+        (item) => !item.archivedAt && !item.deletedAt && item.status !== 'done',
+      );
+    },
+
     /**
      * Изменение записи. expectedVersion — защита от перезаписи чужого изменения
      * (две вкладки, агент): при несовпадении — ItemConflictError с актуальной версией.
@@ -456,21 +464,35 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
       items: readonly unknown[];
       boards: readonly unknown[];
       source: ItemSource;
-      meta?: { key: string; value: unknown };
-    }): Promise<{ items: number; boards: number }> {
+      meta?: { key: string; value: unknown; keepExisting?: (value: unknown) => boolean };
+    }): Promise<{ items: number; boards: number; previousMeta?: unknown }> {
       const items = input.items.map(parseStoredItem);
       const boards = input.boards.map(parseStoredBoard);
       const database = await db();
       const tx = database.transaction(['items', 'boards', 'changes', 'meta'], 'readwrite');
-      for (const board of boards) await tx.objectStore('boards').put(board);
-      for (const item of items) {
-        await tx.objectStore('items').put(item);
-        await tx
-          .objectStore('changes')
-          .add({ ...changeOf(item, 'create', input.source), at: now() });
+      try {
+        const meta = input.meta;
+        const metaStore = tx.objectStore('meta');
+        if (meta?.keepExisting) {
+          const previous = (await metaStore.get(meta.key))?.value;
+          if (meta.keepExisting(previous)) {
+            await tx.done;
+            return { items: 0, boards: 0, previousMeta: previous };
+          }
+        }
+        for (const board of boards) await tx.objectStore('boards').put(board);
+        for (const item of items) {
+          await tx.objectStore('items').put(item);
+          await tx
+            .objectStore('changes')
+            .add({ ...changeOf(item, 'create', input.source), at: now() });
+        }
+        if (meta) await metaStore.put({ key: meta.key, value: meta.value });
+        await tx.done;
+      } catch (error) {
+        await tx.done.catch(() => undefined);
+        throw error;
       }
-      if (input.meta) await tx.objectStore('meta').put(input.meta);
-      await tx.done;
       notify({
         type: 'items-changed',
         itemIds: items.map((item) => item.id),

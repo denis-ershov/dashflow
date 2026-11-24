@@ -1,4 +1,5 @@
 import {
+  activeLayoutModeOf,
   activeSpaceOf,
   createDefaultDashboardState,
   StorageAdapter,
@@ -125,6 +126,40 @@ describe('useDashboardStore (v3)', () => {
     store.switchSpace(work.id);
     expect(activeSpaceOf(useDashboardStore.getState()).baseColumns).toBe(16);
     expect(activeSpaceOf(useDashboardStore.getState()).instances).toHaveLength(1);
+  });
+
+  it('создаёт независимые режимы шаблонов и сохраняет общий режим для пустых пространств', () => {
+    const {
+      activeSpaceId: homeId,
+      createSpace,
+      setLayoutMode,
+      switchSpace,
+    } = useDashboardStore.getState();
+    const snapshot = useDashboardStore.getState;
+    setLayoutMode('zen');
+    expect(createSpace('Утро', 'morning')).toBe(true);
+    const morning = activeSpaceOf(snapshot());
+    expect(activeLayoutModeOf(snapshot())).toBe('modular');
+    expect(morning.instances.map(({ widgetId }) => widgetId)).toEqual(['digest', 'agenda']);
+    expect(createSpace('Фокус', 'focus')).toBe(true);
+    const focus = activeSpaceOf(snapshot());
+    expect(activeLayoutModeOf(snapshot())).toBe('canvas');
+    expect(focus.instances.map(({ widgetId }) => widgetId)).toEqual(['todo', 'pomodoro']);
+    expect(focus.layouts.xs.map(({ i, x }) => [i, x])).toEqual(
+      focus.instances.map(({ instanceId }) => [instanceId, 0]),
+    );
+
+    setLayoutMode('modular');
+    switchSpace(homeId);
+    expect(activeLayoutModeOf(snapshot())).toBe('zen');
+    expect(createSpace('Пустое')).toBe(true);
+    expect(activeLayoutModeOf(snapshot())).toBe('zen');
+    switchSpace(focus.id);
+    expect(activeLayoutModeOf(snapshot())).toBe('modular');
+    expect(createSpace('Другой фокус', 'focus')).toBe(true);
+    expect(activeSpaceOf(snapshot()).instances.map(({ instanceId }) => instanceId)).not.toEqual(
+      focus.instances.map(({ instanceId }) => instanceId),
+    );
   });
 
   it('при удалении активного пространства выбирает оставшееся и сохраняет последнее', () => {

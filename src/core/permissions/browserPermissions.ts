@@ -11,7 +11,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
  * Используются колбэки, а не промисы: пространство `chrome.*` в Firefox MV2 промисы не возвращает.
  */
 
-export type OptionalApiPermission = 'bookmarks' | 'tabs' | 'sessions';
+export type OptionalApiPermission = 'bookmarks' | 'tabs' | 'sessions' | 'notifications';
 
 export interface BrowserPermissionRequest {
   permissions?: readonly OptionalApiPermission[];
