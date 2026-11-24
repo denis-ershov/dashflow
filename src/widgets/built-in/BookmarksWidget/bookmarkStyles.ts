@@ -91,27 +91,27 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
 
   switch (shape) {
     case 'square': {
-      // Speed-dial squircle: иконка сверху, аккуратный заголовок снизу
+      // Компактные квадратные иконки приложений: контрастная подложка + ровная подпись
       const squareSizeMap = {
         xs: {
-          container: 'w-16 p-1 flex flex-col items-center text-center',
-          icon: 'w-10 h-10 rounded-xl mb-1 shadow-sm',
-          img: 'w-5 h-5',
-          title: 'text-2xs font-medium leading-tight max-w-[64px]',
+          container: 'w-full p-1 flex flex-col items-center text-center',
+          icon: 'w-11 h-11 rounded-md mb-1 shadow-1',
+          img: 'w-6 h-6',
+          title: 'text-2xs font-medium leading-tight w-full max-w-20',
           url: 'hidden',
         },
         compact: {
-          container: 'w-[76px] p-1.5 flex flex-col items-center text-center',
-          icon: 'w-12 h-12 rounded-lg mb-1.5 shadow-1',
-          img: 'w-6 h-6',
-          title: 'text-2xs font-medium leading-tight max-w-[72px]',
+          container: 'w-full p-1 flex flex-col items-center text-center',
+          icon: 'w-12 h-12 rounded-md mb-1 shadow-1',
+          img: 'w-7 h-7',
+          title: 'text-2xs font-medium leading-tight w-full max-w-24',
           url: 'hidden',
         },
         medium: {
-          container: 'w-24 p-2 flex flex-col items-center text-center',
-          icon: 'w-14 h-14 rounded-lg mb-1.5 shadow-1',
+          container: 'w-full p-2 flex flex-col items-center text-center',
+          icon: 'w-14 h-14 rounded-md mb-1 shadow-1',
           img: 'w-7 h-7',
-          title: 'text-xs font-medium leading-snug max-w-[88px]',
+          title: 'text-xs font-medium leading-snug w-full max-w-24',
           url: 'hidden',
         },
         large: {
@@ -336,34 +336,45 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
   return {
     containerClass,
     iconContainerClass: cn(
-      'flex items-center justify-center shrink-0 border transition-all duration-200 ease-out overflow-hidden relative',
+      'flex items-center justify-center shrink-0 border transition-all duration-fast ease-out overflow-hidden relative',
       isSpeedDial
         ? cn(
-            cardStyleClasses,
-            'group-hover/tile:scale-110 group-hover/tile:-translate-y-1 group-hover/tile:shadow-2 group-hover/tile:border-primary/60 group-active/tile:scale-95',
+            style === 'transparent'
+              ? 'bg-white/95 border-line/60 group-hover/tile:border-primary'
+              : cardStyleClasses,
+            'group-hover/tile:scale-105 group-hover/tile:shadow-2 group-hover/tile:border-primary',
           )
-        : 'bg-surface-hover/80 border-line/40 group-hover/tile:scale-105',
+        : 'bg-surface-hover/80 border-line/40',
       iconContainerClass,
     ),
-    iconImgClass: cn('object-contain shrink-0 transition-transform duration-200', iconImgClass),
+    iconImgClass: cn('object-contain shrink-0', iconImgClass),
     titleClass: cn(
-      'text-fg truncate block group-hover/tile:text-primary transition-colors duration-200',
+      'text-fg-muted truncate block mx-auto group-hover/tile:text-fg transition-colors duration-fast',
       titleClass,
     ),
-    urlClass: cn('truncate block text-fg-muted transition-colors duration-200', urlClass),
+    urlClass: cn('truncate block text-fg-muted transition-colors duration-fast', urlClass),
   };
 }
+
+const FIXED_SQUARE_COLS: Record<number, string> = {
+  1: 'grid grid-cols-1 gap-2 justify-items-center',
+  2: 'grid grid-cols-2 gap-2 justify-items-center',
+  3: 'grid grid-cols-3 gap-2 justify-items-center',
+  4: 'grid grid-cols-4 gap-2 justify-items-center',
+  5: 'grid grid-cols-5 gap-2 justify-items-center',
+  6: 'grid grid-cols-6 gap-2 justify-items-center',
+};
 
 export function getBookmarkGridClass(
   columns?: 1 | 2 | 3 | 4 | 5 | 6 | 'auto',
   shape?: BookmarkTileShape,
 ): string {
-  // Для Speed Dial (square, circle, rectangle-vertical) используем auto-fill сетку или flex-wrap:
+  // Для Speed Dial (square, circle, rectangle-vertical) используем фиксированную или auto-fill сетку:
   if (shape === 'square') {
-    if (columns && typeof columns === 'number') {
-      return `grid grid-cols-${columns} gap-3 justify-items-center`;
+    if (columns && typeof columns === 'number' && FIXED_SQUARE_COLS[columns]) {
+      return FIXED_SQUARE_COLS[columns];
     }
-    return 'grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-3 sm:gap-4 justify-items-center';
+    return 'grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-2 sm:gap-3 justify-items-center';
   }
 
   if (shape === 'circle') {

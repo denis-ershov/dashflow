@@ -128,7 +128,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
       aria-label={t('dock.label')}
       className={cn(
         'fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-(--z-rail,30)',
-        'glass-panel rounded-md p-1 flex flex-wrap items-center justify-center gap-1 shadow-2 select-none',
+        'bg-surface/95 backdrop-blur-md border border-line-hover rounded-md p-1 flex flex-wrap items-center justify-center gap-1 shadow-3 select-none',
         'w-max max-w-[calc(100%-1rem)]',
         className,
       )}

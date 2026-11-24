@@ -15,8 +15,8 @@ describe('bookmarkStyles helper', () => {
       hoverEffect: 'scale',
     });
 
-    // Speed-dial squircle: контейнер центрирован, иконка оформлена в стекле
-    expect(classes.containerClass).toContain('w-24');
+    // Speed-dial squircle: контейнер занимает ячейку сетки и центрирован, иконка оформлена в стекле
+    expect(classes.containerClass).toContain('w-full');
     expect(classes.containerClass).toContain('flex-col');
     expect(classes.containerClass).toContain('items-center');
     expect(classes.iconContainerClass).toContain('backdrop-blur-md');
@@ -68,8 +68,8 @@ describe('bookmarkStyles helper', () => {
 
   it('должен поддерживать размер xs (Мини) для всех форм', () => {
     const squareXs = getBookmarkTileClasses({ tileShape: 'square', tileSize: 'xs' });
-    expect(squareXs.containerClass).toContain('w-16');
-    expect(squareXs.iconContainerClass).toContain('w-10');
+    expect(squareXs.containerClass).toContain('w-full');
+    expect(squareXs.iconContainerClass).toContain('w-11');
 
     const circleXs = getBookmarkTileClasses({ tileShape: 'circle', tileSize: 'xs' });
     expect(circleXs.containerClass).toContain('w-14');

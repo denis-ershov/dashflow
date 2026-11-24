@@ -104,7 +104,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
     <>
       {/* Шапка виджета (для panel и в режиме редактирования для остальных) */}
       {(!isChromeless || isEditMode) && (
-        <div className="flex items-center justify-between h-10 px-3 border-b border-line bg-canvas/40 select-none shrink-0">
+        <div className="flex items-center justify-between h-9 px-3 border-b border-line/60 select-none shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             {isEditMode && (
               <button
@@ -116,8 +116,11 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
               </button>
             )}
             {title && (
-              <h3 className="flex items-center gap-2 font-mono text-2xs font-semibold uppercase tracking-wider text-fg-muted truncate">
-                <span aria-hidden="true" className="inline-block w-1 h-3 bg-primary shrink-0" />
+              <h3 className="flex items-center gap-2 text-xs font-semibold text-fg truncate">
+                <span
+                  aria-hidden="true"
+                  className="inline-block w-1 h-3 rounded-xs bg-primary shrink-0"
+                />
                 <span className="truncate">{title}</span>
               </h3>
             )}

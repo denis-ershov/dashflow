@@ -260,7 +260,13 @@ export const GridEngine: React.FC = () => {
       >
         {instances.map((item) => {
           const definition = WidgetRegistry.get(item.widgetId);
-          const widgetTitle = definition?.nameKey ? t(definition.nameKey) : definition?.name || item.widgetId;
+          const customTitle =
+            typeof item.settings?.folderTitle === 'string' && item.settings.folderTitle.trim()
+              ? item.settings.folderTitle.trim()
+              : undefined;
+          const widgetTitle =
+            customTitle ??
+            (definition?.nameKey ? t(definition.nameKey) : definition?.name || item.widgetId);
 
           return (
             <div

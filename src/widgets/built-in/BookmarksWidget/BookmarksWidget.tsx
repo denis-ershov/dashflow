@@ -486,10 +486,18 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
 
   const gridClass = getBookmarkGridClass(columns, tileShape);
   const isSpeedDialShape = tileShape === 'square' || tileShape === 'circle';
+  const showToolbar =
+    mode === 'folder-tabs' ||
+    folderSource !== 'custom' ||
+    isEditMode ||
+    isAddingItem ||
+    showSearch ||
+    Boolean(searchQuery);
 
   return (
-    <div className="flex flex-col h-full space-y-3">
+    <div className="relative flex flex-col h-full gap-2">
       {/* === ВЕРХНИЙ ТУЛБАР: НАВИГАЦИЯ, ВКЛАДКИ И ИНСТРУМЕНТЫ === */}
+      {showToolbar && (
       <div className="flex items-center justify-between gap-2 shrink-0 flex-wrap sm:flex-nowrap">
         {/* Левая часть: переключатель вкладок (folder-tabs) или умный хлебный крошек (folder) */}
         {mode === 'folder-tabs' ? (
@@ -887,6 +895,19 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
           )}
         </div>
       </div>
+      )}
+
+      {/* Тихая кнопка добавления при наведении для чистых пользовательских папок */}
+      {!showToolbar && activeSubTab === 'bookmarks' && (
+        <button
+          type="button"
+          aria-label={t('bookmarks.addItem')}
+          onClick={() => setIsAddingItem(true)}
+          className="absolute bottom-1 right-1 z-10 flex items-center justify-center w-8 h-8 rounded-sm border border-line bg-surface/90 text-fg-muted hover:text-primary hover:border-primary opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      )}
 
       {/* Форма добавления закладки */}
       {activeSubTab === 'bookmarks' && isAddingItem && (
