@@ -6,6 +6,7 @@ import { startDigestBackground } from '@/core/digest/background';
 import { GENERATE_DIGEST_MESSAGE } from '@/core/digest/model';
 import { isBackgroundRequest, type FetchRssFeedResponse } from '@/core/network/feedProxy';
 import { fetchPermittedFeedText, startRssBackground } from '@/core/feeds/background';
+import { startHubBackground } from '@/core/hub/background';
 
 /**
  * Обновление применяется, только когда не открыта ни одна вкладка DashFlow: немедленный
@@ -66,12 +67,18 @@ export default defineBackground(() => {
   const generateDigest = startDigestBackground();
   startRssBackground();
   const readCaptureTicket = startCaptureBackground();
+  const hub = startHubBackground();
 
   chrome.runtime.onUpdateAvailable?.addListener(() => void markUpdatePending());
   // Для onRemoved право tabs не нужно: приходит только id вкладки
   chrome.tabs?.onRemoved.addListener(() => void reloadIfNoOpenTabs());
 
   chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
+    const requestHub = hub.request(message, sender);
+    if (requestHub) {
+      void requestHub.then(sendResponse, () => sendResponse({ ok: false, issue: 'data' }));
+      return true;
+    }
     const capture = readCaptureTicket(message, sender);
     if (capture !== undefined) {
       sendResponse(capture);
@@ -89,6 +96,7 @@ export default defineBackground(() => {
       message.type === ITEMS_CHANGED_MESSAGE
     ) {
       if (sender.id !== chrome.runtime.id) return false;
+      hub.wake();
       void refreshReminders().then((success) => sendResponse({ success }));
       return true;
     }

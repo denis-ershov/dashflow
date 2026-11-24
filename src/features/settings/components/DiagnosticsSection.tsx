@@ -22,6 +22,7 @@ import {
   FEATURE_FLAG_DEFINITIONS,
 } from '@/core/featureFlags';
 import { runLogged } from '@/core/observability';
+import { HubDiagnostics } from '@/features/hub/HubDiagnostics';
 
 function formatTime(timestamp: number): string {
   try {
@@ -187,6 +188,8 @@ export const DiagnosticsSection: React.FC = () => {
           </div>
         )}
       </div>
+
+      <HubDiagnostics />
 
       {/* Карточка 2: Журнал событий и логов (Live Log Viewer) */}
       <div className="p-4 rounded-xl bg-surface border border-line space-y-3">

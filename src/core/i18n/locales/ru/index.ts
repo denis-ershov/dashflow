@@ -7,6 +7,7 @@ import { reminders } from './reminders';
 import { digest } from './digest';
 import { agenda } from './agenda';
 import { capture } from './capture';
+import { hub } from './hub';
 
 /** Русский словарь — канонический: из него выводится тип TranslationKey */
 export const ru = {
@@ -19,4 +20,5 @@ export const ru = {
   digest,
   agenda,
   capture,
+  hub,
 } as const;

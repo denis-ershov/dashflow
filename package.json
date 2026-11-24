@@ -1,6 +1,6 @@
 {
   "name": "dashflow",
-  "version": "3.10.0",
+  "version": "4.0.0",
   "description": "Современный, адаптивный и расширяемый дашборд новой вкладки для браузера (React 19, Tailwind CSS 4, WXT, Manifest V3)",
   "private": true,
   "type": "module",
@@ -29,8 +29,8 @@
     "compile": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"{src,tests}/**/*.{ts,tsx,css}\"",
-    "format:check": "prettier --check \"{src,tests}/**/*.{ts,tsx,css}\"",
+    "format": "prettier --write \"{src,tests,hub/src,hub/test,packages/shared/src}/**/*.{ts,tsx,css}\"",
+    "format:check": "prettier --check \"{src,tests,hub/src,hub/test,packages/shared/src}/**/*.{ts,tsx,css}\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -38,7 +38,10 @@
     "perf:budget": "node scripts/check-extension-budget.mjs",
     "perf:startup": "node scripts/check-extension-startup.mjs",
     "screenshots": "node scripts/store-screenshots.mjs",
-    "postinstall": "wxt prepare"
+    "postinstall": "wxt prepare",
+    "build:hub": "npm run build -w @dashflow/shared && npm run build -w dashflow-hub",
+    "test:hub": "npm run build -w @dashflow/shared && npm test -w dashflow-hub",
+    "pack:hub": "npm run build:hub && node scripts/pack-hub.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "6.3.1",
@@ -48,7 +51,6 @@
     "@tanstack/react-query": "^5.66.5",
     "@xmldom/xmldom": "0.9.12",
     "clsx": "^2.1.1",
-    "fractional-indexing": "^4.0.0",
     "idb": "^8.0.3",
     "immer": "^10.1.1",
     "lucide-react": "^0.475.0",
@@ -94,5 +96,9 @@
     "tmp": "^0.2.6",
     "shell-quote": "^1.8.5",
     "tar": "^7.5.22"
-  }
+  },
+  "workspaces": [
+    "packages/shared",
+    "hub"
+  ]
 }

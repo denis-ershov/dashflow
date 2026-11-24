@@ -1,5 +1,6 @@
 import type { IDBPObjectStore } from 'idb';
 import { openItemsDb, type ItemsDb, type ItemsDbSchema, type StoredChange } from './db';
+import { HUB_WRITE_STORES, queueHubWrites } from './hubOutbox';
 import type { ItemsChangedEvent } from './events';
 import { orderBetween, ulid } from './ids';
 import {
@@ -52,10 +53,16 @@ const DEFAULT_COLUMNS = [
   { id: 'doing', title: 'In progress' },
   { id: 'done', title: 'Done' },
 ];
-type ItemWriteStore = IDBPObjectStore<ItemsDbSchema, ['items', 'changes'], 'items', 'readwrite'>;
+const ITEM_WRITE_STORES = ['items', 'changes', ...HUB_WRITE_STORES] as const;
+type ItemWriteStore = IDBPObjectStore<
+  ItemsDbSchema,
+  typeof ITEM_WRITE_STORES,
+  'items',
+  'readwrite'
+>;
 type ChangeWriteStore = IDBPObjectStore<
   ItemsDbSchema,
-  ['items', 'changes'],
+  typeof ITEM_WRITE_STORES,
   'changes',
   'readwrite'
 >;
@@ -118,7 +125,7 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
     prepare: (store: ItemWriteStore) => Promise<{ result: Result; writes: Item[] }>,
   ): Promise<Result> {
     const database = await db();
-    const tx = database.transaction(['items', 'changes'], 'readwrite');
+    const tx = database.transaction(ITEM_WRITE_STORES, 'readwrite');
     const store = tx.objectStore('items');
     const changes = tx.objectStore('changes');
     try {
@@ -129,6 +136,7 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
         const seq = await changes.add(changeOf(item, op, source));
         trim ||= seq % 100 === 0;
       }
+      await queueHubWrites(tx, writes);
       if (trim) await trimChanges(changes);
       await tx.done;
       if (writes.length) notify({ type: 'items-changed', itemIds: writes.map(({ id }) => id) });
@@ -337,19 +345,16 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
     async purgeDeleted(source: ItemSource, retentionMs = TRASH_RETENTION_MS): Promise<number> {
       const database = await db();
       const threshold = new Date(Date.parse(now()) - retentionMs).toISOString();
-      const expired = await database.getAllFromIndex(
-        'items',
-        'deletedAt',
-        IDBKeyRange.upperBound(threshold),
-      );
-      if (expired.length === 0) return 0;
       const tx = database.transaction(['items', 'changes'], 'readwrite');
+      const items = tx.objectStore('items');
+      const expired = await items.index('deletedAt').getAll(IDBKeyRange.upperBound(threshold));
       for (const item of expired) {
-        await tx.objectStore('items').delete(item.id);
+        await items.delete(item.id);
         await tx.objectStore('changes').add({ ...changeOf(item, 'purge', source), at: now() });
       }
       await tx.done;
-      notify({ type: 'items-changed', itemIds: expired.map((item) => item.id) });
+      if (expired.length)
+        notify({ type: 'items-changed', itemIds: expired.map((item) => item.id) });
       return expired.length;
     },
 
@@ -415,18 +420,25 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
         createdAt: timestamp,
         updatedAt: timestamp,
       };
-      await (await db()).put('boards', board);
+      const tx = (await db()).transaction(['boards', ...HUB_WRITE_STORES], 'readwrite');
+      await Promise.all([
+        tx.objectStore('boards').put(board),
+        queueHubWrites(tx, [], [board]),
+        tx.done,
+      ]);
       notify({ type: 'items-changed', itemIds: [], boards: true });
       return board;
     },
 
     async updateBoard(id: string, draftInput: Partial<BoardDraft>): Promise<Board> {
       const database = await db();
-      const current = await database.get('boards', id);
+      const tx = database.transaction(['boards', ...HUB_WRITE_STORES], 'readwrite');
+      const boards = tx.objectStore('boards');
+      const current = await boards.get(id);
       if (!current) throw new ItemNotFoundError(id);
       const draft = parseBoardDraft({ title: current.title, ...draftInput });
       const board: Board = { ...current, ...draft, updatedAt: now() };
-      await database.put('boards', board);
+      await Promise.all([boards.put(board), queueHubWrites(tx, [], [board]), tx.done]);
       notify({ type: 'items-changed', itemIds: [], boards: true });
       return board;
     },
@@ -434,12 +446,14 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
     /** Архивирует доску или возвращает из архива (записи доски не трогаются) */
     async setBoardArchived(id: string, archived: boolean): Promise<Board> {
       const database = await db();
-      const current = await database.get('boards', id);
+      const tx = database.transaction(['boards', ...HUB_WRITE_STORES], 'readwrite');
+      const boards = tx.objectStore('boards');
+      const current = await boards.get(id);
       if (!current) throw new ItemNotFoundError(id);
       const board: Board = { ...current, updatedAt: now() };
       if (archived) board.archivedAt = board.updatedAt;
       else delete board.archivedAt;
-      await database.put('boards', board);
+      await Promise.all([boards.put(board), queueHubWrites(tx, [], [board]), tx.done]);
       notify({ type: 'items-changed', itemIds: [], boards: true });
       return board;
     },
@@ -469,7 +483,10 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
       const items = input.items.map(parseStoredItem);
       const boards = input.boards.map(parseStoredBoard);
       const database = await db();
-      const tx = database.transaction(['items', 'boards', 'changes', 'meta'], 'readwrite');
+      const tx = database.transaction(
+        ['items', 'boards', 'changes', ...HUB_WRITE_STORES],
+        'readwrite',
+      );
       try {
         const meta = input.meta;
         const metaStore = tx.objectStore('meta');
@@ -487,6 +504,7 @@ export function createItemRepository(options: ItemRepositoryOptions = {}) {
             .objectStore('changes')
             .add({ ...changeOf(item, 'create', input.source), at: now() });
         }
+        await queueHubWrites(tx, items, boards);
         if (meta) await metaStore.put({ key: meta.key, value: meta.value });
         await tx.done;
       } catch (error) {

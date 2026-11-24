@@ -105,6 +105,22 @@ function DashboardContent() {
   useSpaceHotkeys(isInitialized && dashboardStatus === 'ready');
 
   useEffect(() => {
+    if (dashboardStatus !== 'ready' || !globalThis.chrome?.runtime?.id) return;
+    let stop: (() => void) | undefined;
+    let disposed = false;
+    void import('@/core/hub/tab').then(
+      ({ attachHubTab }) => {
+        if (!disposed) stop = attachHubTab();
+      },
+      () => console.warn('[DashFlow] Не удалось загрузить клиент Hub'),
+    );
+    return () => {
+      disposed = true;
+      stop?.();
+    };
+  }, [dashboardStatus]);
+
+  useEffect(() => {
     // Стор запускается на значениях по умолчанию даже при ошибке чтения — её только журналируем
     initApp().catch((error: unknown) => crashLogger.logError(error, 'general', { stage: 'initApp' }));
     initializeTheme();

@@ -12,6 +12,7 @@ import { DiagnosticsSection } from './DiagnosticsSection';
 import { runLogged } from '@/core/observability';
 import type { HeroSettings } from '@/core/storage/dashboardMigrations';
 import { CaptureMenuSettings } from '@/features/capture/CaptureMenuSettings';
+import { HubSettings } from '@/features/hub/HubSettings';
 
 export const SettingsModal: React.FC = () => {
   const {
@@ -338,6 +339,7 @@ export const SettingsModal: React.FC = () => {
           </div>
           {isOpen && <CaptureMenuSettings />}
         </div>
+        <HubSettings />
 
         {/* Секция 5: Импорт и Экспорт */}
         <div className="p-4 rounded-xl bg-surface border border-line flex items-center justify-between">

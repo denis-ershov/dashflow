@@ -8,7 +8,9 @@ export default defineConfig({
   // С WXT 0.20 public по умолчанию в корне проекта; иконки и _locales лежат в src/public
   publicDir: 'src/public',
   modules: ['@wxt-dev/module-react'],
-  zip: { excludeSources: ['**/*.log'] },
+  zip: {
+    excludeSources: ['**/*.log', '**/dist/**', 'coverage/**', 'playwright-report/**', 'test-results/**'],
+  },
   manifest: (env) => {
     const isDev = env.mode === 'development';
     // Сайты RSS-лент: доступ запрашивается по клику только к адресам лент пользователя

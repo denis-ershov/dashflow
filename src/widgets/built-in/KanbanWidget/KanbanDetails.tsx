@@ -5,6 +5,7 @@ import { MarkdownPreview } from '@/ui/feedback/MarkdownPreview';
 import { Drawer } from '@/ui/overlays';
 import { Button } from '@/ui/primitives';
 import { CardMetadata } from './KanbanCard';
+import { KanbanEarlierVersion } from './KanbanEarlierVersion';
 import type { Lane, Placement } from './kanbanOrder';
 import { kanbanSelectClass } from './kanbanStyles';
 
@@ -47,6 +48,7 @@ export function KanbanDetails({
           <p className="text-sm text-fg-muted">{t('kanban.noDescription')}</p>
         )}
       </div>
+      <KanbanEarlierVersion itemId={item.id} version={item.version} />
       <div className="space-y-2">
         <div className="flex flex-wrap gap-2">
           <Button

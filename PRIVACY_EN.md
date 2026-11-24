@@ -1,6 +1,7 @@
 # DashFlow Privacy Policy
 
-**Last Updated:** October 30, 2026  
+**Last Updated:** November 24, 2026
+
 **Version:** 1.0.0
 
 ---
@@ -15,7 +16,7 @@ We take your privacy seriously. This policy describes what data DashFlow process
 
 ## Privacy Principles
 
-1. **Privacy by Design**: All user data is stored locally on your device.
+1. **Privacy by Design**: Data stays in your browser profile by default. Sync with your own DashFlow Hub is optional.
 2. **Zero Telemetry**: We do not collect analytics, usage metrics, or personally identifiable information.
 3. **Data Minimization**: We only request permissions strictly necessary for the extension features you choose to use.
 4. **Transparency**: Our complete source code is publicly accessible on GitHub for independent audit.
@@ -40,7 +41,13 @@ DashFlow stores the following configuration items **strictly locally** in your b
   - Embedded iframe URLs
 - **Diagnostics**: Rotating buffer of local crash events (max 20 entries), viewable only by you in the settings panel.
 
-**None of this data is ever transmitted to our servers or third-party tracking services.**
+DashFlow keeps workspace data in your browser until you connect your own Hub. DashFlow does not send workspace data to the developers.
+
+### Optional DashFlow Hub sync
+
+When you pair DashFlow, the extension requests permission for the host you enter. Tasks, notes, links, reminders, digests, saved articles, and boards sync directly with your Hub. This includes text and URLs that you save to the Inbox. A remote Hub requires HTTPS.
+
+The device token stays in local extension storage and is excluded from JSON exports. Disconnecting stops sync and keeps the browser copy. You manage the Hub copy, its backups, and its version history separately.
 
 ---
 
@@ -78,10 +85,10 @@ In compliance with the Chrome Web Store and Mozilla Add-ons Developer Program Po
 
 ## User Rights & GDPR / CCPA Compliance
 
-Because DashFlow stores all data locally on your device:
+You can manage your local DashFlow data from your browser profile.
 - **Right to Access**: You can inspect all stored settings at any time in the Settings panel or by exporting your JSON configuration.
 - **Right to Rectification**: All settings and notes can be edited directly within the interface.
-- **Right to Erasure**: Uninstalling the extension or clearing extension data immediately and permanently removes all stored data.
+- **Right to Erasure**: Uninstalling the extension or clearing extension data removes the browser copy. You manage deletion from your Hub separately.
 - **Right to Portability**: You can export your entire dashboard configuration to a `.json` file at any time.
 
 ---

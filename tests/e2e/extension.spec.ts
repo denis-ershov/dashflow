@@ -433,6 +433,7 @@ test('Inbox принимает задачу с метаданными и отк�
 }) => {
   const page = await context.newPage();
   await page.goto(`chrome-extension://${extensionId}/newtab.html`);
+  await expect(page.getByRole('button', { name: 'Command palette', exact: true })).toBeVisible();
   await page.keyboard.press('Control+k');
   const search = page.getByRole('combobox', { name: 'Search workspace and commands' });
   await search.fill('Inbox');

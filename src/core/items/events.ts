@@ -46,7 +46,7 @@ export function publishItemsChanged(event: ItemsChangedEvent): void {
   if (
     typeof window !== 'undefined' &&
     typeof globalThis.chrome?.runtime?.sendMessage === 'function' &&
-    event.itemIds.length
+    (event.itemIds.length || event.boards)
   ) {
     try {
       chrome.runtime.sendMessage(

@@ -1,0 +1,26 @@
+{
+  "name": "dashflow-hub",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "bin": {
+    "dashflow-hub": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "tsc -p tsconfig.json --noEmit && vitest run",
+    "start": "node dist/cli.js serve"
+  },
+  "dependencies": {
+    "@dashflow/shared": "0.1.0",
+    "@fastify/websocket": "11.3.7",
+    "fastify": "5.12.8"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.2"
+  }
+}

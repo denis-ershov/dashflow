@@ -1,0 +1,13 @@
+.git
+.output
+.wxt
+node_modules
+**/node_modules
+**/*.sqlite
+**/*.sqlite-*
+**/.env
+**/.env.*
+!.env.example
+coverage
+playwright-report
+test-results

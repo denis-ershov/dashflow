@@ -16,7 +16,7 @@ export default defineConfig({
     include: ['tests/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
-      include: ['src/**/*.{ts,tsx}'],
+      include: ['src/**/*.{ts,tsx}', 'packages/shared/src/**/*.ts'],
       exclude: ['src/**/*.d.ts'],
       reporter: ['text-summary', 'html'],
       // Базовая линия 2026-10-30 (Vitest 5: v8 считает по AST, а не по строкам, поэтому цифры

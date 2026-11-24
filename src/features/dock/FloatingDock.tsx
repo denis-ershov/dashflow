@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Tooltip } from '@/ui/primitives';
 import { useTranslation } from '@/core/i18n';
+import { useHubStatus } from '@/features/hub/useHubStatus';
 
 /** Панель или режим, который сейчас открыт кнопкой дока — подсвечивается как активный */
 export type DockPanel =
@@ -73,7 +74,7 @@ const DockButton: React.FC<DockButtonProps> = ({
         aria-label={label}
         aria-pressed={pressed}
         className={cn(
-          'size-11 rounded-full flex items-center justify-center cursor-pointer transition-colors duration-fast active:scale-95',
+          'relative size-11 rounded-full flex items-center justify-center cursor-pointer transition-colors duration-fast active:scale-95',
           TONE_CLASSES[tone],
         )}
       >
@@ -106,10 +107,21 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
   className,
 }) => {
   const { t } = useTranslation();
+  const hubStatus = useHubStatus();
   const toneFor = (panel: DockPanel): DockButtonTone =>
     activePanel === panel ? 'active' : 'default';
   const isZen = layoutMode === 'zen';
   const canEditGrid = onToggleEditMode && (layoutMode === 'modular' || layoutMode === 'canvas');
+  const settingsLabel =
+    hubStatus.state === 'disconnected'
+      ? t('dock.settings')
+      : `${t('dock.settings')}: ${t(`hub.${hubStatus.state}`)}`;
+  const hubStatusTone =
+    hubStatus.state === 'connected'
+      ? 'bg-success'
+      : hubStatus.state === 'connecting'
+        ? 'bg-primary'
+        : 'bg-warning';
 
   return (
     <nav
@@ -196,8 +208,19 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
       <DockDivider />
 
       <DockButton
-        label={t('dock.settings')}
-        icon={<Settings className={ICON} />}
+        label={settingsLabel}
+        tooltip={settingsLabel}
+        icon={
+          <>
+            <Settings className={ICON} />
+            {hubStatus.state !== 'disconnected' && (
+              <span
+                aria-hidden="true"
+                className={`absolute end-1 top-1 size-2 rounded-full ring-2 ring-canvas ${hubStatusTone}`}
+              />
+            )}
+          </>
+        }
         onClick={onOpenSettings}
         tone={toneFor('settings')}
       />

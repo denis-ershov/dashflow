@@ -1,0 +1,592 @@
+openapi: 3.1.0
+info:
+  title: DashFlow Hub API
+  version: 0.1.0
+  description: >-
+    HTTP API v1 backed by the Hub SQLite repository. Token scopes are enforced
+    server side. Default writes/minute is 60 (configurable up to 10000); request
+    body limit is 256 KiB and request timeout is 15 seconds. Hub defaults to
+    loopback. Use TLS at a reverse proxy for remote access; never expose the
+    plain Hub port publicly. Extension Origin is exact allowlist only and does
+    not replace Bearer authentication.
+
+    This contract change does not alter SQLite schema or API behavior, so it
+    requires no migration. Roll back by reverting the application/document
+    version; retain the existing SQLite database and take backups using the
+    Hub operations procedure. Never include tokens, webhook path secrets, or
+    signing keys in logs. The stream carries sequence notifications only; read
+    actual changes through the authenticated changes endpoint.
+servers:
+  - url: http://127.0.0.1:47831
+security:
+  - bearerAuth: []
+tags:
+  - { name: Health }
+  - { name: Pairing }
+  - { name: Items }
+  - { name: Boards }
+  - { name: Sync }
+  - { name: Webhooks }
+  - { name: Stream }
+paths:
+  /v1/health:
+    get:
+      tags: [Health]
+      operationId: health
+      security: []
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema: { type: object, required: [status], properties: { status: { const: ok } } }
+  /v1/pair:
+    post:
+      tags: [Pairing]
+      operationId: pair
+      security: []
+      description: One-use six digit code, expires in five minutes and is bound to allowlisted Origin. Pair limits are 10/min per IP and 30/min globally. Returns a secret sync token once.
+      parameters:
+        - { $ref: '#/components/parameters/Origin' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [code, name]
+              properties:
+                code: { type: string, pattern: '^\d{6}$' }
+                name: { type: string, minLength: 1, maxLength: 100 }
+      responses:
+        '200':
+          description: Paired device
+          content:
+            application/json:
+              schema: { type: object, required: [token], properties: { token: { $ref: '#/components/schemas/Token' } } }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /v1/items:
+    get:
+      tags: [Items]
+      operationId: listItems
+      x-required-scopes: [items:read]
+      parameters:
+        - { name: kind, in: query, schema: { $ref: '#/components/schemas/ItemKind' } }
+        - { name: status, in: query, schema: { type: string, maxLength: 64 } }
+        - { name: boardId, in: query, schema: { $ref: '#/components/schemas/Id' } }
+        - { name: q, in: query, schema: { type: string, maxLength: 200 } }
+        - { name: cursor, in: query, schema: { type: string, maxLength: 512 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+      responses:
+        '200':
+          description: Cursor page, descending updatedAt and id
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Item' } }
+                  nextCursor: { type: [string, 'null'] }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Items]
+      operationId: createItem
+      description: Creating an item of kind digest also requires digests:write.
+      x-required-scopes: [items:write]
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ItemDraft' }
+      responses:
+        '201':
+          description: Created (idempotent replay returns saved result)
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Item' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '413': { $ref: '#/components/responses/Error' }
+        '415': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /v1/items/{id}:
+    parameters:
+      - { $ref: '#/components/parameters/PathId' }
+    get:
+      tags: [Items]
+      operationId: getItem
+      x-required-scopes: [items:read]
+      responses:
+        '200':
+          description: Item
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Item' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [Items]
+      operationId: updateItem
+      x-required-scopes: [items:write]
+      description: Requires If-Match current version. Owner check is enforced; items:manage permits cross-owner change.
+      parameters:
+        - { $ref: '#/components/parameters/IfMatch' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ItemPatch' }
+      responses:
+        '200':
+          description: Updated item
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Item' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [Items]
+      operationId: deleteItem
+      x-required-scopes: [items:manage]
+      description: Soft delete. Optional If-Match checks current version.
+      parameters:
+        - { $ref: '#/components/parameters/OptionalIfMatch' }
+      responses:
+        '204': { description: Soft deleted }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /v1/items/{id}/history:
+    get:
+      tags: [Items]
+      operationId: itemHistory
+      x-required-scopes: [sync]
+      parameters:
+        - { $ref: '#/components/parameters/PathId' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+      responses:
+        '200':
+          description: Newest-first history entries; null value is a tombstone
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [history]
+                properties:
+                  history: { type: array, items: { $ref: '#/components/schemas/History' } }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /v1/boards:
+    get:
+      tags: [Boards]
+      operationId: listBoards
+      x-required-scopes: [boards:read]
+      responses:
+        '200':
+          description: Boards
+          content:
+            application/json:
+              schema: { type: object, required: [boards], properties: { boards: { type: array, items: { $ref: '#/components/schemas/Board' } } } }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Boards]
+      operationId: createBoard
+      x-required-scopes: [boards:write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BoardDraft' }
+      responses:
+        '201':
+          description: Created board
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Board' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+  /v1/boards/{id}:
+    parameters:
+      - { $ref: '#/components/parameters/PathId' }
+    get:
+      tags: [Boards]
+      operationId: getBoard
+      x-required-scopes: [boards:read]
+      responses:
+        '200':
+          description: Board
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Board' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [Boards]
+      operationId: updateBoard
+      x-required-scopes: [boards:write]
+      description: Current implementation does not check board ownership or If-Match.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BoardPatch' }
+      responses:
+        '200':
+          description: Updated board
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Board' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /v1/digests:
+    post:
+      tags: [Items]
+      operationId: createDigest
+      x-required-scopes: [digests:write]
+      description: Server fixes kind=digest, status=unread, and places the record in Inbox.
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/ItemFields'
+                - type: object
+                  required: [title, body]
+                  properties:
+                    body: { type: string, minLength: 1, maxLength: 100000 }
+      responses:
+        '201':
+          description: Digest item created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Item' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '413': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /v1/changes:
+    get:
+      tags: [Sync]
+      operationId: listChanges
+      x-required-scopes: [sync]
+      description: Shared global change journal; poll with nextSince while hasMore is true. Max page size 100.
+      parameters:
+        - { name: since, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 100 } }
+      responses:
+        '200':
+          description: Change page
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChangePage' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+  /v1/sync/push:
+    post:
+      tags: [Sync]
+      operationId: pushChanges
+      x-required-scopes: [sync]
+      description: Batch of 1 to 50. Idempotency key per change. Stale versions are not applied; conflicts are recorded in item_history. New records are owned by token principal; updates preserve existing owner.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [changes]
+              properties:
+                changes: { type: array, minItems: 1, maxItems: 50, items: { $ref: '#/components/schemas/PushChange' } }
+      responses:
+        '200':
+          description: Results in input order
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [results]
+                properties:
+                  results: { type: array, items: { $ref: '#/components/schemas/PushResult' } }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /v1/webhooks/in/{token}:
+    post:
+      tags: [Webhooks]
+      operationId: receiveWebhook
+      security: []
+      description: >-
+        No Origin header or Bearer auth. Timestamp is 13-digit epoch milliseconds
+        within plus/minus five minutes. Signature is lowercase sha256 hex HMAC-SHA256
+        over UTF-8 timestamp + dot + delivery + dot + exact raw body bytes; signing
+        key is secret and comparison is timing safe. Delivery (1-80 chars [A-Za-z0-9_.-])
+        is used for idempotency. Token is a path secret. IP limit 120/min; per webhook
+        write limit uses configured writesPerMinute. New item is forced into inbox.
+      parameters:
+        - { name: token, in: path, required: true, description: Secret webhook token, schema: { type: string, pattern: '^[A-Za-z0-9_-]{16,256}$' } }
+        - { name: X-DashFlow-Timestamp, in: header, required: true, schema: { type: string, pattern: '^\d{13}$' } }
+        - { name: X-DashFlow-Delivery, in: header, required: true, schema: { type: string, pattern: '^[A-Za-z0-9_.-]{1,80}$' } }
+        - { name: X-DashFlow-Signature, in: header, required: true, schema: { type: string, pattern: '^sha256=[0-9a-f]{64}$' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ItemDraft' }
+      responses:
+        '201':
+          description: Created inbox item
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Item' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /v1/stream:
+    get:
+      tags: [Stream]
+      operationId: changeStream
+      description: >-
+        WebSocket upgrade; Origin must be allowlisted. Handshake limit 120/min per
+        IP, maximum 256 active connections. Within 5 seconds send text JSON
+        {"type":"authenticate","token":"..."} with sync scope; server replies
+        {"type":"ready"}. Then client sends {"type":"ping"} at most every 5s;
+        server replies {"type":"pong"}. Updates are {"type":"changes","seq":N};
+        fetch GET /v1/changes to read them. Token activity checked on ping and
+        notification. Binary/invalid frames, inactive token or buffered data over
+        64 KiB close connection. Frame payload limit is 1024 bytes.
+      parameters:
+        - { $ref: '#/components/parameters/Origin' }
+      responses:
+        '101': { description: WebSocket protocol switched }
+        '403': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: DashFlow Hub token
+      description: Token created by CLI or pairing; shown once and revocable by CLI.
+  parameters:
+    Origin:
+      name: Origin
+      in: header
+      required: true
+      description: Exact configured chrome-extension or moz-extension origin.
+      schema: { type: string, pattern: '^(chrome-extension://[a-p]{32}|moz-extension://[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12})$' }
+    PathId:
+      name: id
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/Id' }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string, pattern: '^[A-Za-z0-9_.-]{1,100}$' }
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: Current version in quotes, for example "3".
+      schema: { type: string, pattern: '^"[0-9]+"$' }
+    OptionalIfMatch:
+      name: If-Match
+      in: header
+      required: false
+      schema: { type: string, pattern: '^"?[0-9]+"?$' }
+  headers:
+    ETag:
+      description: Current version, quoted.
+      schema: { type: string, pattern: '^"[0-9]+"$' }
+  responses:
+    Error:
+      description: Standard Hub error envelope; 429 includes Retry-After 60.
+      headers:
+        Retry-After: { schema: { type: integer, example: 60 } }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Id:
+      type: string
+      pattern: '^[A-Za-z0-9_-]{1,64}$'
+    Token:
+      type: string
+      minLength: 16
+      maxLength: 256
+      pattern: '^[A-Za-z0-9_-]+$'
+    ItemKind:
+      type: string
+      enum: [task, note, link, reminder, digest, article, card]
+    Source:
+      type: object
+      required: [type, id, name]
+      properties:
+        type: { type: string, enum: [user, agent, connector, import] }
+        id: { type: string }
+        name: { type: string }
+    ItemFields:
+      type: object
+      properties:
+        title: { type: string, minLength: 1, maxLength: 500 }
+        body: { type: [string, 'null'], maxLength: 100000 }
+        url: { type: [string, 'null'], format: uri, pattern: '^https?://' }
+        status: { type: string, maxLength: 64 }
+        boardId: { type: [string, 'null'], $ref: '#/components/schemas/Id' }
+        order: { type: string, maxLength: 128 }
+        priority: { type: [string, 'null'], enum: [low, medium, high, null] }
+        dueAt: { type: [string, 'null'], format: date-time }
+        remindAt: { type: [string, 'null'], format: date-time }
+        tags: { type: array, items: { type: string, maxLength: 100 } }
+        pinned: { type: boolean }
+        kind: { $ref: '#/components/schemas/ItemKind' }
+    ItemDraft:
+      allOf:
+        - $ref: '#/components/schemas/ItemFields'
+        - type: object
+          required: [kind, title]
+    ItemPatch:
+      allOf:
+        - $ref: '#/components/schemas/ItemFields'
+        - type: object
+          minProperties: 1
+          properties:
+            kind: false
+            archivedAt: { type: [string, 'null'], format: date-time }
+    Item:
+      allOf:
+        - $ref: '#/components/schemas/ItemFields'
+        - type: object
+          required: [id, kind, title, status, order, tags, source, createdAt, updatedAt, version]
+          properties:
+            id: { $ref: '#/components/schemas/Id' }
+            source: { $ref: '#/components/schemas/Source' }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+            archivedAt: { type: string, format: date-time }
+            deletedAt: { type: string, format: date-time }
+            version: { type: integer, minimum: 1 }
+    BoardColumn:
+      type: object
+      required: [id, title]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        title: { type: string, minLength: 1, maxLength: 100 }
+        wipLimit: { type: integer, minimum: 0 }
+    BoardDraft:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 100 }
+        columns: { type: array, items: { $ref: '#/components/schemas/BoardColumn' } }
+    BoardPatch:
+      type: object
+      minProperties: 1
+      properties:
+        title: { type: string, minLength: 1, maxLength: 100 }
+        columns: { type: array, items: { $ref: '#/components/schemas/BoardColumn' } }
+        archivedAt: { type: [string, 'null'], format: date-time }
+    Board:
+      allOf:
+        - $ref: '#/components/schemas/BoardDraft'
+        - type: object
+          required: [id, createdAt, updatedAt]
+          properties:
+            id: { $ref: '#/components/schemas/Id' }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+            archivedAt: { type: string, format: date-time }
+    Snapshot:
+      type: object
+      required: [entity, op, id, version, value]
+      properties:
+        entity: { type: string, enum: [item, board] }
+        op: { type: string, enum: [upsert, delete] }
+        id: { $ref: '#/components/schemas/Id' }
+        version: { type: integer, minimum: 1 }
+        value: { oneOf: [{ $ref: '#/components/schemas/Item' }, { $ref: '#/components/schemas/Board' }, { type: 'null' }] }
+    PushChange:
+      allOf:
+        - $ref: '#/components/schemas/Snapshot'
+        - type: object
+          required: [idempotencyKey]
+          properties:
+            idempotencyKey: { type: string, pattern: '^[A-Za-z0-9_.-]{1,100}$' }
+    Change:
+      allOf:
+        - $ref: '#/components/schemas/Snapshot'
+        - type: object
+          required: [seq]
+          properties:
+            seq: { type: integer, minimum: 1 }
+    ChangePage:
+      type: object
+      required: [changes, nextSince, hasMore]
+      properties:
+        changes: { type: array, items: { $ref: '#/components/schemas/Change' } }
+        nextSince: { type: integer, minimum: 0 }
+        hasMore: { type: boolean }
+    PushResult:
+      type: object
+      required: [idempotencyKey, applied, version, value]
+      properties:
+        idempotencyKey: { type: string }
+        applied: { type: boolean }
+        version: { type: integer, minimum: 1 }
+        value: { oneOf: [{ $ref: '#/components/schemas/Item' }, { $ref: '#/components/schemas/Board' }, { type: 'null' }] }
+    History:
+      type: object
+      required: [version, at, value]
+      properties:
+        version: { type: integer, minimum: 1 }
+        at: { type: string, format: date-time }
+        value: { oneOf: [{ $ref: '#/components/schemas/Item' }, { $ref: '#/components/schemas/Board' }, { type: 'null' }] }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string, enum: [VALIDATION_FAILED, NOT_FOUND, CONFLICT, FORBIDDEN, RATE_LIMITED, UNAUTHORIZED, PAYLOAD_TOO_LARGE, UNSUPPORTED_MEDIA_TYPE, INTERNAL_ERROR] }
+            message: { type: string }
+            details:
+              oneOf:
+                - { type: object, required: [field], properties: { field: { type: string } } }
+                - { type: object, required: [version], properties: { version: { type: integer } } }

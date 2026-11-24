@@ -1,6 +1,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import { runLogged } from '@/core/observability/crashLogger';
 import type { Board, Item, ItemChange, ItemKind } from './types';
+import type { HubPushChange, HubSyncSnapshot } from '../../../packages/shared/src/sync';
 
 /**
  * Отдельная база IndexedDB для Item. Ключ-значение StorageAdapter для этого не подходит:
@@ -9,7 +10,7 @@ import type { Board, Item, ItemChange, ItemKind } from './types';
  */
 
 export const ITEMS_DB_NAME = 'dashflow_items';
-export const ITEMS_DB_VERSION = 1;
+export const ITEMS_DB_VERSION = 2;
 
 /** Запись журнала без seq: номер — автоинкрементный ключ хранилища */
 export type StoredChange = Omit<ItemChange, 'seq'>;
@@ -41,6 +42,9 @@ export interface ItemsDbSchema extends DBSchema {
     key: string;
     value: MetaRecord;
   };
+  hubOutbox: { key: string; value: { key: string; change: HubPushChange } };
+  hubVersions: { key: string; value: { key: string; version: number } };
+  itemHistory: { key: string; value: { key: string; earlier: HubSyncSnapshot } };
 }
 
 export interface MetaRecord {
@@ -57,21 +61,28 @@ export function openItemsDb(name: string = ITEMS_DB_NAME): Promise<ItemsDb> {
   }
 
   return openDB<ItemsDbSchema>(name, ITEMS_DB_VERSION, {
-    upgrade(db) {
-      const items = db.createObjectStore('items', { keyPath: 'id' });
-      items.createIndex('kind', 'kind');
-      items.createIndex('status', 'status');
-      items.createIndex('boardId', 'boardId');
-      items.createIndex('updatedAt', 'updatedAt');
-      items.createIndex('remindAt', 'remindAt');
-      items.createIndex('deletedAt', 'deletedAt');
+    upgrade(db, oldVersion) {
+      if (oldVersion < 1) {
+        const items = db.createObjectStore('items', { keyPath: 'id' });
+        items.createIndex('kind', 'kind');
+        items.createIndex('status', 'status');
+        items.createIndex('boardId', 'boardId');
+        items.createIndex('updatedAt', 'updatedAt');
+        items.createIndex('remindAt', 'remindAt');
+        items.createIndex('deletedAt', 'deletedAt');
 
-      db.createObjectStore('boards', { keyPath: 'id' });
+        db.createObjectStore('boards', { keyPath: 'id' });
 
-      const changes = db.createObjectStore('changes', { autoIncrement: true });
-      changes.createIndex('itemId', 'itemId');
+        const changes = db.createObjectStore('changes', { autoIncrement: true });
+        changes.createIndex('itemId', 'itemId');
 
-      db.createObjectStore('meta', { keyPath: 'key' });
+        db.createObjectStore('meta', { keyPath: 'key' });
+      }
+      if (oldVersion < 2) {
+        db.createObjectStore('hubOutbox', { keyPath: 'key' });
+        db.createObjectStore('hubVersions', { keyPath: 'key' });
+        db.createObjectStore('itemHistory', { keyPath: 'key' });
+      }
     },
   });
 }
