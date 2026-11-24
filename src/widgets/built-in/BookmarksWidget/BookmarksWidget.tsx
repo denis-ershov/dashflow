@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from '@/core/i18n';
 import {
   useBrowserPermissions,
@@ -28,7 +29,7 @@ import {
   ExternalLink,
   ShieldCheck,
 } from 'lucide-react';
-import type { WidgetProps } from '@/core/widget';
+import { useWidgetHeaderSlot, type WidgetProps } from '@/core/widget';
 import { SingleBookmarkTile } from './SingleBookmarkTile';
 import {
   useChromeBookmarksStore,
@@ -173,6 +174,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
             desc: t('bookmarks.permission.bookmarksDesc'),
           };
 
+  const headerActionsSlot = useWidgetHeaderSlot();
   const [currentFolderId, setCurrentFolderId] = useState<string>(initialFolderId);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingItem, setIsAddingItem] = useState(false);
@@ -896,17 +898,36 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
       </div>
       )}
 
-      {/* Тихая кнопка добавления при наведении для чистых пользовательских папок */}
-      {!showToolbar && activeSubTab === 'bookmarks' && (
-        <button
-          type="button"
-          aria-label={t('bookmarks.addItem')}
-          onClick={() => setIsAddingItem(true)}
-          className="absolute bottom-1 right-1 z-10 flex items-center justify-center w-8 h-8 rounded-sm border border-line bg-surface/90 text-fg-muted hover:text-primary hover:border-primary opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
-      )}
+      {/* Кнопка добавления закладки в шапке виджета (не перекрывает тайлы) */}
+      {!showToolbar &&
+        activeSubTab === 'bookmarks' &&
+        (headerActionsSlot ? (
+          createPortal(
+            <button
+              type="button"
+              aria-label={t('bookmarks.addItem')}
+              onClick={() => setIsAddingItem((prev) => !prev)}
+              className={cn(
+                "flex items-center justify-center w-8 h-8 rounded-sm transition-colors cursor-pointer relative before:absolute before:-inset-2 before:content-['']",
+                isAddingItem
+                  ? 'text-primary bg-surface-hover'
+                  : 'text-fg-muted hover:text-primary hover:bg-surface-hover',
+              )}
+            >
+              <Plus className="w-4 h-4" />
+            </button>,
+            headerActionsSlot,
+          )
+        ) : (
+          <button
+            type="button"
+            aria-label={t('bookmarks.addItem')}
+            onClick={() => setIsAddingItem((prev) => !prev)}
+            className="absolute bottom-1 right-1 z-10 flex items-center justify-center w-8 h-8 rounded-sm border border-line bg-surface/90 text-fg-muted hover:text-primary hover:border-primary opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        ))}
 
       {/* Форма добавления закладки */}
       {activeSubTab === 'bookmarks' && isAddingItem && (
@@ -982,7 +1003,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
       )}
 
       {hasAccess !== false && activeSubTab === 'bookmarks' && (
-        <div className="flex-1 min-h-0 overflow-y-auto p-1">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {items.length === 0 ? (
             <EmptyState
               title={t('bookmarks.emptyTitle')}
@@ -1034,7 +1055,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                       className={cn(
                         'min-w-0',
                         isSpeedDialShape
-                          ? 'w-full text-center mt-1'
+                          ? 'w-full text-center'
                           : 'flex-1 flex flex-col justify-center',
                       )}
                     >
@@ -1169,7 +1190,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                       className={cn(
                         'min-w-0',
                         isSpeedDialShape
-                          ? 'w-full text-center mt-1'
+                          ? 'w-full text-center'
                           : 'flex-1 flex flex-col justify-center',
                       )}
                     >
@@ -1250,7 +1271,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                       className={cn(
                         'min-w-0',
                         isSpeedDialShape
-                          ? 'w-full text-center mt-1'
+                          ? 'w-full text-center'
                           : 'flex-1 flex flex-col justify-center',
                       )}
                     >

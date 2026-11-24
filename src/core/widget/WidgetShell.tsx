@@ -1,4 +1,11 @@
-import React, { Component, type ErrorInfo, type ReactNode } from 'react';
+import React, {
+  Component,
+  createContext,
+  useContext,
+  useState,
+  type ErrorInfo,
+  type ReactNode,
+} from 'react';
 import { Settings, Trash2, GripVertical } from 'lucide-react';
 import { ErrorState } from '@/ui/feedback';
 import { cn } from '@/ui/lib/cn';
@@ -6,6 +13,13 @@ import { Card } from '@/ui/primitives/Card';
 import { crashLogger } from '@/core/observability';
 import { t, useI18nStore, useTranslation } from '@/core/i18n';
 import type { WidgetSurfaceType } from './types';
+
+/** Контейнер в шапке WidgetShell, куда виджет может порталировать собственные действия (например, «+») */
+const WidgetHeaderSlotContext = createContext<HTMLDivElement | null>(null);
+
+export function useWidgetHeaderSlot(): HTMLDivElement | null {
+  return useContext(WidgetHeaderSlotContext);
+}
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -94,6 +108,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
   className,
 }) => {
   const { t: tr } = useTranslation();
+  const [headerActionsSlot, setHeaderActionsSlot] = useState<HTMLDivElement | null>(null);
   const isChromeless = surface === 'chromeless';
   const isTiles = surface === 'tiles';
 
@@ -130,9 +145,13 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
           <div
             className={cn(
               'flex items-center gap-1 shrink-0 transition-opacity',
-              isEditMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+              isEditMode
+                ? 'opacity-100'
+                : 'opacity-0 group-hover:opacity-100 focus-within:opacity-100',
             )}
           >
+            <div ref={setHeaderActionsSlot} className="flex items-center gap-1" />
+
             {onOpenSettings && (
               <button
                 type="button"
@@ -161,13 +180,16 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
       {/* Тело виджета, защищенное ErrorBoundary */}
       <div
         className={cn(
-          'flex-1 min-h-0 w-full p-2',
+          'flex-1 min-h-0 w-full',
+          isTiles ? 'p-1' : 'p-2',
           isChromeless ? 'overflow-visible' : 'overflow-auto',
         )}
       >
-        <WidgetErrorBoundary fallbackTitle={title} onRemove={onRemove}>
-          {children}
-        </WidgetErrorBoundary>
+        <WidgetHeaderSlotContext.Provider value={headerActionsSlot}>
+          <WidgetErrorBoundary fallbackTitle={title} onRemove={onRemove}>
+            {children}
+          </WidgetErrorBoundary>
+        </WidgetHeaderSlotContext.Provider>
       </div>
     </>
   );

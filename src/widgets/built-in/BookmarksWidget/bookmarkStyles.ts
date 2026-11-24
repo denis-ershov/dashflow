@@ -101,7 +101,7 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
           url: 'hidden',
         },
         compact: {
-          container: 'w-full p-2 flex flex-col items-center text-center rounded-md border border-transparent',
+          container: 'w-full p-1 flex flex-col items-center text-center rounded-md border border-transparent',
           icon: 'w-11 h-11 rounded-md mb-1 shadow-1',
           img: 'w-6 h-6',
           title: 'text-2xs font-medium leading-tight w-full max-w-20',
