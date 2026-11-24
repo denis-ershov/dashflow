@@ -20,7 +20,7 @@ describe('bookmarkStyles helper', () => {
     expect(classes.containerClass).toContain('flex-col');
     expect(classes.containerClass).toContain('items-center');
     expect(classes.iconContainerClass).toContain('backdrop-blur-md');
-    expect(classes.containerClass).toContain('hover:scale-[1.04]');
+    expect(classes.containerClass).toContain('hover:bg-surface-hover');
   });
 
   it('должен генерировать корректные классы для горизонтальных прямоугольников', () => {
@@ -69,7 +69,7 @@ describe('bookmarkStyles helper', () => {
   it('должен поддерживать размер xs (Мини) для всех форм', () => {
     const squareXs = getBookmarkTileClasses({ tileShape: 'square', tileSize: 'xs' });
     expect(squareXs.containerClass).toContain('w-full');
-    expect(squareXs.iconContainerClass).toContain('w-11');
+    expect(squareXs.iconContainerClass).toContain('w-10');
 
     const circleXs = getBookmarkTileClasses({ tileShape: 'circle', tileSize: 'xs' });
     expect(circleXs.containerClass).toContain('w-14');
@@ -91,7 +91,7 @@ describe('bookmarkStyles helper', () => {
   });
 
   it('должен генерировать адаптивные grid-классы для различных форм', () => {
-    expect(getBookmarkGridClass(1, 'square')).toContain('grid-cols-1');
+    expect(getBookmarkGridClass(1, 'square')).toContain('repeat(1,minmax(0,76px))');
     expect(getBookmarkGridClass('auto', 'square')).toContain('auto-fill');
     expect(getBookmarkGridClass('auto', 'circle')).toContain('auto-fill');
     expect(getBookmarkGridClass('auto', 'rectangle-vertical')).toContain('auto-fill');

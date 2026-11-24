@@ -983,7 +983,7 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
       )}
 
       {hasAccess !== false && activeSubTab === 'bookmarks' && (
-        <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+        <div className="flex-1 min-h-0 overflow-y-auto p-1">
           {items.length === 0 ? (
             <EmptyState
               title={t('bookmarks.emptyTitle')}

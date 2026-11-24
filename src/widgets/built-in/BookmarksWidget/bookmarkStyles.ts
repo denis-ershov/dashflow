@@ -73,12 +73,12 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
     full: 'rounded-full',
   }[radius];
 
-  // 3. Эффект наведения (Hover Effect)
+  // 3. Эффект наведения (Hover Effect) — строго внутри границ ячейки без внешнего ring
   const hoverClasses = {
-    scale: 'hover:scale-[1.04] active:scale-[0.97]',
-    lift: 'hover:-translate-y-1 hover:shadow-3 active:translate-y-0',
-    glow: 'hover:shadow-[0_0_18px_rgba(59,130,246,0.4)]',
-    border: 'hover:border-primary hover:ring-2 hover:ring-primary/20',
+    scale: 'hover:bg-surface-hover/70',
+    lift: 'hover:-translate-y-1 hover:shadow-2 active:translate-y-0',
+    glow: 'hover:shadow-2 hover:border-primary/60',
+    border: 'hover:bg-surface-hover/80 hover:border-line-hover',
     none: '',
   }[hover];
 
@@ -91,25 +91,25 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
 
   switch (shape) {
     case 'square': {
-      // Компактные квадратные иконки приложений: контрастная подложка + ровная подпись
+      // Компактные квадратные иконки приложений: плотная ячейка + контрастная подложка
       const squareSizeMap = {
         xs: {
-          container: 'w-full p-1 flex flex-col items-center text-center',
-          icon: 'w-11 h-11 rounded-md mb-1 shadow-1',
+          container: 'w-full p-1 flex flex-col items-center text-center rounded-md border border-transparent',
+          icon: 'w-10 h-10 rounded-md mb-1 shadow-1',
           img: 'w-6 h-6',
           title: 'text-2xs font-medium leading-tight w-full max-w-20',
           url: 'hidden',
         },
         compact: {
-          container: 'w-full p-1 flex flex-col items-center text-center',
-          icon: 'w-12 h-12 rounded-md mb-1 shadow-1',
-          img: 'w-7 h-7',
-          title: 'text-2xs font-medium leading-tight w-full max-w-24',
+          container: 'w-full p-2 flex flex-col items-center text-center rounded-md border border-transparent',
+          icon: 'w-11 h-11 rounded-md mb-1 shadow-1',
+          img: 'w-6 h-6',
+          title: 'text-2xs font-medium leading-tight w-full max-w-20',
           url: 'hidden',
         },
         medium: {
-          container: 'w-full p-2 flex flex-col items-center text-center',
-          icon: 'w-14 h-14 rounded-md mb-1 shadow-1',
+          container: 'w-full p-2 flex flex-col items-center text-center rounded-md border border-transparent',
+          icon: 'w-12 h-12 rounded-md mb-1 shadow-1',
           img: 'w-7 h-7',
           title: 'text-xs font-medium leading-snug w-full max-w-24',
           url: 'hidden',
@@ -336,13 +336,13 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
   return {
     containerClass,
     iconContainerClass: cn(
-      'flex items-center justify-center shrink-0 border transition-all duration-fast ease-out overflow-hidden relative',
+      'flex items-center justify-center shrink-0 border transition-colors duration-fast overflow-hidden relative',
       isSpeedDial
         ? cn(
             style === 'transparent'
-              ? 'bg-white/95 border-line/60 group-hover/tile:border-primary'
+              ? 'bg-white/95 border-line/40 group-hover/tile:border-primary'
               : cardStyleClasses,
-            'group-hover/tile:scale-105 group-hover/tile:shadow-2 group-hover/tile:border-primary',
+            'group-hover/tile:border-primary',
           )
         : 'bg-surface-hover/80 border-line/40',
       iconContainerClass,
@@ -357,24 +357,24 @@ export function getBookmarkTileClasses(options: BookmarkStyleOptions = {}): {
 }
 
 const FIXED_SQUARE_COLS: Record<number, string> = {
-  1: 'grid grid-cols-1 gap-2 justify-items-center',
-  2: 'grid grid-cols-2 gap-2 justify-items-center',
-  3: 'grid grid-cols-3 gap-2 justify-items-center',
-  4: 'grid grid-cols-4 gap-2 justify-items-center',
-  5: 'grid grid-cols-5 gap-2 justify-items-center',
-  6: 'grid grid-cols-6 gap-2 justify-items-center',
+  1: 'grid grid-cols-[repeat(1,minmax(0,76px))] gap-1 justify-items-center',
+  2: 'grid grid-cols-[repeat(2,minmax(0,76px))] gap-1 justify-items-center',
+  3: 'grid grid-cols-[repeat(3,minmax(0,76px))] gap-1 justify-items-center',
+  4: 'grid grid-cols-[repeat(4,minmax(0,76px))] gap-1 justify-items-center',
+  5: 'grid grid-cols-[repeat(5,minmax(0,76px))] gap-1 justify-items-center',
+  6: 'grid grid-cols-[repeat(6,minmax(0,76px))] gap-1 justify-items-center',
 };
 
 export function getBookmarkGridClass(
   columns?: 1 | 2 | 3 | 4 | 5 | 6 | 'auto',
   shape?: BookmarkTileShape,
 ): string {
-  // Для Speed Dial (square, circle, rectangle-vertical) используем фиксированную или auto-fill сетку:
+  // Для Speed Dial (square, circle, rectangle-vertical) используем плотную компактную сетку:
   if (shape === 'square') {
     if (columns && typeof columns === 'number' && FIXED_SQUARE_COLS[columns]) {
       return FIXED_SQUARE_COLS[columns];
     }
-    return 'grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-2 sm:gap-3 justify-items-center';
+    return 'grid grid-cols-[repeat(auto-fill,minmax(64px,1fr))] gap-1 justify-items-center';
   }
 
   if (shape === 'circle') {
