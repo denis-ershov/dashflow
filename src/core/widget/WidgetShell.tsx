@@ -104,7 +104,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
     <>
       {/* Шапка виджета (для panel и в режиме редактирования для остальных) */}
       {(!isChromeless || isEditMode) && (
-        <div className="flex items-center justify-between h-9 px-3 border-b border-line/60 select-none shrink-0">
+        <div className="flex items-center justify-between h-8 px-3 border-b border-line/60 select-none shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             {isEditMode && (
               <button
@@ -197,12 +197,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
       data-surface={surface}
       variant={isTiles ? 'subtle' : 'glass'}
       padding="none"
-      className={cn(
-        layoutClasses,
-        isTiles ? 'border border-line p-2 shadow-1' : 'border border-line shadow-1',
-        editRing,
-        className,
-      )}
+      className={cn(layoutClasses, 'border border-line shadow-1', editRing, className)}
     >
       {content}
     </Card>

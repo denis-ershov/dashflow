@@ -489,7 +489,6 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
   const showToolbar =
     mode === 'folder-tabs' ||
     folderSource !== 'custom' ||
-    isEditMode ||
     isAddingItem ||
     showSearch ||
     Boolean(searchQuery);

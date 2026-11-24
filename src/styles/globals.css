@@ -23,6 +23,29 @@
     scrollbar-color: var(--dashflow-line-hover) transparent;
   }
 
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--dashflow-line-hover) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--dashflow-line-hover);
+    border-radius: 3px;
+  }
+
+  *::-webkit-scrollbar-button {
+    display: none;
+  }
+
   body {
     min-height: 100vh;
     overflow-x: hidden;
