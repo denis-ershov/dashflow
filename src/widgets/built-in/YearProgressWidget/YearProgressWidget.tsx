@@ -94,13 +94,13 @@ export const YearProgressWidget: React.FC<WidgetProps<YearProgressSettings>> = (
       {/* Полоса прогресса */}
       <div
         className={cn(
-          'w-full bg-surface-active overflow-hidden border border-line/60',
-          progressStyle === 'pill' ? 'h-3 rounded-full p-0.5' : 'h-2 rounded-md',
+          'w-full bg-canvas overflow-hidden border border-line',
+          progressStyle === 'pill' ? 'h-2 rounded-sm' : 'h-1 rounded-xs',
         )}
       >
         <div
           className={cn(
-            'h-full bg-linear-to-r rounded-full transition-all duration-700 ease-out',
+            'h-full bg-linear-to-r rounded-xs transition-all duration-slow ease-out',
             gradientClass,
           )}
           style={{ width: `${current.percent}%` }}

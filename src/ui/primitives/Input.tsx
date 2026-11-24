@@ -17,9 +17,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     const variantStyles = {
       default:
-        'bg-surface text-fg placeholder:text-fg-muted border border-line rounded-xl px-4 py-2 text-sm transition-colors duration-fast focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20',
+        'bg-surface text-fg placeholder:text-fg-muted border border-line rounded-sm px-3 py-2 text-sm transition-colors duration-fast focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20',
       glass:
-        'glass-input text-fg placeholder:text-fg-muted/70 px-4 py-2 text-sm transition-all duration-fast',
+        'glass-input text-fg placeholder:text-fg-muted/70 px-3 py-2 text-sm transition-colors duration-fast',
     };
 
     return (

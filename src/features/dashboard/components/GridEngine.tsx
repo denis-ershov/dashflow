@@ -1,5 +1,5 @@
 import { activeSpaceOf } from '@/core/storage';
-import React, { useCallback, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useState } from 'react';
 import { ResponsiveGridLayout, useContainerWidth, verticalCompactor } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
 import { Columns, Move, Plus, Check, Sliders } from 'lucide-react';
@@ -11,8 +11,13 @@ import { WidgetShell } from '@/core/widget/WidgetShell';
 import { registerBuiltInWidgets } from '@/widgets/built-in';
 import { useTranslation } from '@/core/i18n';
 import { LazyWidgetRenderer } from './LazyWidgetRenderer';
-import { WidgetSettingsDrawer } from './WidgetSettingsDrawer';
 import { useGridMetrics } from '../hooks/useGridMetrics';
+
+const WidgetSettingsDrawer = lazy(() =>
+  import('./WidgetSettingsDrawer').then(({ WidgetSettingsDrawer }) => ({
+    default: WidgetSettingsDrawer,
+  })),
+);
 import { useGridKeyboardNav, applyKeyboardDelta } from '../hooks/useGridKeyboardNav';
 import { EmptyState } from '@/ui/feedback/EmptyState';
 import { Button } from '@/ui/primitives/Button';
@@ -292,10 +297,14 @@ export const GridEngine: React.FC = () => {
       </div>
 
       {/* Выдвижная панель настроек виджета */}
-      <WidgetSettingsDrawer
-        instanceId={activeSettingsInstanceId}
-        onClose={() => setActiveSettingsInstanceId(null)}
-      />
+      {activeSettingsInstanceId && (
+        <Suspense fallback={null}>
+          <WidgetSettingsDrawer
+            instanceId={activeSettingsInstanceId}
+            onClose={() => setActiveSettingsInstanceId(null)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };

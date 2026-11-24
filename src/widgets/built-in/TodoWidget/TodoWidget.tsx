@@ -344,9 +344,9 @@ export const TodoWidget: React.FC<WidgetProps<TodoSettings>> = ({
 
       {/* Индикатор прогресса выполнения задач */}
       {showProgress && activeTab === 'todos' && todos.length > 0 && (
-        <div className="w-full bg-surface-hover h-1.5 rounded-full overflow-hidden">
+        <div className="w-full bg-canvas h-1 rounded-xs overflow-hidden border border-line">
           <div
-            className="bg-primary h-full transition-all duration-300 rounded-full"
+            className="bg-primary h-full transition-all duration-normal rounded-xs"
             style={{ width: `${Math.round((completedCount / todos.length) * 100)}%` }}
           />
         </div>

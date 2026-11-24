@@ -84,7 +84,7 @@ export function OnboardingDialog({ onComplete }: OnboardingDialogProps) {
                 value={city}
                 onChange={(event) => setCity(event.currentTarget.value)}
                 placeholder={t('onboarding.cityPlaceholder')}
-                className="min-h-11 w-full rounded-xl border border-line bg-canvas px-3 text-sm text-fg focus-visible:outline-2 focus-visible:outline-primary"
+                className="min-h-11 w-full rounded-sm border border-line bg-canvas px-3 text-sm text-fg focus-visible:outline-2 focus-visible:outline-primary"
               />
               <span className="block text-xs font-normal text-fg-muted">
                 {t('onboarding.cityPrivacy')}

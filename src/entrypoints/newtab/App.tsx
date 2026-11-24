@@ -15,7 +15,6 @@ import { WallpaperBackground } from '@/features/appearance/WallpaperBackground';
 import { HeroSection } from '@/features/hero';
 import { SpeedDialGrid } from '@/features/speedDial/SpeedDialGrid';
 import { FloatingDock, type DockPanel } from '@/features/dock';
-import { useAudioStore } from '@/core/audio';
 import { useFeatureFlags } from '@/core/featureFlags';
 import { useThemeStore } from '@/core/theme/themeStore';
 import { Spinner, RootErrorBoundary } from '@/ui/feedback';
@@ -129,8 +128,7 @@ function DashboardContent() {
     })),
   );
   const initializeTheme = useThemeStore((state) => state.initialize);
-  const isAudioPlaying = useAudioStore((state) => Object.values(state.activeTracks).some(Boolean));
-  const stopAllAudio = useAudioStore((state) => state.stopAll);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const isAudioEnabled = useFeatureFlags().isEnabled('ambientAudio');
   const { t } = useTranslation();
 
@@ -212,10 +210,13 @@ function DashboardContent() {
     return () => clearTimeout(timer);
   }, [dashboardStatus]);
 
-  // Выключение флага ambientAudio должно глушить уже играющие треки
+  // Выключение флага ambientAudio закрывает панель; играющие треки глушит ленивая панель
   useEffect(() => {
-    if (!isAudioEnabled) stopAllAudio();
-  }, [isAudioEnabled, stopAllAudio]);
+    if (!isAudioEnabled) {
+      setIsAudioDrawerOpen(false);
+      setIsAudioPlaying(false);
+    }
+  }, [isAudioEnabled]);
 
   if (dashboardStatus === 'error') {
     return (
@@ -330,6 +331,8 @@ function DashboardContent() {
         <AmbientSoundDrawer
           isOpen={isAudioEnabled && isAudioDrawerOpen}
           onClose={() => setIsAudioDrawerOpen(false)}
+          enabled={isAudioEnabled}
+          onPlayingChange={setIsAudioPlaying}
         />
       </DeferredPanel>
       <ToastContainer />

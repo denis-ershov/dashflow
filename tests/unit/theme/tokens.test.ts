@@ -125,7 +125,7 @@ describe('resolveTheme — вывод оттенков', () => {
 
   it('строит стекло из surface с прозрачностью темы', () => {
     const theme = resolve();
-    expect(theme.colors.glassBg).toEqual({ ...theme.colors.surface, a: 0.65 });
+    expect(theme.colors.glassBg).toEqual({ ...theme.colors.surface, a: 0.88 });
   });
 
   it('следует за изменением glassOpacity', () => {
@@ -164,10 +164,10 @@ describe('resolveTheme — вывод оттенков', () => {
 describe('resolveTheme — скаляры', () => {
   it('подставляет дефолты скаляров', () => {
     const theme = resolve();
-    expect(theme.glassBlur).toBe('24px');
-    expect(theme.glassOpacity).toBe(0.65);
+    expect(theme.glassBlur).toBe('12px');
+    expect(theme.glassOpacity).toBe(0.88);
     expect(theme.fontScale).toBe(1);
-    expect(theme.radius).toEqual(RADIUS_SCALES.soft);
+    expect(theme.radius).toEqual(RADIUS_SCALES.sharp);
   });
 
   it('принимает корректную длину размытия', () => {
@@ -261,15 +261,15 @@ describe('buildThemeCss', () => {
   it('печатает выбранную шкалу радиусов', () => {
     const printed = declarations(buildThemeCss(resolve({ radius: 'sharp' })));
     expect(printed.get('--dashflow-radius-xs')).toBe('2px');
-    expect(printed.get('--dashflow-radius-xl')).toBe('14px');
+    expect(printed.get('--dashflow-radius-xl')).toBe('10px');
   });
 
   it('печатает шрифты, размытие и масштаб', () => {
     const printed = declarations(buildThemeCss(resolve({ fontScale: 1.25 })));
-    expect(printed.get('--dashflow-glass-blur')).toBe('24px');
+    expect(printed.get('--dashflow-glass-blur')).toBe('12px');
     expect(printed.get('--dashflow-font-scale')).toBe('1.25');
-    expect(printed.get('--dashflow-font-sans')).toContain('system-ui');
-    expect(printed.get('--dashflow-font-mono')).toContain('ui-monospace');
+    expect(printed.get('--dashflow-font-sans')).toContain('Sofia Sans Variable');
+    expect(printed.get('--dashflow-font-mono')).toContain('IBM Plex Mono');
   });
 
   it('не печатает ничего сверх контракта', () => {

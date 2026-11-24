@@ -39,6 +39,7 @@
 import type { ThemeTokens } from '@/core/theme/tokens';
 
 export type PresetId =
+  | 'tactical-dark'
   | 'neutral-dark'
   | 'deep-blue'
   | 'default-light'
@@ -55,9 +56,34 @@ export interface ThemePreset {
 }
 
 /** Палитра по умолчанию для нового профиля и для откатов при негодной теме. */
-export const DEFAULT_PRESET_ID: PresetId = 'neutral-dark';
+export const DEFAULT_PRESET_ID: PresetId = 'tactical-dark';
 
 export const PRESETS: readonly ThemePreset[] = [
+  {
+    id: 'tactical-dark',
+    tokens: {
+      canvas: '#0b0e13',
+      surface: 'rgb(20 26 35 / 0.92)',
+      surfaceHover: 'rgb(28 37 50 / 0.96)',
+      surfaceActive: 'rgb(36 48 64 / 1)',
+      primary: '#f0a830',
+      primaryHover: '#f5bc58',
+      primaryFg: '#0b0e13',
+      secondary: '#6ba7c4',
+      accent: '#d9603b',
+      fg: '#e6edf3',
+      fgMuted: '#909eab',
+      fgDim: '#7d8a99',
+      line: '#1f2a37',
+      lineHover: '#334559',
+      danger: '#d9603b',
+      warning: '#f0a830',
+      success: '#4fb477',
+      info: '#6ba7c4',
+      glassBg: 'rgb(15 20 27 / 0.9)',
+      glassBorder: '#1f2a37',
+    },
+  },
   {
     id: 'neutral-dark',
     tokens: {
@@ -71,7 +97,7 @@ export const PRESETS: readonly ThemePreset[] = [
       accent: '#8b5cf6',
       fg: '#f8fafc',
       fgMuted: '#94a3b8',
-      fgDim: '#748196',
+      fgDim: '#78859a',
       line: 'rgb(255 255 255 / 0.08)',
       lineHover: 'rgb(255 255 255 / 0.22)',
     },

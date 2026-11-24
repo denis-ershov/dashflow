@@ -74,7 +74,7 @@ const DockButton: React.FC<DockButtonProps> = ({
         aria-label={label}
         aria-pressed={pressed}
         className={cn(
-          'relative size-11 rounded-full flex items-center justify-center cursor-pointer transition-colors duration-fast active:scale-95',
+          'relative size-11 rounded-sm flex items-center justify-center cursor-pointer transition-colors duration-fast',
           TONE_CLASSES[tone],
         )}
       >
@@ -128,7 +128,7 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
       aria-label={t('dock.label')}
       className={cn(
         'fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-(--z-rail,30)',
-        'glass-pill max-sm:rounded-xl! p-1 sm:p-1.5 flex flex-wrap items-center justify-center gap-0.5 sm:gap-1 shadow-3 select-none',
+        'glass-panel rounded-md p-1 flex flex-wrap items-center justify-center gap-1 shadow-2 select-none',
         'w-max max-w-[calc(100%-1rem)]',
         className,
       )}

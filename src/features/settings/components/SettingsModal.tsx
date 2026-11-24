@@ -67,51 +67,34 @@ export const SettingsModal: React.FC = () => {
     >
       <div className="space-y-6">
         {/* Переключатель вкладок настроек */}
-        <div className="flex flex-wrap border-b border-line pb-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab('agents')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeTab === 'agents'
-                ? 'bg-primary/10 text-primary border border-primary/30'
-                : 'text-fg-muted hover:text-fg hover:bg-surface'
-            }`}
-          >
-            <Bot className="w-3.5 h-3.5" />
-            <span>{t('agents.title')}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('general')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeTab === 'general'
-                ? 'bg-primary/10 text-primary border border-primary/30'
-                : 'text-fg-muted hover:text-fg hover:bg-surface'
-            }`}
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span>{t('layoutSettings.tabGeneral')}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('diagnostics')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeTab === 'diagnostics'
-                ? 'bg-primary/10 text-primary border border-primary/30'
-                : 'text-fg-muted hover:text-fg hover:bg-surface'
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5" />
-            <span>{t('layoutSettings.tabDiagnostics')}</span>
-          </button>
-          <Button
-            size="sm"
-            variant={activeTab === 'integrations' ? 'primary' : 'ghost'}
-            aria-pressed={activeTab === 'integrations'}
-            onClick={() => setActiveTab('integrations')}
-          >
-            {t('integrations.title')}
-          </Button>
+        {/* Навигационные вкладки (единая высота и стиль) */}
+        <div className="flex flex-wrap items-center gap-1 rounded-md border border-line bg-canvas/60 p-1">
+          {(
+            [
+              { id: 'general', label: t('layoutSettings.tabGeneral'), icon: <SlidersHorizontal className="w-4 h-4 shrink-0" /> },
+              { id: 'agents', label: t('agents.title'), icon: <Bot className="w-4 h-4 shrink-0" /> },
+              { id: 'integrations', label: t('integrations.title'), icon: <Layout className="w-4 h-4 shrink-0" /> },
+              { id: 'diagnostics', label: t('layoutSettings.tabDiagnostics'), icon: <Activity className="w-4 h-4 shrink-0" /> },
+            ] as const
+          ).map((tab) => {
+            const selected = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-sm px-3 py-2 text-xs font-semibold transition-colors duration-fast cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                  selected
+                    ? 'border border-primary/40 bg-surface text-primary'
+                    : 'border border-transparent text-fg-muted hover:text-fg hover:bg-surface/60'
+                }`}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {activeTab === 'integrations' ? (

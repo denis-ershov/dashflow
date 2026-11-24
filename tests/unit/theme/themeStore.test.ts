@@ -9,9 +9,11 @@ describe('useThemeStore', () => {
     useThemeStore.getState().resetTheme();
   });
 
-  it('инициализируется с neutral-dark по умолчанию', () => {
+  it('инициализируется с tactical-dark, Sofia Sans и sharp по умолчанию', () => {
     const state = useThemeStore.getState();
-    expect(state.activePresetId).toBe('neutral-dark');
+    expect(state.activePresetId).toBe('tactical-dark');
+    expect(state.fontPreset).toBe('sofia-sans');
+    expect(state.radiusScale).toBe('sharp');
     expect(state.customCss).toBe('');
     expect(state.wallpaperUrl).toBeNull();
     expect(state.scrim).toBe(0.3);

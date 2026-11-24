@@ -32,11 +32,11 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
         role={interactive ? 'button' : undefined}
         tabIndex={interactive ? 0 : undefined}
         className={cn(
-          'rounded-lg transition-all duration-fast overflow-hidden',
+          'rounded-md transition-colors duration-fast overflow-hidden',
           variants[variant],
           paddings[padding],
           interactive &&
-            'cursor-pointer active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary select-none',
+            'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary select-none',
           className,
         )}
         {...props}

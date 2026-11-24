@@ -92,16 +92,16 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
         {showMemory && (
           <div className="flex flex-col gap-1">
             <div className="flex justify-between text-xs font-semibold text-fg">
-              <span className="flex items-center gap-1.5 text-secondary">
-                <Cpu className="w-3.5 h-3.5" /> {t('systemMonitor.memory')}
+              <span className="flex items-center gap-2 text-secondary">
+                <Cpu className="w-4 h-4" /> {t('systemMonitor.memory')}
               </span>
-              <span className="font-mono text-fg-muted">
+              <span className="font-mono tabular-nums text-fg-muted">
                 {t('systemMonitor.mb', { value: memoryUsage ?? 0 })}
               </span>
             </div>
-            <div className="w-full h-1.5 bg-surface-active rounded-full overflow-hidden border border-line">
+            <div className="w-full h-1 bg-canvas rounded-xs overflow-hidden border border-line">
               <div
-                className="h-full bg-secondary rounded-full transition-all duration-500"
+                className="h-full bg-secondary rounded-xs transition-all duration-normal"
                 style={{ width: `${Math.min(100, Math.max(5, ((memoryUsage || 30) / 250) * 100))}%` }}
               />
             </div>
@@ -111,18 +111,18 @@ export const SystemMonitorWidget: React.FC<WidgetProps<SystemMonitorSettings>> =
         {showBattery && (
           <div className="flex flex-col gap-1">
             <div className="flex justify-between text-xs font-semibold text-fg">
-              <span className="flex items-center gap-1.5 text-warning">
-                {isCharging ? <BatteryCharging className="w-3.5 h-3.5" /> : <Battery className="w-3.5 h-3.5" />}
+              <span className="flex items-center gap-2 text-warning">
+                {isCharging ? <BatteryCharging className="w-4 h-4" /> : <Battery className="w-4 h-4" />}
                 {t('systemMonitor.battery')}
               </span>
-              <span className="font-mono text-fg-muted">
+              <span className="font-mono tabular-nums text-fg-muted">
                 {batteryLevel !== null ? `${batteryLevel}%` : t('systemMonitor.acPower')}
               </span>
             </div>
-            <div className="w-full h-1.5 bg-surface-active rounded-full overflow-hidden border border-line">
+            <div className="w-full h-1 bg-canvas rounded-xs overflow-hidden border border-line">
               <div
                 className={cn(
-                  'h-full rounded-full transition-all duration-500',
+                  'h-full rounded-xs transition-all duration-normal',
                   batteryLevel !== null && batteryLevel <= 20
                     ? 'bg-danger'
                     : isCharging

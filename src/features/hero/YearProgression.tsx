@@ -34,23 +34,27 @@ export const YearProgression: React.FC<YearProgressionProps> = ({ className }) =
       onClick={handleNextMode}
       aria-label={t('hero.progressLabel', { label: active.label, percent: active.percent })}
       className={cn(
-        'glass-pill flex max-w-full flex-wrap items-center justify-center gap-3 px-4 py-2 text-xs select-none cursor-pointer group min-h-11',
+        'glass-pill flex max-w-full flex-wrap items-center justify-center gap-3 px-3 py-2 text-xs select-none cursor-pointer group min-h-11',
         className,
       )}
     >
       <div className="flex items-center gap-2 text-fg-muted group-hover:text-primary transition-colors">
         <Calendar className="w-4 h-4 shrink-0" />
-        <span className="font-medium capitalize">{active.label}</span>
+        <span className="font-mono text-2xs uppercase tracking-wider font-medium">
+          {active.label}
+        </span>
       </div>
 
-      <div className="w-20 sm:w-28 h-2 bg-surface rounded-full overflow-hidden border border-line">
+      <div className="w-20 sm:w-28 h-1 bg-canvas rounded-xs overflow-hidden border border-line">
         <div
-          className="h-full bg-primary rounded-full transition-all duration-normal"
+          className="h-full bg-primary rounded-xs transition-all duration-normal"
           style={{ width: `${active.percent}%` }}
         />
       </div>
 
-      <span className="font-mono text-fg font-semibold min-w-10 text-right">{active.percent}%</span>
+      <span className="font-mono tabular-nums text-fg font-semibold min-w-10 text-right">
+        {active.percent}%
+      </span>
     </button>
   );
 };

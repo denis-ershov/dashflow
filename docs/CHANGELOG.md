@@ -7,6 +7,15 @@
 
 ---
 
+## [Unreleased]
+
+### Полный редизайн в стиле Tactical Precision UI и локальные шрифты (2026-11-24)
+
+- **Палитра по умолчанию `tactical-dark`:** добавлена графитовая палитра в стиле HUD (`#0B0E13`, `#141A23`, `#1F2A37`, акцент `#F0A830`, стальной `#6BA7C4`, семантика `#4FB477` / `#D9603B`), прошедшая все пороги контрастности WCAG 2.1 AA/AAA. Прежняя синяя тема `neutral-dark` сохранена как дополнительный пресет. Файлы — `src/core/theme/presets.ts`, `src/styles/tokens.css`, `src/features/appearance/PresetGrid.tsx`, словари ru/en, тесты темы.
+- **Локальные шрифты с полной кириллицей и выбор в настройках:** заменён `Outfit` (без кириллицы) на локальный каталог шрифтов в `src/styles/fonts.css` и `src/core/theme/fonts.ts` — **Sofia Sans** (по умолчанию), **Inter**, **Jura**, **IBM Plex Mono** (также используется для цифр и таймеров с `tabular-nums`) и **System UI**. Выбор шрифта и шкалы скруглений (`sharp` / `soft` / `round`) добавлен в `useThemeStore` и окно «Оформление».
+- **Чёткая геометрия, поверхности и выравнивание:** шкала `sharp` (`2/4/6/8/10 px`) стала дефолтной; убраны мыльный blur на обычном фоне, `hover: translateY(-1px)` и `rounded-full` «таблетки» в примитивах (`Button`, `Input`, `Select`, `Card`, `Badge`, `Modal`, `Drawer`), каркасе (`SearchBar2`, `FloatingDock`, `YearProgression`, `SpeedDialGrid`, `WidgetShell`), модалках (`SettingsModal`, `AppearanceModal`, `CommandPalette`) и виджетах (`SystemMonitorWidget`, `TodoWidget`, `YearProgressWidget`, `KanbanCard`, `NexusChatWidget`).
+- **Обоснование:** устранить «плавающие» скругления, расхождение метрик кириллицы/латиницы и неровные высоты контролов. Миграция `ThemeStateV2` обратно совместима: старые профили сохраняют выбранный пресет и получают дефолтные `fontPreset: 'sofia-sans'` и `radiusScale: 'sharp'`. Откат — переключить тему на `neutral-dark` и скругления на `soft` либо вернуть коммит.
+
 ## [4.2.0] - 2026-11-24
 
 ### Этап 5. Интеграции Hub 0.3.0 и расширения

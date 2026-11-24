@@ -17,6 +17,8 @@ describe('migrateThemeState', () => {
     const v2State: ThemeStateV2 = {
       version: CURRENT_THEME_VERSION,
       activePresetId: 'ocean',
+      fontPreset: 'inter',
+      radiusScale: 'soft',
       customTokens: undefined,
       customCss: '.card { color: blue; }',
       allowExternalCss: false,
@@ -84,12 +86,12 @@ describe('migrateThemeState', () => {
     expect(migrated.customCss).toBe('');
   });
 
-  it('откатывается на neutral-dark для неизвестных пресетов', () => {
+  it('откатывается на tactical-dark для неизвестных пресетов', () => {
     const v1 = {
       activePresetId: 'non-existent-preset-123',
     };
 
     const migrated = migrateThemeState(v1);
-    expect(migrated.activePresetId).toBe('neutral-dark');
+    expect(migrated.activePresetId).toBe('tactical-dark');
   });
 });

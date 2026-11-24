@@ -57,15 +57,18 @@ export const Modal: React.FC<ModalProps> = ({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'relative w-full bg-surface text-fg border border-line rounded-xl shadow-3 overflow-hidden flex flex-col max-h-[90vh] animate-scale-in duration-normal focus-visible:outline-none',
+          'relative w-full bg-surface text-fg border border-line rounded-md shadow-3 overflow-hidden flex flex-col max-h-[90vh] animate-scale-in duration-normal focus-visible:outline-none',
           widthClasses[maxWidth],
           className,
         )}
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-line">
-            <h3 className="text-base font-semibold tracking-tight text-fg">{title}</h3>
+          <div className="flex items-center justify-between gap-2 px-5 py-3 border-b border-line bg-canvas/50">
+            <h3 className="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold uppercase tracking-wider text-fg wrap-anywhere">
+              <span aria-hidden="true" className="inline-block h-1 w-3 bg-primary shrink-0" />
+              <span className="min-w-0 wrap-anywhere">{title}</span>
+            </h3>
             <Button
               variant="ghost"
               size="sm"
@@ -79,7 +82,7 @@ export const Modal: React.FC<ModalProps> = ({
         )}
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto flex-1">{children}</div>
+        <div className="p-5 overflow-y-auto flex-1">{children}</div>
       </div>
     </div>
   );

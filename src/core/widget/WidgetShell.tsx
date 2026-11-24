@@ -104,18 +104,23 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
     <>
       {/* Шапка виджета (для panel и в режиме редактирования для остальных) */}
       {(!isChromeless || isEditMode) && (
-        <div className="flex items-center justify-between min-h-10 pl-4 pr-2 pt-2 select-none shrink-0">
+        <div className="flex items-center justify-between h-10 px-3 border-b border-line bg-canvas/40 select-none shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             {isEditMode && (
               <button
                 type="button"
-                className="widget-drag-handle flex items-center justify-center w-8 h-8 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover cursor-grab transition-colors relative before:absolute before:-inset-2 before:content-['']"
+                className="widget-drag-handle flex items-center justify-center w-8 h-8 rounded-sm text-fg-muted hover:text-fg hover:bg-surface-hover cursor-grab transition-colors relative before:absolute before:-inset-2 before:content-['']"
                 aria-label={tr('widgetShell.drag')}
               >
                 <GripVertical className="w-4 h-4" />
               </button>
             )}
-            {title && <h3 className="text-xs font-medium text-fg-muted truncate">{title}</h3>}
+            {title && (
+              <h3 className="flex items-center gap-2 font-mono text-2xs font-semibold uppercase tracking-wider text-fg-muted truncate">
+                <span aria-hidden="true" className="inline-block w-1 h-3 bg-primary shrink-0" />
+                <span className="truncate">{title}</span>
+              </h3>
+            )}
           </div>
 
           {/* Панель действий в режиме редактирования или по наведению */}
@@ -129,7 +134,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
               <button
                 type="button"
                 onClick={onOpenSettings}
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors cursor-pointer relative before:absolute before:-inset-2 before:content-['']"
+                className="flex items-center justify-center w-8 h-8 rounded-sm text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors cursor-pointer relative before:absolute before:-inset-2 before:content-['']"
                 aria-label={tr('widgetShell.settings')}
               >
                 <Settings className="w-4 h-4" />
@@ -140,7 +145,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
               <button
                 type="button"
                 onClick={onRemove}
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-danger hover:bg-danger/15 transition-colors cursor-pointer relative before:absolute before:-inset-2 before:content-['']"
+                className="flex items-center justify-center w-8 h-8 rounded-sm text-danger hover:bg-danger/15 transition-colors cursor-pointer relative before:absolute before:-inset-2 before:content-['']"
                 aria-label={tr('widgetShell.remove')}
               >
                 <Trash2 className="w-4 h-4" />
@@ -153,7 +158,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
       {/* Тело виджета, защищенное ErrorBoundary */}
       <div
         className={cn(
-          'flex-1 min-h-0 w-full p-1',
+          'flex-1 min-h-0 w-full p-2',
           isChromeless ? 'overflow-visible' : 'overflow-auto',
         )}
       >
@@ -173,7 +178,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
         className={cn(
           layoutClasses,
           'overflow-visible bg-transparent border-transparent',
-          isEditMode && 'glass-panel border-dashed border-line rounded-lg',
+          isEditMode && 'glass-panel border-dashed border-line rounded-md',
           editRing,
           className,
         )}
@@ -191,9 +196,7 @@ export const WidgetShell: React.FC<WidgetShellProps> = ({
       padding="none"
       className={cn(
         layoutClasses,
-        isTiles
-          ? 'border border-line/80 p-2 shadow-1'
-          : 'border border-line shadow-2 hover:shadow-3',
+        isTiles ? 'border border-line p-2 shadow-1' : 'border border-line shadow-1',
         editRing,
         className,
       )}

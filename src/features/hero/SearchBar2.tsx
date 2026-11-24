@@ -76,9 +76,9 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
       <form
         onSubmit={handleSubmit}
         className={cn(
-          'glass-panel flex items-center gap-2 p-1.5 pl-2 min-h-13 rounded-full border shadow-2 transition-all duration-normal max-[380px]:grid max-[380px]:grid-cols-[minmax(0,1fr)_auto]',
+          'glass-panel flex items-center gap-2 p-1 pl-2 min-h-12 rounded-md border shadow-1 transition-colors duration-fast max-[380px]:grid max-[380px]:grid-cols-[minmax(0,1fr)_auto]',
           'border-line hover:border-line-hover',
-          'focus-within:border-primary focus-within:shadow-[0_0_24px_var(--dashflow-primary-glow)]',
+          'focus-within:border-primary',
         )}
       >
         {/* Кнопка выбора поисковика */}
@@ -87,7 +87,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
             type="button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             aria-label={t('search.chooseEngine', { name: activeName })}
-            className="flex items-center gap-2 px-3 py-2 rounded-full bg-surface hover:bg-surface-hover text-fg text-xs font-medium border border-line transition-colors min-h-10 cursor-pointer relative before:absolute before:-inset-1 before:content-[''] max-[380px]:h-11 max-[380px]:w-11 max-[380px]:min-w-11 max-[380px]:px-0 max-[380px]:justify-center"
+            className="flex items-center gap-2 px-3 py-2 rounded-sm bg-surface hover:bg-surface-hover text-fg text-xs font-medium border border-line transition-colors min-h-10 cursor-pointer relative before:absolute before:-inset-1 before:content-[''] max-[380px]:h-11 max-[380px]:w-11 max-[380px]:min-w-11 max-[380px]:px-0 max-[380px]:justify-center"
           >
             {activeEngine.icon}
             <span className="hidden sm:inline">{activeName}</span>
@@ -96,7 +96,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
 
           {/* Выпадающее меню поисковиков */}
           {isDropdownOpen && (
-            <div className="absolute top-full left-0 mt-2 z-50 w-48 glass-panel rounded-xl shadow-3 border border-line p-2 flex flex-col gap-1">
+            <div className="absolute top-full left-0 mt-2 z-50 w-48 glass-panel rounded-md shadow-2 border border-line p-1 flex flex-col gap-1">
               {SEARCH_ENGINE_LIST.map((item) => {
                 const key = item.id;
                 return (
@@ -105,9 +105,9 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
                     type="button"
                     onClick={() => handleSelectEngine(key)}
                     className={cn(
-                      'flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-left transition-colors cursor-pointer',
+                      'flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-medium text-left transition-colors cursor-pointer',
                       engine === key
-                        ? 'bg-primary text-primary-fg'
+                        ? 'bg-primary text-primary-fg font-semibold'
                         : 'text-fg hover:bg-surface-hover',
                     )}
                   >
@@ -157,7 +157,7 @@ export const SearchBar2: React.FC<SearchBar2Props> = ({
           <button
             type="submit"
             aria-label={t('search.submit')}
-            className="p-2 rounded-full bg-primary text-primary-fg hover:bg-primary-hover shadow-1 active:scale-95 transition-all min-w-10 min-h-10 flex items-center justify-center cursor-pointer relative before:absolute before:-inset-1 before:content-['']"
+            className="p-2 rounded-sm bg-primary text-primary-fg hover:bg-primary-hover transition-colors min-w-10 min-h-10 flex items-center justify-center cursor-pointer relative before:absolute before:-inset-1 before:content-['']"
           >
             <Search className="w-4 h-4" />
           </button>

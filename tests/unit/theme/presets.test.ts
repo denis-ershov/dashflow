@@ -5,8 +5,9 @@ import { contrastRatio, flatten, parseColor, type Rgba } from '@/core/theme/colo
 import { buildThemeCss, resolveTheme, COLOR_KEYS, type ResolvedTheme } from '@/core/theme/tokens';
 import { DEFAULT_PRESET_ID, findPreset, PRESETS, type PresetId } from '@/core/theme/presets';
 
-/** Все девять id в порядке, зафиксированном спекой (§«Палитра по умолчанию и пресеты»). */
+/** Все десять id в порядке, зафиксированном спекой. */
 const ORDER: PresetId[] = [
+  'tactical-dark',
   'neutral-dark',
   'deep-blue',
   'default-light',
@@ -87,8 +88,8 @@ function dashflowDeclarations(source: string): Map<string, string> {
 }
 
 describe('PRESETS — состав и порядок', () => {
-  it('содержит девять пресетов', () => {
-    expect(PRESETS).toHaveLength(9);
+  it('содержит десять пресетов', () => {
+    expect(PRESETS).toHaveLength(10);
   });
 
   it('id не повторяются', () => {
@@ -100,8 +101,8 @@ describe('PRESETS — состав и порядок', () => {
     expect(PRESETS.map((preset) => preset.id)).toEqual(ORDER);
   });
 
-  it('пресет по умолчанию — neutral-dark', () => {
-    expect(DEFAULT_PRESET_ID).toBe('neutral-dark');
+  it('пресет по умолчанию — tactical-dark', () => {
+    expect(DEFAULT_PRESET_ID).toBe('tactical-dark');
   });
 
   it.each(ORDER)('%s несёт только id и tokens', (id) => {

@@ -26,14 +26,14 @@ describe('applyTheme', () => {
     expect(styleTag?.textContent).toContain('--dashflow-canvas: rgb(11 15 23)');
   });
 
-  it('откатывается на neutral-dark при невалидных токенах', () => {
+  it('откатывается на tactical-dark при невалидных токенах', () => {
     const invalidTokens = { canvas: 'not-a-color' } as unknown as ThemeTokens;
     const ok = applyTheme(invalidTokens);
     expect(ok).toBe(false);
 
     const styleTag = document.getElementById(THEME_STYLE_ID) as HTMLStyleElement | null;
     expect(styleTag).not.toBeNull();
-    expect(styleTag?.textContent).toContain('--dashflow-canvas: rgb(11 15 23)');
+    expect(styleTag?.textContent).toContain('--dashflow-canvas: rgb(11 14 19)');
   });
 
   it('обновляет содержимое существующего style-тега при повторном вызове', () => {

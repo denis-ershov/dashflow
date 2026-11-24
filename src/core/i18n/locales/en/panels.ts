@@ -112,7 +112,8 @@ export const panels: LocaleShape<typeof ruPanels> = {
     addToScreen: 'Add to screen',
   },
   themeDescriptions: {
-    'neutral-dark': 'A balanced dark theme for long, comfortable sessions',
+    'tactical-dark': 'Crisp graphite HUD palette with amber and steel accents',
+    'neutral-dark': 'A balanced dark theme with blue accents for long sessions',
     'deep-blue': 'Deep blue tones with crisp elements',
     'default-light': 'A clean light theme with soft contrast',
     midnight: 'A night violet palette with neon accents',
@@ -124,6 +125,14 @@ export const panels: LocaleShape<typeof ruPanels> = {
   },
   themes: {
     intro: 'Pick a ready-made theme. All themes meet WCAG 2.1 AA/AAA contrast requirements.',
+    fontTitle: 'Interface font',
+    fontHint: 'All fonts are bundled locally with full Cyrillic and Latin support.',
+    radiusTitle: 'Corner radius',
+    radiusOptions: {
+      sharp: 'Crisp (4–8 px)',
+      soft: 'Balanced (6–14 px)',
+      round: 'Soft (10–20 px)',
+    },
   },
   wallpaper: {
     spaceHint: 'Wallpaper and dimming are saved for the current space.',

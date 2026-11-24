@@ -10,7 +10,8 @@
  */
 
 import { DEFAULT_PRESET_ID, findPreset, type PresetId } from './presets';
-import { type ThemeTokens } from './tokens';
+import { RADIUS_SCALE_NAMES, type RadiusScaleName, type ThemeTokens } from './tokens';
+import { DEFAULT_FONT_PRESET_ID, isFontPresetId, type FontPresetId } from './fonts';
 import { DEFAULT_SCRIM, sanitizeWallpaperUrl, validateScrim } from './wallpaper';
 import { validateCustomCss } from './cssValidator';
 
@@ -19,6 +20,8 @@ export const CURRENT_THEME_VERSION = 2;
 export interface ThemeStateV2 {
   version: 2;
   activePresetId: PresetId;
+  fontPreset: FontPresetId;
+  radiusScale: RadiusScaleName;
   customTokens?: ThemeTokens;
   customCss: string;
   allowExternalCss: boolean;
@@ -29,12 +32,20 @@ export interface ThemeStateV2 {
 export const DEFAULT_THEME_STATE: ThemeStateV2 = {
   version: CURRENT_THEME_VERSION,
   activePresetId: DEFAULT_PRESET_ID,
+  fontPreset: DEFAULT_FONT_PRESET_ID,
+  radiusScale: 'sharp',
   customTokens: undefined,
   customCss: '',
   allowExternalCss: false,
   wallpaperUrl: null,
   scrim: DEFAULT_SCRIM,
 };
+
+function normalizeRadiusScale(value: unknown): RadiusScaleName {
+  return typeof value === 'string' && (RADIUS_SCALE_NAMES as readonly string[]).includes(value)
+    ? (value as RadiusScaleName)
+    : 'sharp';
+}
 
 /**
  * Чистая функция миграции произвольного состояния темы к текущей версии v2.
@@ -64,6 +75,8 @@ export function migrateThemeState(raw: unknown): ThemeStateV2 {
     return {
       version: CURRENT_THEME_VERSION,
       activePresetId,
+      fontPreset: isFontPresetId(obj.fontPreset) ? obj.fontPreset : DEFAULT_FONT_PRESET_ID,
+      radiusScale: normalizeRadiusScale(obj.radiusScale),
       customTokens:
         typeof obj.customTokens === 'object' && obj.customTokens !== null
           ? (obj.customTokens as ThemeTokens)
@@ -119,6 +132,8 @@ export function migrateThemeState(raw: unknown): ThemeStateV2 {
   return {
     version: CURRENT_THEME_VERSION,
     activePresetId,
+    fontPreset: DEFAULT_FONT_PRESET_ID,
+    radiusScale: 'sharp',
     customTokens: undefined,
     customCss,
     allowExternalCss: allowExternal,

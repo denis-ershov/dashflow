@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from '@/core/i18n';
 import { Drawer } from '@/ui/overlays/Drawer';
 import { Slider, Button, Switch } from '@/ui/primitives';
@@ -9,9 +9,16 @@ import { cn } from '@/ui/lib/cn';
 export interface AmbientSoundDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  enabled?: boolean;
+  onPlayingChange?: (playing: boolean) => void;
 }
 
-export const AmbientSoundDrawer: React.FC<AmbientSoundDrawerProps> = ({ isOpen, onClose }) => {
+export const AmbientSoundDrawer: React.FC<AmbientSoundDrawerProps> = ({
+  isOpen,
+  onClose,
+  enabled = true,
+  onPlayingChange,
+}) => {
   const { t } = useTranslation();
   const {
     activeTracks,
@@ -26,6 +33,16 @@ export const AmbientSoundDrawer: React.FC<AmbientSoundDrawerProps> = ({ isOpen, 
   } = useAudioStore();
 
   const isAnyPlaying = Object.values(activeTracks).some(Boolean);
+
+  useEffect(() => {
+    onPlayingChange?.(isAnyPlaying);
+  }, [isAnyPlaying, onPlayingChange]);
+
+  useEffect(() => {
+    if (!enabled && isAnyPlaying) {
+      stopAll();
+    }
+  }, [enabled, isAnyPlaying, stopAll]);
 
   return (
     <Drawer isOpen={isOpen} onClose={onClose} title={t('audio.title')}>

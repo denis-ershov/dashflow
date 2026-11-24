@@ -146,7 +146,7 @@ function PaletteDialog({ revealItem, revealWidget }: PaletteActions) {
               .filter(({ results }) => results.length > 0)
               .map(({ title, results }) => (
                 <div key={title} role="group" aria-label={title} className="mb-2 last:mb-0">
-                  <div aria-hidden="true" className="px-3 py-1 text-xs font-medium text-fg-muted">
+                  <div aria-hidden="true" className="px-3 py-1 font-mono text-2xs font-semibold uppercase tracking-wider text-fg-muted">
                     {title}
                   </div>
                   {results.map((result) => {
@@ -162,10 +162,10 @@ function PaletteDialog({ revealItem, revealWidget }: PaletteActions) {
                         onClick={() => run(result)}
                         onMouseMove={() => setSelectedIndex(position)}
                         className={cn(
-                          'flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm',
+                          'flex min-h-11 w-full items-center gap-2 rounded-sm px-3 py-2 text-start text-sm transition-colors duration-fast',
                           selection === position
                             ? 'border-s-2 border-primary bg-surface-active text-fg font-medium ring-1 ring-inset ring-primary'
-                            : 'hover:bg-surface-hover',
+                            : 'border-s-2 border-transparent hover:bg-surface-hover',
                         )}
                       >
                         <span aria-hidden="true" className="shrink-0">

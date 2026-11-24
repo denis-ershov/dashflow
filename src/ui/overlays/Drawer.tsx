@@ -54,9 +54,12 @@ export const Drawer: React.FC<DrawerProps> = ({
           )}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-line bg-surface/50">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-line bg-surface/60">
             <div>
-              <h3 className="text-base font-semibold tracking-tight text-fg">{title}</h3>
+              <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-fg">
+                <span aria-hidden="true" className="inline-block h-1 w-3 bg-primary shrink-0" />
+                {title}
+              </h3>
               {subtitle && <p className="text-xs text-fg-muted mt-1">{subtitle}</p>}
             </div>
 
@@ -72,7 +75,7 @@ export const Drawer: React.FC<DrawerProps> = ({
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">{children}</div>
+          <div className="flex-1 overflow-y-auto p-5 space-y-5">{children}</div>
         </div>
       </div>
     </div>

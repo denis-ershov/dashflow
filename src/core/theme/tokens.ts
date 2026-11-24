@@ -50,9 +50,9 @@ export const RADIUS_SCALE_NAMES = ['sharp', 'soft', 'round'] as const;
 export type RadiusScaleName = (typeof RADIUS_SCALE_NAMES)[number];
 
 export const RADIUS_SCALES: Record<RadiusScaleName, RadiusScale> = {
-  sharp: { xs: '2px', sm: '4px', md: '6px', lg: '10px', xl: '14px' },
-  soft: { xs: '6px', sm: '10px', md: '14px', lg: '20px', xl: '28px' },
-  round: { xs: '10px', sm: '16px', md: '22px', lg: '30px', xl: '40px' },
+  sharp: { xs: '2px', sm: '4px', md: '6px', lg: '8px', xl: '10px' },
+  soft: { xs: '4px', sm: '6px', md: '10px', lg: '14px', xl: '18px' },
+  round: { xs: '6px', sm: '10px', md: '14px', lg: '20px', xl: '26px' },
 };
 
 /** Набор токенов темы: семь ключей обязательны, остальное выводится. */
@@ -107,9 +107,9 @@ const WARNING_DEFAULT = '#f59e0b';
 const SUCCESS_DEFAULT = '#10b981';
 const INFO_DEFAULT = '#38bdf8';
 
-const FONT_SANS_DEFAULT =
-  "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
-const FONT_MONO_DEFAULT = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+const FONT_SANS_DEFAULT = "'Sofia Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif";
+const FONT_MONO_DEFAULT =
+  "'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
 
 const LENGTH_PATTERN = /^(?:0|[1-9]\d{0,2})(?:\.\d+)?px$/;
 const FONT_PATTERN = /^[A-Za-z0-9\s,'"._-]{1,200}$/;
@@ -195,12 +195,12 @@ function deriveColors(
 }
 
 function resolveScalars(tokens: ThemeTokens): Omit<ResolvedTheme, 'colors'> | null {
-  const glassBlur = readString(tokens.glassBlur, LENGTH_PATTERN, '24px');
+  const glassBlur = readString(tokens.glassBlur, LENGTH_PATTERN, '12px');
   const fontSans = readString(tokens.fontSans, FONT_PATTERN, FONT_SANS_DEFAULT);
   const fontMono = readString(tokens.fontMono, FONT_PATTERN, FONT_MONO_DEFAULT);
-  const glassOpacity = readNumber(tokens.glassOpacity, 0, 1, 0.65);
+  const glassOpacity = readNumber(tokens.glassOpacity, 0, 1, 0.88);
   const fontScale = readNumber(tokens.fontScale, 0.75, 1.5, 1);
-  const radiusName = tokens.radius ?? 'soft';
+  const radiusName = tokens.radius ?? 'sharp';
 
   if (glassBlur === null || fontSans === null || fontMono === null) return null;
   if (glassOpacity === null || fontScale === null) return null;

@@ -236,7 +236,7 @@ export const NexusChatWidget: React.FC<Partial<WidgetProps<NexusChatSettings>>> 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain space-y-2.5 pe-1">
         {messages.length === 0 && !isLoading ? (
           <div className="glass-card flex flex-col items-center justify-center gap-3 p-4 text-center">
-            <div className="flex size-11 items-center justify-center rounded-full border border-line bg-surface text-primary">
+            <div className="flex size-11 items-center justify-center rounded-sm border border-line bg-surface text-primary">
               <Sparkles aria-hidden="true" className="size-5" />
             </div>
             <div className="space-y-1">

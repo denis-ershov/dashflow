@@ -80,8 +80,13 @@ export function KanbanCard({
       aria-setsize={count}
       style={style}
       className={cn(
-        'grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start rounded-xl border border-line bg-canvas p-1 shadow-sm',
-        (isDragging || dragging) && 'border-primary bg-primary/5',
+        'grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start rounded-sm border border-line border-s-2 bg-canvas p-1 shadow-sm',
+        item.priority === 'high'
+          ? 'border-s-danger'
+          : item.priority === 'medium'
+            ? 'border-s-warning'
+            : 'border-s-transparent',
+        (isDragging || dragging) && 'border-primary border-s-primary bg-primary/10',
       )}
     >
       <Button
