@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { BookmarksWidget } from '@/widgets/built-in/BookmarksWidget/BookmarksWidget';
 import { bookmarksManifest } from '@/widgets/built-in/BookmarksWidget/manifest';
 
@@ -90,5 +90,27 @@ describe('BookmarksWidget Component & Manifest', () => {
     expect(screen.getByRole('button', { name: /^Закладки$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Вкладки/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Недавние$/i })).toBeInTheDocument();
+  });
+
+  it('должен открывать закладку в новой вкладке при нажатии на колёсико мыши', async () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    render(
+      <BookmarksWidget
+        instanceId="bm-middle"
+        settings={{
+          mode: 'folder',
+          selectedFolderId: '1',
+          viewMode: 'tiles',
+          tileShape: 'square',
+          openInNewTab: false,
+        }}
+      />,
+    );
+
+    const label = await screen.findByText('DashFlow GitHub');
+    fireEvent(label, new MouseEvent('auxclick', { bubbles: true, cancelable: true, button: 1 }));
+
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    expect(openSpy.mock.calls[0]?.[1]).toBe('_blank');
   });
 });

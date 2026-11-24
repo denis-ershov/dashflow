@@ -432,15 +432,44 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
     }
   };
 
-  const handleItemClick = (item: { id: string; url?: string; children?: unknown }) => {
+  const openUrlInBackgroundTab = (url: string) => {
+    if (!isSafeHttpUrl(url)) return;
+    if (typeof chrome !== 'undefined' && chrome.tabs?.create) {
+      chrome.tabs.create({ url, active: false }, () => undefined);
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleItemClick = (
+    item: { id: string; url?: string; children?: unknown },
+    e?: React.MouseEvent,
+  ) => {
     if (item.children && structureMode === 'tree') {
       setCurrentFolderId(item.id);
     } else if (item.url) {
-      if (openInNewTab) {
+      if (e && (e.ctrlKey || e.metaKey)) {
+        openUrlInBackgroundTab(item.url);
+      } else if (openInNewTab) {
         window.open(item.url, '_blank', 'noopener,noreferrer');
       } else {
         window.location.href = item.url;
       }
+    }
+  };
+
+  const handleItemAuxClick = (
+    item: { id: string; url?: string; children?: unknown },
+    e: React.MouseEvent,
+  ) => {
+    if (e.button !== 1 || !item.url) return;
+    e.preventDefault();
+    openUrlInBackgroundTab(item.url);
+  };
+
+  const preventMiddleMouseAutoScroll = (e: React.MouseEvent) => {
+    if (e.button === 1) {
+      e.preventDefault();
     }
   };
 
@@ -1017,7 +1046,9 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                   key={item.id}
                   role="button"
                   tabIndex={0}
-                  onClick={() => handleItemClick(item)}
+                  onClick={(e) => handleItemClick(item, e)}
+                  onMouseDown={preventMiddleMouseAutoScroll}
+                  onAuxClick={(e) => handleItemAuxClick(item, e)}
                   onKeyDown={onActivationKey(() => handleItemClick(item))}
                   className={cn('relative', tileClasses.containerClass)}
                   title={`${item.title}${item.url ? `\n${item.url}` : ''}`}
@@ -1106,7 +1137,9 @@ export const BookmarksWidget: React.FC<WidgetProps<BookmarkSettings>> = ({
                   key={item.id}
                   role="button"
                   tabIndex={0}
-                  onClick={() => handleItemClick(item)}
+                  onClick={(e) => handleItemClick(item, e)}
+                  onMouseDown={preventMiddleMouseAutoScroll}
+                  onAuxClick={(e) => handleItemAuxClick(item, e)}
                   onKeyDown={onActivationKey(() => handleItemClick(item))}
                   className="group/tile flex items-center justify-between p-2.5 rounded-xl bg-surface/70 hover:bg-surface border border-line hover:border-primary/50 transition-all duration-200 ease-out cursor-pointer select-none backdrop-blur-sm hover:translate-x-0.5 hover:shadow-1"
                 >

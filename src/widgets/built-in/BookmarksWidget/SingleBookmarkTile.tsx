@@ -43,11 +43,33 @@ export const SingleBookmarkTile: React.FC<SingleBookmarkTileProps> = ({ settings
     }
   };
 
-  const handleClick = () => {
-    if (openInNewTab) {
+  const openInBackgroundTab = () => {
+    if (typeof chrome !== 'undefined' && chrome.tabs?.create) {
+      chrome.tabs.create({ url, active: false }, () => undefined);
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleClick = (e?: React.MouseEvent) => {
+    if (e && (e.ctrlKey || e.metaKey)) {
+      openInBackgroundTab();
+    } else if (openInNewTab) {
       window.open(url, '_blank', 'noopener,noreferrer');
     } else {
       window.location.href = url;
+    }
+  };
+
+  const handleAuxClick = (e: React.MouseEvent) => {
+    if (e.button !== 1) return;
+    e.preventDefault();
+    openInBackgroundTab();
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 1) {
+      e.preventDefault();
     }
   };
 
@@ -66,7 +88,9 @@ export const SingleBookmarkTile: React.FC<SingleBookmarkTileProps> = ({ settings
 
   return (
     <div
-      onClick={handleClick}
+      onClick={(e) => handleClick(e)}
+      onMouseDown={handleMouseDown}
+      onAuxClick={handleAuxClick}
       role="link"
       tabIndex={0}
       onKeyDown={(e) => {
