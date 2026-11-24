@@ -43,6 +43,7 @@ export interface DashboardState extends DashboardSnapshot {
   activeModal: ActiveModal;
 
   createSpace: (title: string, preset?: SpacePreset) => boolean;
+  applyOnboardingPreset: (preset: SpacePreset) => boolean;
   switchSpace: (id: string) => void;
   removeSpace: (id: string) => DashboardRemoval | undefined;
 
@@ -90,6 +91,15 @@ function updateSpace(
   return {
     spaces: state.spaces.map((space) => (space.id === id ? { ...space, ...update(space) } : space)),
   };
+}
+
+function stableSnapshot(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableSnapshot).join(',')}]`;
+  if (typeof value === 'object' && value !== null) {
+    const entries = Object.entries(value).sort(([left], [right]) => left.localeCompare(right));
+    return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${stableSnapshot(entry)}`).join(',')}}`;
+  }
+  return JSON.stringify(value) ?? 'undefined';
 }
 
 function updateActiveSpace(
@@ -182,6 +192,20 @@ export const useDashboardStore = create<DashboardState>()(
           spaces: [...state.spaces, space],
           activeSpaceId: space.id,
         }));
+        return true;
+      },
+      applyOnboardingPreset: (preset) => {
+        const state = get();
+        const baseline = createDefaultDashboardSnapshot();
+        const currentSnapshot = pickPersistedDashboard(state);
+        if (stableSnapshot(currentSnapshot) !== stableSnapshot(baseline)) return false;
+        const space = createDashboardSpace('home', preset);
+        set({
+          spaces: [space],
+          activeSpaceId: space.id,
+          ...(space.layoutMode ? { layoutMode: space.layoutMode } : {}),
+          ...CLOSED_DASHBOARD_UI,
+        });
         return true;
       },
       switchSpace: (id) => {

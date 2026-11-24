@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
   type FormEvent,
@@ -10,7 +11,7 @@ import {
 import { Inbox, Plus } from 'lucide-react';
 import { commandBus } from '@/core/commands';
 import { useTranslation, type TranslationKey } from '@/core/i18n';
-import { itemRepository, ItemValidationError, useItems } from '@/core/items';
+import { itemRepository, ItemValidationError, SOURCE_TYPES, useItems } from '@/core/items';
 import { parseQuickCapture, QUICK_CAPTURE_LIMIT } from '@/core/items/quickParse';
 import { ReminderList } from '@/features/reminders/ReminderList';
 import { EmptyState, ErrorState, Skeleton } from '@/ui/feedback';
@@ -54,10 +55,15 @@ function inboxShortcut(event: KeyboardEvent<HTMLElement>) {
 
 export function InboxWidget() {
   const { t, tp, language } = useTranslation();
-  const { items, loading, error, reload } = useItems(itemRepository, {
+  const { items: allItems, loading, error, reload } = useItems(itemRepository, {
     status: 'inbox',
     sort: 'createdAt',
   });
+  const [source, setSource] = useState('all');
+  const items = useMemo(
+    () => source === 'all' ? allItems : allItems.filter((item) => item.source.type === source),
+    [allItems, source],
+  );
   const idPrefix = useId();
   const rowId = useCallback((itemId: string) => `${idPrefix}-${itemId}`, [idPrefix]);
   const listRef = useRef<HTMLDivElement>(null);
@@ -231,6 +237,22 @@ export function InboxWidget() {
           loading={busy === 'capture'}
         />
       </form>
+
+      {!unavailable && (allItems.length > 0 || source !== 'all') && (
+        <label className="flex min-w-0 shrink-0 flex-wrap items-center gap-2 text-sm text-fg-muted">
+          <span>{t('agents.sourceLabel')}</span>
+          <select
+            className="min-h-11 min-w-0 rounded-lg border border-line bg-canvas px-2 text-sm text-fg"
+            value={source}
+            onChange={(event) => setSource(event.target.value)}
+          >
+            <option value="all">{t('agents.sourceAll')}</option>
+            {SOURCE_TYPES.map((type) => (
+              <option key={type} value={type}>{t(`inbox.sources.${type}`)}</option>
+            ))}
+          </select>
+        </label>
+      )}
 
       {!unavailable && items.length > 0 && (
         <div className="flex min-w-0 shrink-0 flex-wrap items-center justify-between gap-x-2">

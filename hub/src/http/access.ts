@@ -97,6 +97,7 @@ export function actorFor(
 export function tokenAccess(repository: HubRepository, writesPerMinute: number) {
   const identities = new WeakMap<FastifyRequest, Actor>();
   const allowWrite = windowLimiter();
+  const permitWrite = (tokenId: string) => allowWrite(tokenId, writesPerMinute);
   const allowAuthFailure = windowLimiter();
 
   const requireScope =
@@ -113,7 +114,7 @@ export function tokenAccess(repository: HubRepository, writesPerMinute: number) 
         throw unauthorized();
       }
       identities.set(request, actorFor(record));
-      if (write && !allowWrite(record.id, writesPerMinute)) throw rateLimited();
+      if (write && !permitWrite(record.id)) throw rateLimited();
       if (!record.scopes.includes(scope)) throw denied();
       return Promise.resolve();
     };
@@ -122,5 +123,5 @@ export function tokenAccess(repository: HubRepository, writesPerMinute: number) 
     if (!result) throw unauthorized();
     return result;
   };
-  return { identities, requireScope, actor };
+  return { identities, requireScope, actor, permitWrite };
 }

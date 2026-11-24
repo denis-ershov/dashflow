@@ -139,7 +139,11 @@ export function AgendaWidget() {
           </p>
         )}
         {showEmpty && (
-          <EmptyState title={t('agenda.empty')} icon={<Calendar aria-hidden="true" size={24} />} />
+          <EmptyState
+            title={t('agenda.empty')}
+            description={t('agenda.emptyHint')}
+            icon={<Calendar aria-hidden="true" size={24} />}
+          />
         )}
         {days.map((day) => (
           <AgendaDayList key={day.start} day={day} entries={entries} />

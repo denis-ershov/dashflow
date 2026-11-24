@@ -1,4 +1,4 @@
-import { GripVertical } from 'lucide-react';
+import { Bot, GripVertical } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import type { KeyboardEvent } from 'react';
 import { useTranslation } from '@/core/i18n';
@@ -13,9 +13,16 @@ export function CardMetadata({ item }: { item: Item }) {
   const due = item.dueAt ? new Date(item.dueAt) : undefined;
   const overdue = Boolean(due && due.getTime() < Date.now() && item.status !== 'done');
 
-  if (!due && !item.priority && item.tags.length === 0) return null;
+  const agent = item.source.type === 'agent' ? item.source.name : undefined;
+  if (!due && !item.priority && !agent && item.tags.length === 0) return null;
   return (
     <div className="flex min-w-0 flex-wrap gap-2 text-xs text-fg-muted">
+      {agent && (
+        <span className="inline-flex min-w-0 items-center gap-1 wrap-anywhere">
+          <Bot aria-hidden="true" className="size-4 shrink-0" />
+          {t('inbox.namedSource', { type: t('inbox.sources.agent'), name: agent })}
+        </span>
+      )}
       {item.priority && <span>{t(`kanban.priority.${item.priority}`)}</span>}
       {due && (
         <time dateTime={item.dueAt} className={cn(overdue && 'font-medium text-danger')}>

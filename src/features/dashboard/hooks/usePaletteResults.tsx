@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import {
+  Bot,
   FileText,
   Globe,
   Layers,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useTranslation } from '@/core/i18n';
+import { useHubStatus } from '@/features/hub/useHubStatus';
 import type { Item } from '@/core/items';
 import { activeLayoutModeOf } from '@/core/storage';
 import { PRESETS } from '@/core/theme/presets';
@@ -36,6 +38,7 @@ export type PaletteResult = {
 
 function usePaletteCommands(): PaletteResult[] {
   const { t } = useTranslation();
+  const hub = useHubStatus();
   const { setActiveModal, addWidget, layoutMode, setLayoutMode } = useDashboardStore(
     useShallow((state) => ({
       setActiveModal: state.setActiveModal,
@@ -123,6 +126,15 @@ function usePaletteCommands(): PaletteResult[] {
     };
   });
 
+  if (hub.state === 'connected') {
+    baseCommands.push({
+      id: 'assign-agent',
+      title: t('agents.assign'),
+      category: t('commandPalette.categories.navigation'),
+      icon: <Bot className="size-4" />,
+      action: () => setActiveModal('assignAgent'),
+    });
+  }
   return [...baseCommands, ...themeCommands, ...widgetCommands];
 }
 

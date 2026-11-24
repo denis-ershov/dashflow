@@ -1,4 +1,11 @@
-import type { HubPushResult, ItemKind, ItemSource } from '@dashflow/shared';
+import type {
+  HubAgentRecord,
+  HubAgentRollbackPreview,
+  HubAgentRollbackResult,
+  HubPushResult,
+  ItemKind,
+  ItemSource,
+} from '@dashflow/shared';
 
 export type { HubChange } from '@dashflow/shared';
 
@@ -38,6 +45,8 @@ export interface ListItemsQuery {
   kind?: ItemKind;
   status?: string;
   boardId?: string;
+  assignee?: string;
+  sourceId?: string;
   q?: string;
   cursor?: string;
   limit?: number;
@@ -45,6 +54,16 @@ export interface ListItemsQuery {
   includeArchived?: boolean;
   tag?: string;
 }
+
+export type AgentRecord = HubAgentRecord;
+
+export interface AgentRollbackRange {
+  since: string;
+  until?: string;
+}
+
+export type AgentRollbackPreview = HubAgentRollbackPreview;
+export type AgentRollbackResult = HubAgentRollbackResult;
 
 export class HubDbError extends Error {
   constructor(

@@ -4,7 +4,8 @@ import type { WidgetInstance } from '@/core/widget/types';
 export type Breakpoint = 'xl' | 'lg' | 'md' | 'sm' | 'xs';
 export type BaseColumns = 12 | 16 | 24;
 
-export type ActiveModal = 'addWidget' | 'settings' | 'appearance' | 'marketplace' | 'spaces' | null;
+export type ActiveModal =
+  'addWidget' | 'settings' | 'appearance' | 'marketplace' | 'spaces' | 'assignAgent' | null;
 
 const ACTIVE_MODALS: ReadonlySet<string> = new Set([
   'addWidget',

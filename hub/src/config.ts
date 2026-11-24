@@ -9,6 +9,7 @@ export interface HubConfig {
   databasePath: string;
   extensionOrigins: string[];
   writesPerMinute: number;
+  mcpAllowedHosts?: string[];
 }
 
 export interface LoadConfigOptions {
@@ -89,6 +90,21 @@ function parseOrigins(value: unknown, name: string): string[] {
   return [...new Set(origins.map((origin) => origin.replace(/\/$/u, '')))];
 }
 
+function parseMcpHosts(value: unknown, name: string): string[] {
+  if (!Array.isArray(value) || value.length > 64)
+    throw new Error(`${name} must be an array of hosts`);
+  return [
+    ...new Set(
+      value.map((host: unknown) => {
+        if (typeof host !== 'string' || !host || host.length > 255) {
+          throw new Error(`${name} contains an invalid host`);
+        }
+        return host;
+      }),
+    ),
+  ];
+}
+
 function parseConfigFile(value: unknown, baseDirectory: string): Partial<HubConfig> {
   if (!isRecord(value)) throw new Error('Config file must contain a JSON object');
   const knownKeys = new Set([
@@ -97,6 +113,7 @@ function parseConfigFile(value: unknown, baseDirectory: string): Partial<HubConf
     'databasePath',
     'extensionOrigins',
     'writesPerMinute',
+    'mcpAllowedHosts',
   ]);
   for (const key of Object.keys(value)) {
     if (!knownKeys.has(key)) throw new Error(`Unknown config key: ${key}`);
@@ -112,6 +129,9 @@ function parseConfigFile(value: unknown, baseDirectory: string): Partial<HubConf
   }
   if (value.writesPerMinute !== undefined) {
     config.writesPerMinute = parseInteger(value.writesPerMinute, 'writesPerMinute', 1, 10000);
+  }
+  if (value.mcpAllowedHosts !== undefined) {
+    config.mcpAllowedHosts = parseMcpHosts(value.mcpAllowedHosts, 'mcpAllowedHosts');
   }
   return config;
 }
@@ -144,6 +164,12 @@ function parseEnvironment(env: NodeJS.ProcessEnv, baseDirectory: string): Partia
       1,
       10000,
     );
+  }
+  if (env.DASHFLOW_HUB_MCP_HOSTS !== undefined) {
+    const hosts = env.DASHFLOW_HUB_MCP_HOSTS.split(',')
+      .map((host) => host.trim())
+      .filter(Boolean);
+    config.mcpAllowedHosts = parseMcpHosts(hosts, 'DASHFLOW_HUB_MCP_HOSTS');
   }
   return config;
 }

@@ -2,6 +2,7 @@ import { chromium, expect, test, type BrowserContext, type Page } from '@playwri
 import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { skipOnboardingForTest } from './extensionFixture';
 import type { FastifyInstance } from 'fastify';
 import type { Item } from '../../src/core/items/types';
 
@@ -69,7 +70,7 @@ function launch(extension: string) {
 }
 
 async function openWorkspace(context: BrowserContext) {
-  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+  const worker = await skipOnboardingForTest(context);
   const origin = `chrome-extension://${new URL(worker.url()).host}`;
   const page = await context.newPage();
   await page.goto(`${origin}/newtab.html`);

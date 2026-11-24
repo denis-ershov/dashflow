@@ -211,7 +211,7 @@
   opacity: 0.15;
   border-radius: var(--dashflow-radius-lg, 12px);
   border: 2px dashed var(--dashflow-primary);
-  transition-duration: 100ms;
+  transition-duration: var(--duration-fast);
   z-index: 2;
   user-select: none;
 }

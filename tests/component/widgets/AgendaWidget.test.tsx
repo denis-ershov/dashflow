@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { itemRepository } from '@/core/items';
+import { t } from '@/core/i18n';
 import { AgendaWidget } from '@/widgets/built-in/AgendaWidget/AgendaWidget';
 import { setCalendarConnection } from '@/widgets/built-in/AgendaWidget/calendarConnection';
 import { resetWorkspace } from '../../helpers/workspace';
@@ -14,6 +15,14 @@ beforeEach(async () => {
   await resetWorkspace([{ instanceId: 'agenda-1', widgetId: 'agenda', settings: {} }]);
 });
 afterEach(() => vi.unstubAllGlobals());
+
+describe('Agenda empty state hint', () => {
+  it('explains how to add calendar events or task deadlines', async () => {
+    render(<AgendaWidget />);
+    expect(await screen.findByText(t('agenda.empty'))).toBeInTheDocument();
+    expect(screen.getByText(t('agenda.emptyHint'))).toBeInTheDocument();
+  });
+});
 
 describe('Повестка дня', () => {
   it('показывает локальные сроки без календаря и переключает неделю с клавиатуры', async () => {

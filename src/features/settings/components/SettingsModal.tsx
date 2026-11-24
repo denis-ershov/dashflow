@@ -7,12 +7,13 @@ import { useAppStore } from '@/stores/useAppStore';
 import { useTranslation } from '@/core/i18n';
 import { Switch, Slider, Button } from '@/ui/primitives';
 import { ImportExportModal } from './ImportExportModal';
-import { Globe, Layout, Sparkles, SlidersHorizontal, Activity } from 'lucide-react';
+import { Globe, Layout, Sparkles, SlidersHorizontal, Activity, Bot } from 'lucide-react';
 import { DiagnosticsSection } from './DiagnosticsSection';
 import { runLogged } from '@/core/observability';
 import type { HeroSettings } from '@/core/storage/dashboardMigrations';
 import { CaptureMenuSettings } from '@/features/capture/CaptureMenuSettings';
 import { HubSettings } from '@/features/hub/HubSettings';
+import { AgentsSettings } from '@/features/agents/AgentsSettings';
 
 export const SettingsModal: React.FC = () => {
   const {
@@ -52,7 +53,7 @@ export const SettingsModal: React.FC = () => {
   );
   const { t, tp } = useTranslation();
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'general' | 'diagnostics'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'diagnostics' | 'agents'>('general');
 
   const isOpen = activeModal === 'settings';
 
@@ -66,6 +67,18 @@ export const SettingsModal: React.FC = () => {
       <div className="space-y-6">
         {/* Переключатель вкладок настроек */}
         <div className="flex border-b border-line pb-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab('agents')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === 'agents'
+                ? 'bg-primary/10 text-primary border border-primary/30'
+                : 'text-fg-muted hover:text-fg hover:bg-surface'
+            }`}
+          >
+            <Bot className="w-3.5 h-3.5" />
+            <span>{t('agents.title')}</span>
+          </button>
           <button
             type="button"
             onClick={() => setActiveTab('general')}
@@ -92,7 +105,9 @@ export const SettingsModal: React.FC = () => {
           </button>
         </div>
 
-        {activeTab === 'diagnostics' ? (
+        {activeTab === 'agents' ? (
+          <AgentsSettings />
+        ) : activeTab === 'diagnostics' ? (
           <DiagnosticsSection />
         ) : (
           <>

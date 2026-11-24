@@ -387,7 +387,7 @@ export const RssWidget: React.FC<WidgetProps<RssSettings>> = ({
             <EmptyState
               title={searchQuery ? t('rss.nothingFound') : t('rss.noPosts')}
               description={
-                searchQuery ? t('rss.noResults', { query: searchQuery }) : t('rss.emptySources')
+                searchQuery ? t('rss.noResults', { query: searchQuery }) : t('rss.noPostsHint')
               }
             />
           </div>

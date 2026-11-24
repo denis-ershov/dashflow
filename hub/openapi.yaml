@@ -78,6 +78,8 @@ paths:
         - { name: kind, in: query, schema: { $ref: '#/components/schemas/ItemKind' } }
         - { name: status, in: query, schema: { type: string, maxLength: 64 } }
         - { name: boardId, in: query, schema: { $ref: '#/components/schemas/Id' } }
+        - { name: assignee, in: query, schema: { type: string, pattern: '^(me|agent:[A-Za-z0-9_-]{1,64})$' } }
+        - { name: sourceId, in: query, schema: { $ref: '#/components/schemas/Id' } }
         - { name: q, in: query, schema: { type: string, maxLength: 200 } }
         - { name: cursor, in: query, schema: { type: string, maxLength: 512 } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
@@ -295,6 +297,135 @@ paths:
         '403': { $ref: '#/components/responses/Error' }
         '413': { $ref: '#/components/responses/Error' }
         '429': { $ref: '#/components/responses/Error' }
+  /v1/agents:
+    get:
+      tags: [Agents]
+      operationId: listAgents
+      x-required-scopes: [sync]
+      responses:
+        '200':
+          description: Agent metadata, including revoked credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [agents]
+                properties:
+                  agents: { type: array, items: { $ref: '#/components/schemas/Agent' } }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+  /v1/agents/{id}/revoke:
+    parameters:
+      - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/Id' } }
+    post:
+      tags: [Agents]
+      operationId: revokeAgent
+      x-required-scopes: [sync]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, maxProperties: 0 }
+      responses:
+        '200':
+          description: Revoked agent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [agent]
+                properties:
+                  agent: { $ref: '#/components/schemas/Agent' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /v1/agents/{id}/rollback/preview:
+    parameters:
+      - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/Id' } }
+    post:
+      tags: [Agents]
+      operationId: previewAgentRollback
+      x-required-scopes: [sync]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AgentRollbackRange' }
+      responses:
+        '200':
+          description: Preview and confirmation token for the exact normalized range
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [preview]
+                properties:
+                  preview:
+                    allOf:
+                      - { $ref: '#/components/schemas/AgentRollbackRange' }
+                      - type: object
+                        required: [until, matched, eligible, skipped, previewToken]
+                        properties:
+                          matched: { type: integer, minimum: 0 }
+                          eligible: { type: integer, minimum: 0 }
+                          skipped: { type: integer, minimum: 0 }
+                          previewToken: { type: string }
+        '400': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+  /v1/agents/{id}/rollback:
+    parameters:
+      - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/Id' } }
+    post:
+      tags: [Agents]
+      operationId: rollbackAgent
+      x-required-scopes: [sync]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - { $ref: '#/components/schemas/AgentRollbackRange' }
+                - type: object
+                  required: [until, previewToken]
+                  properties:
+                    previewToken: { type: string }
+      responses:
+        '200':
+          description: Rollback applied
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [result]
+                properties:
+                  result:
+                    type: object
+                    required: [reverted, skipped, latestSeq]
+                    properties:
+                      reverted: { type: integer, minimum: 0 }
+                      skipped: { type: integer, minimum: 0 }
+                      latestSeq: { type: integer, minimum: 0 }
+        '403': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+  /mcp:
+    post:
+      tags: [Agents]
+      operationId: invokeMcp
+      description: Stateless Model Context Protocol Streamable HTTP. Each tool enforces its own scopes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: JSON-RPC response
+          content:
+            application/json:
+              schema: { type: object }
+        '202': { description: JSON-RPC notification accepted }
+        '401': { description: Bearer token required }
+        '403': { description: Host or Origin rejected }
+        '429': { description: Request limit exceeded }
   /v1/changes:
     get:
       tags: [Sync]
@@ -453,6 +584,24 @@ components:
     ItemKind:
       type: string
       enum: [task, note, link, reminder, digest, article, card]
+    Agent:
+      type: object
+      required: [id, name, scopes, createdAt, createdItems]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        name: { type: string }
+        scopes: { type: array, items: { type: string } }
+        createdAt: { type: string, format: date-time }
+        createdItems: { type: integer, minimum: 0 }
+        expiresAt: { type: string, format: date-time }
+        revokedAt: { type: string, format: date-time }
+        lastUsedAt: { type: string, format: date-time }
+    AgentRollbackRange:
+      type: object
+      required: [since]
+      properties:
+        since: { type: string, format: date-time }
+        until: { type: string, format: date-time }
     Source:
       type: object
       required: [type, id, name]
@@ -474,6 +623,8 @@ components:
         remindAt: { type: [string, 'null'], format: date-time }
         tags: { type: array, items: { type: string, maxLength: 100 } }
         pinned: { type: boolean }
+        assignee: { type: [string, 'null'], pattern: '^agent:[A-Za-z0-9_-]{1,64}$' }
+        agentComment: { type: [string, 'null'], maxLength: 4000 }
         kind: { $ref: '#/components/schemas/ItemKind' }
     ItemDraft:
       allOf:

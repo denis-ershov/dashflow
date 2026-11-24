@@ -7,6 +7,7 @@ import {
   type HubPushChange,
 } from '../../../packages/shared/src/sync';
 import { isHubToken, type HubConnection, type HubFailure } from './model';
+import { readHubAgent, readHubAgentPreview, readHubAgentRollback } from './agents';
 
 export class HubClientError extends Error {
   constructor(readonly issue: HubFailure) {
@@ -82,6 +83,47 @@ export async function getHubEarlierItem(connection: HubConnection, id: string) {
     if (item.id === id) return item;
   }
   return undefined;
+}
+
+export async function fetchHubAgents(connection: HubConnection) {
+  const { agents } = asRecord(
+    await requestHub(hubUrl(connection.origin, 'agents'), connection.token),
+  );
+  if (!Array.isArray(agents)) throw new HubClientError('data');
+  return agents.map(readHubAgent);
+}
+
+export async function revokeHubAgent(connection: HubConnection, id: string) {
+  const url = hubUrl(connection.origin, `agents/${encodeURIComponent(id)}/revoke`);
+  const { agent } = asRecord(await requestHub(url, connection.token, '{}'));
+  return readHubAgent(agent);
+}
+
+export async function previewHubAgentRollback(
+  connection: HubConnection,
+  id: string,
+  since: string,
+  until?: string,
+) {
+  const url = hubUrl(connection.origin, `agents/${encodeURIComponent(id)}/rollback/preview`);
+  const { preview } = asRecord(
+    await requestHub(url, connection.token, JSON.stringify({ since, until })),
+  );
+  return readHubAgentPreview(preview);
+}
+
+export async function rollbackHubAgent(
+  connection: HubConnection,
+  id: string,
+  since: string,
+  until: string,
+  previewToken: string,
+) {
+  const url = hubUrl(connection.origin, `agents/${encodeURIComponent(id)}/rollback`);
+  const { result } = asRecord(
+    await requestHub(url, connection.token, JSON.stringify({ since, until, previewToken })),
+  );
+  return readHubAgentRollback(result);
 }
 
 export async function pushHubChanges(connection: HubConnection, changes: readonly HubPushChange[]) {

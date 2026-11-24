@@ -29,7 +29,7 @@ export function registerRestRoutes(
   notify: () => void,
 ) {
   app.get('/v1/items', { onRequest: requireScope('items:read') }, (request) =>
-    repository.listItems(itemQuery(request.query)),
+    repository.listItems(itemQuery(request.query, actor(request).id)),
   );
   app.get<{ Params: { id: string } }>(
     '/v1/items/:id',

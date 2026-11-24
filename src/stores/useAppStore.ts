@@ -10,11 +10,13 @@ interface AppState {
   language: SupportedLanguage;
   animationsEnabled: boolean;
   density: UiDensity;
+  city: string;
   isInitialized: boolean;
 
   setLanguage: (lang: SupportedLanguage) => Promise<void>;
   setAnimationsEnabled: (enabled: boolean) => Promise<void>;
   setDensity: (density: UiDensity) => Promise<void>;
+  setCity: (city: string) => Promise<void>;
   initialize: () => Promise<void>;
 }
 
@@ -23,6 +25,7 @@ export const useAppStore = create<AppState>()(
     language: 'ru',
     animationsEnabled: true,
     density: 'comfortable',
+    city: '',
     isInitialized: false,
 
     initialize: async () => {
@@ -31,12 +34,15 @@ export const useAppStore = create<AppState>()(
       let savedLang: SupportedLanguage = fallbackLang;
       let savedAnim = true;
       let savedDensity: UiDensity = 'comfortable';
+      let savedCity = '';
       let readError: unknown = null;
       try {
         savedLang = await StorageAdapter.get<SupportedLanguage>('app_language', fallbackLang);
         savedAnim = await StorageAdapter.get<boolean>('app_animations', true);
         const storedDensity = await StorageAdapter.get<unknown>(STORAGE_KEYS.APP_DENSITY, 'comfortable');
         savedDensity = storedDensity === 'compact' ? 'compact' : 'comfortable';
+        const storedCity = await StorageAdapter.get<unknown>(STORAGE_KEYS.APP_CITY, '');
+        savedCity = typeof storedCity === 'string' ? storedCity.trim().slice(0, 100) : '';
       } catch (error) {
         // Интерфейс всё равно запускается на значениях по умолчанию, ошибку получит вызывающий
         readError = error;
@@ -46,6 +52,7 @@ export const useAppStore = create<AppState>()(
         state.language = savedLang;
         state.animationsEnabled = savedAnim;
         state.density = savedDensity;
+        state.city = savedCity;
         state.isInitialized = true;
       });
       applyMotionPreference(savedAnim);
@@ -84,6 +91,13 @@ export const useAppStore = create<AppState>()(
       });
       applyDensityPreference(density);
       await StorageAdapter.set(STORAGE_KEYS.APP_DENSITY, density);
+    },
+    setCity: async (city) => {
+      const normalized = city.trim().slice(0, 100);
+      set((state) => {
+        state.city = normalized;
+      });
+      await StorageAdapter.set(STORAGE_KEYS.APP_CITY, normalized);
     },
   })),
 );

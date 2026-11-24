@@ -158,9 +158,14 @@ export function DigestWidget() {
         </p>
       )}
       {!loading && !error && !latest && (
-        <p className="text-sm text-fg-muted">
-          {t(items.length ? 'digest.noUnread' : 'digest.empty')}
-        </p>
+        <div role="status" className="space-y-1 text-sm">
+          <p className="font-medium text-fg">
+            {t(items.length ? 'digest.noUnread' : 'digest.empty')}
+          </p>
+          <p className="text-fg-muted">
+            {t(items.length ? 'digest.noUnreadHint' : 'digest.emptyHint')}
+          </p>
+        </div>
       )}
       {latest && (
         <article className="min-w-0 rounded-xl border border-line p-3">

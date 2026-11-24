@@ -1,6 +1,7 @@
 import {
   HUB_SYNC_BATCH,
   ITEM_KINDS,
+  isItemAssignee,
   ItemValidationError,
   parseBoardDraft,
   parseHubSyncSnapshot,
@@ -92,6 +93,8 @@ const draftFields = [
   'remindAt',
   'tags',
   'pinned',
+  'assignee',
+  'agentComment',
 ];
 export const createDraft = (value: unknown) =>
   parseItemDraft(object(value, ['kind', ...draftFields]));
@@ -127,14 +130,27 @@ function parseIsoDate(value: unknown): string {
   return new Date(value).toISOString();
 }
 
-export function itemQuery(value: unknown) {
-  const q = object(value, ['kind', 'status', 'boardId', 'q', 'cursor', 'limit']);
+export function itemQuery(value: unknown, actorId?: string) {
+  const q = object(value, [
+    'kind',
+    'status',
+    'boardId',
+    'q',
+    'cursor',
+    'limit',
+    'assignee',
+    'sourceId',
+  ]);
   const kind = ITEM_KINDS.find((entry): entry is ItemKind => entry === q.kind);
   if (q.kind !== undefined && !kind) return invalid('kind');
+  const assignee = q.assignee === 'me' && actorId ? `agent:${actorId}` : q.assignee;
+  if (assignee !== undefined && !isItemAssignee(assignee)) return invalid('assignee');
   return {
     kind,
     status: q.status === undefined ? undefined : safeId(q.status, 'status'),
     boardId: q.boardId === undefined ? undefined : safeId(q.boardId, 'boardId'),
+    assignee,
+    sourceId: q.sourceId === undefined ? undefined : safeId(q.sourceId, 'sourceId'),
     q: q.q === undefined ? undefined : text(q.q, 'q', 200),
     cursor: q.cursor === undefined ? undefined : text(q.cursor, 'cursor', 512),
     limit: q.limit === undefined ? undefined : integer(q.limit, 'limit', 1, 100),

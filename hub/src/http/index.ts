@@ -2,6 +2,8 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import websocket from '@fastify/websocket';
 import { HUB_BODY_LIMIT } from '@dashflow/shared';
 import { HubDbError, type HubRepository } from '../db/index.js';
+import { createMcpHttpHandler } from '../mcp/index.js';
+import { registerAgentRoutes } from './agents.js';
 import {
   actorFor,
   denied,
@@ -21,6 +23,7 @@ export interface HubServerOptions {
   repository: HubRepository;
   extensionOrigins?: readonly string[];
   writesPerMinute?: number;
+  mcpAllowedHosts?: readonly string[];
 }
 
 const errorStatus = {
@@ -62,6 +65,7 @@ export async function createHubServer({
   repository,
   extensionOrigins = [],
   writesPerMinute = 60,
+  mcpAllowedHosts,
 }: HubServerOptions): Promise<FastifyInstance> {
   if (!Number.isSafeInteger(writesPerMinute) || writesPerMinute < 1 || writesPerMinute > 10_000) {
     throw new Error('Invalid write rate limit in Hub configuration');
@@ -151,8 +155,24 @@ export async function createHubServer({
   );
 
   registerRestRoutes(app, repository, access, notify);
+  registerAgentRoutes(app, repository, access, notify);
   await registerWebhooks(app, repository, writesPerMinute, notify, (request, identity) => {
     access.identities.set(request, identity);
+  });
+  const mcp = createMcpHttpHandler({
+    repository,
+    allowedHosts: mcpAllowedHosts,
+    allowedOrigins: extensionOrigins,
+    allowWrite: access.permitWrite,
+  });
+  app.route({
+    method: ['POST', 'GET', 'DELETE'],
+    url: '/mcp',
+    async handler(request, reply) {
+      reply.hijack();
+      await mcp(request.raw, reply.raw, request.body);
+      notify();
+    },
   });
   return app;
 }

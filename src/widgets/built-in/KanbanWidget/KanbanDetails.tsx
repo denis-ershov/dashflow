@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
+import { useHubStatus } from '@/features/hub/useHubStatus';
 import { useTranslation } from '@/core/i18n';
 import type { Item } from '@/core/items';
 import { MarkdownPreview } from '@/ui/feedback/MarkdownPreview';
@@ -8,6 +9,12 @@ import { CardMetadata } from './KanbanCard';
 import { KanbanEarlierVersion } from './KanbanEarlierVersion';
 import type { Lane, Placement } from './kanbanOrder';
 import { kanbanSelectClass } from './kanbanStyles';
+
+const AgentAssignmentForm = lazy(() =>
+  import('@/features/agents/AssignAgentDialog').then(({ AgentAssignmentForm }) => ({
+    default: AgentAssignmentForm,
+  })),
+);
 
 interface KanbanDetailsProps {
   item: Item;
@@ -29,6 +36,8 @@ export function KanbanDetails({
   onClose,
 }: KanbanDetailsProps) {
   const { t } = useTranslation();
+  const hub = useHubStatus();
+  const [assigning, setAssigning] = useState(false);
   const [chosenColumn, setChosenColumn] = useState('');
   const lane = lanes.find(({ column }) => column.id === item.status);
   const index = lane?.items.findIndex(({ id }) => id === item.id) ?? -1;
@@ -49,6 +58,23 @@ export function KanbanDetails({
         )}
       </div>
       <KanbanEarlierVersion itemId={item.id} version={item.version} />
+      {item.agentComment && (
+        <section aria-label={t('agents.reply')} className="min-w-0 space-y-1">
+          <h5 className="text-sm font-semibold">{t('agents.reply')}</h5>
+          <MarkdownPreview text={item.agentComment} />
+        </section>
+      )}
+      {hub.state === 'connected' && (item.kind === 'task' || item.kind === 'card') && (
+        assigning ? (
+          <Suspense fallback={<p role="status">{t('agents.loading')}</p>}>
+            <AgentAssignmentForm item={item} onClose={() => setAssigning(false)} />
+          </Suspense>
+        ) : (
+          <Button type="button" variant="secondary" onClick={() => setAssigning(true)}>
+            {t('agents.assign')}
+          </Button>
+        )
+      )}
       <div className="space-y-2">
         <div className="flex flex-wrap gap-2">
           <Button

@@ -20,6 +20,7 @@ export const agenda = {
   unsupported: 'Some events use an unsupported format, recurrence rule, or time zone.',
   truncated: 'The list is limited. Some events may be missing.',
   empty: 'No events or deadlines for this period',
+  emptyHint: 'Connect a calendar or add a task with a due date to see it here.',
   deadline: 'Due',
   allDay: 'All day',
   continues: 'Continues',

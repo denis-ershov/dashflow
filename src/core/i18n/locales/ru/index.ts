@@ -8,6 +8,8 @@ import { digest } from './digest';
 import { agenda } from './agenda';
 import { capture } from './capture';
 import { hub } from './hub';
+import { onboarding } from './onboarding';
+import { agents } from './agents';
 
 /** Русский словарь — канонический: из него выводится тип TranslationKey */
 export const ru = {
@@ -21,4 +23,6 @@ export const ru = {
   agenda,
   capture,
   hub,
+  onboarding,
+  agents,
 } as const;

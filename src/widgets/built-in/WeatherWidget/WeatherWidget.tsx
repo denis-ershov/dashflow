@@ -48,6 +48,7 @@ import {
   getWindDirectionText,
 } from './weatherService';
 import { runLogged } from '@/core/observability';
+import { useAppStore } from '@/stores/useAppStore';
 
 /**
  * Ниже этой высоты режим «Метеостанция» не помещается без внутренней прокрутки:
@@ -75,9 +76,11 @@ const WeatherWidgetView: React.FC<WidgetProps<WeatherSettings> & { forceCompact:
   settings,
   forceCompact,
 }) => {
-  const city = settings?.city || DEFAULT_CITY;
-  const autoLocation = settings?.autoLocation;
-  const coords = settings?.coords;
+  const preferredCity = useAppStore((state) => state.city);
+  const city = settings?.city?.trim() || preferredCity.trim() || DEFAULT_CITY;
+  const hasExplicitCity = Boolean(settings?.city?.trim() || preferredCity.trim());
+  const autoLocation = hasExplicitCity ? false : settings?.autoLocation;
+  const coords = hasExplicitCity ? undefined : settings?.coords;
   const selectedView = settings?.viewMode || 'dashboard';
   const viewMode = selectedView === 'dashboard' && forceCompact ? 'compact' : selectedView;
   const { t, language } = useTranslation();

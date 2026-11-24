@@ -29,6 +29,7 @@ export type ItemPriority = (typeof ITEM_PRIORITIES)[number];
 
 export const SOURCE_TYPES = ['user', 'agent', 'connector', 'import'] as const;
 export type ItemSourceType = (typeof SOURCE_TYPES)[number];
+export type ItemAssignee = `agent:${string}`;
 
 /** Кто создал или изменил запись — для значка источника, фильтров, аудита и отката */
 export interface ItemSource {
@@ -58,6 +59,9 @@ export interface Item {
   tags: string[];
   source: ItemSource;
   pinned?: boolean;
+  assignee?: ItemAssignee;
+  /** Ответ назначенного агента хранится отдельно от исходного описания. */
+  agentComment?: string;
   createdAt: string;
   updatedAt: string;
   archivedAt?: string;
@@ -82,6 +86,8 @@ export type ItemDraft = Pick<Item, 'kind' | 'title'> &
       | 'remindAt'
       | 'tags'
       | 'pinned'
+      | 'assignee'
+      | 'agentComment'
     >
   >;
 
@@ -93,6 +99,8 @@ export const CLEARABLE_FIELDS = [
   'priority',
   'dueAt',
   'remindAt',
+  'assignee',
+  'agentComment',
 ] as const;
 type ClearableField = (typeof CLEARABLE_FIELDS)[number];
 

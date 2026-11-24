@@ -131,6 +131,15 @@ export class Credentials {
     );
   }
 
+  protected getTokenRecord(id: string): TokenRecord | undefined {
+    const row = this.db
+      .prepare(
+        'SELECT id,name,scopes,created_at,expires_at,revoked_at,last_used_at FROM tokens WHERE id = ?',
+      )
+      .get(id) as TokenRow | undefined;
+    return row && readToken(row);
+  }
+
   listTokens(): TokenRecord[] {
     return (
       this.db
@@ -143,13 +152,18 @@ export class Credentials {
 
   revokeToken(id: string): boolean {
     return transaction(this.db, () => {
-      const result = this.db
-        .prepare('UPDATE tokens SET revoked_at = ? WHERE id = ? AND revoked_at IS NULL')
-        .run(this.now().toISOString(), id);
-      if (!result.changes) return false;
+      if (!this.markTokenRevoked(id)) return false;
       this.recordAudit({ actorId: 'admin', action: 'token.revoke', entityId: id, outcome: 'ok' });
       return true;
     });
+  }
+
+  protected markTokenRevoked(id: string): boolean {
+    return Boolean(
+      this.db
+        .prepare('UPDATE tokens SET revoked_at = ? WHERE id = ? AND revoked_at IS NULL')
+        .run(this.now().toISOString(), id).changes,
+    );
   }
 
   createPairingChallenge(origin?: string) {
@@ -226,6 +240,23 @@ export class Credentials {
       });
       return { token, secret: key, record };
     });
+  }
+
+  listWebhooks(): { id: string; name: string; createdAt: string; revokedAt?: string }[] {
+    const rows = this.db
+      .prepare('SELECT id,name,created_at,revoked_at FROM webhooks ORDER BY id')
+      .all() as unknown as {
+      id: string;
+      name: string;
+      created_at: string;
+      revoked_at: string | null;
+    }[];
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      createdAt: row.created_at,
+      revokedAt: row.revoked_at ?? undefined,
+    }));
   }
 
   getWebhook(token: string): { id: string; name: string; key: string } | undefined {

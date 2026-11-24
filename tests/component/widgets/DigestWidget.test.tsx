@@ -2,6 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DIGEST_SCHEDULE_KEY, DIGEST_SOURCE, GENERATE_DIGEST_MESSAGE } from '@/core/digest/model';
+import { t } from '@/core/i18n';
 import { itemRepository } from '@/core/items';
 import { DigestWidget } from '@/widgets/built-in/DigestWidget/DigestWidget';
 import { resetWorkspace } from '../../helpers/workspace';
@@ -36,6 +37,12 @@ describe('Виджет дайджеста', () => {
     await resetWorkspace([]);
     vi.clearAllMocks();
     mocks.get.mockResolvedValue({});
+  });
+
+  it('shows a concrete action in the empty state', async () => {
+    render(<DigestWidget />);
+    expect(await screen.findByText(t('digest.empty'))).toBeInTheDocument();
+    expect(screen.getByText(t('digest.emptyHint'))).toBeInTheDocument();
   });
 
   it('показывает последний непрочитанный выпуск, безопасные ссылки и архив после прочтения', async () => {

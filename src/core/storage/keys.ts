@@ -16,6 +16,8 @@ export const STORAGE_KEYS = {
   APP_SETTINGS: 'dashflow_app_settings',
   /** Глобальная настройка плотности отступов интерфейса. */
   APP_DENSITY: 'app_density',
+  /** Необязательный город для виджета погоды. */
+  APP_CITY: 'app_city',
   /** Пользовательские обои (IndexedDB) */
   WALLPAPER_BLOB: 'dashflow_wallpaper_blob',
   /** Кеш прогноза погоды (IndexedDB) */

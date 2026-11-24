@@ -23,6 +23,10 @@ try {
   });
 
   await page.goto(`chrome-extension://${id}/newtab.html`);
+  const onboarding = page.getByRole('dialog');
+  await onboarding.waitFor({ state: 'visible' });
+  await onboarding.getByRole('button', { name: 'Skip setup' }).click();
+  await onboarding.waitFor({ state: 'detached' });
   const firstWidget = page.getByTestId('grid-engine-container').locator('.react-grid-item').first();
   await firstWidget.waitFor();
 

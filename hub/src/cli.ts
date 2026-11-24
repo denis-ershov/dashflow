@@ -5,6 +5,9 @@ import { pathToFileURL } from 'node:url';
 import { loadHubConfig } from './config.js';
 import { openHubRepository } from './db/index.js';
 import { createHubServer } from './http/index.js';
+import { windowLimiter } from './http/access.js';
+import { startMcpStdio } from './mcp/index.js';
+import { webhookCommand } from './webhookCli.js';
 
 const SCOPES = new Set([
   'items:read',
@@ -18,8 +21,19 @@ const SCOPES = new Set([
 
 function printHelp(): void {
   process.stdout.write(
-    `DashFlow Hub\n\nUsage:\n  dashflow-hub [serve]\n  dashflow-hub pair --origin <extension-origin>\n  dashflow-hub token create <name> --scope <scope[,scope...]> [--expires <ISO-date>]\n  dashflow-hub token list\n  dashflow-hub token revoke <token-id>\n\nEnvironment: DASHFLOW_HUB_CONFIG, DASHFLOW_HUB_HOST, DASHFLOW_HUB_PORT,\nDASHFLOW_HUB_DB_PATH, DASHFLOW_HUB_EXTENSION_ORIGINS, DASHFLOW_HUB_WRITES_PER_MINUTE.\n`,
+    `DashFlow Hub\n\nUsage:\n  dashflow-hub [serve]\n  dashflow-hub pair --origin <extension-origin>\n  dashflow-hub token create <name> --scope <scope[,scope...]> [--expires <ISO-date>]\n  dashflow-hub token list\n  dashflow-hub token revoke <token-id>\n  dashflow-hub webhook create <name>\n  dashflow-hub webhook list\n  dashflow-hub webhook revoke <webhook-id>\n\nEnvironment: DASHFLOW_HUB_CONFIG, DASHFLOW_HUB_HOST, DASHFLOW_HUB_PORT,\nDASHFLOW_HUB_DB_PATH, DASHFLOW_HUB_EXTENSION_ORIGINS, DASHFLOW_HUB_WRITES_PER_MINUTE.\n`,
   );
+}
+
+async function webhook(args: string[]): Promise<void> {
+  const config = await loadHubConfig();
+  const repository = await openConfiguredRepository(config.databasePath);
+  const host = config.host.includes(':') ? `[${config.host}]` : config.host;
+  try {
+    webhookCommand(args, repository, `http://${host}:${config.port}/v1/webhooks/in`);
+  } finally {
+    repository.close();
+  }
 }
 
 function option(args: string[], name: string): string | undefined {
@@ -45,6 +59,7 @@ async function serve(): Promise<void> {
       repository,
       extensionOrigins: config.extensionOrigins,
       writesPerMinute: config.writesPerMinute,
+      mcpAllowedHosts: config.mcpAllowedHosts,
     });
     process.once('SIGINT', onSignal);
     process.once('SIGTERM', onSignal);
@@ -56,6 +71,42 @@ async function serve(): Promise<void> {
     process.removeListener('SIGTERM', onSignal);
     try {
       if (server) await server.close();
+    } finally {
+      repository.close();
+    }
+  }
+}
+
+async function mcpCommand(args: string[]) {
+  if (args.length) throw new Error('Usage: dashflow-hub mcp');
+  const token = process.env.DASHFLOW_HUB_TOKEN;
+  if (!token) throw new Error('DASHFLOW_HUB_TOKEN is required');
+  const config = await loadHubConfig();
+  const repository = await openConfiguredRepository(config.databasePath);
+  const limiter = windowLimiter();
+  let stop: (() => void) | undefined;
+  const closed = new Promise<void>((resolve) => {
+    stop = resolve;
+  });
+  const notifyStop = () => stop?.();
+  process.stdin.once('end', notifyStop);
+  process.once('SIGINT', notifyStop);
+  process.once('SIGTERM', notifyStop);
+  let server: Awaited<ReturnType<typeof startMcpStdio>> | undefined;
+  try {
+    server = await startMcpStdio({
+      repository,
+      token,
+      locale: process.env.DASHFLOW_HUB_MCP_LOCALE === 'ru' ? 'ru' : 'en',
+      allowWrite: (tokenId) => limiter(tokenId, config.writesPerMinute),
+    });
+    if (!process.stdin.readableEnded) await closed;
+  } finally {
+    process.stdin.removeListener('end', notifyStop);
+    process.removeListener('SIGINT', notifyStop);
+    process.removeListener('SIGTERM', notifyStop);
+    try {
+      await server?.close();
     } finally {
       repository.close();
     }
@@ -166,6 +217,14 @@ export async function runCli(args = process.argv.slice(2)): Promise<void> {
   }
   if (command === 'token') {
     await tokenCommand(rest);
+    return;
+  }
+  if (command === 'webhook') {
+    await webhook(rest);
+    return;
+  }
+  if (command === 'mcp') {
+    await mcpCommand(rest);
     return;
   }
   throw new Error(`Unknown command: ${command}`);

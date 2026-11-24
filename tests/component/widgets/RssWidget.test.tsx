@@ -5,10 +5,19 @@ import { render, screen, waitFor, fireEvent, within } from '@testing-library/rea
 import { RssWidget } from '@/widgets/built-in/RssWidget/RssWidget';
 import { rssManifest } from '@/widgets/built-in/RssWidget/manifest';
 import { itemRepository } from '@/core/items';
+import { t } from '@/core/i18n';
 
 describe('RssWidget Component & Manifest', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it('shows a concrete next step when the selected feeds have no posts', async () => {
+    vi.spyOn(global, 'fetch').mockImplementation(
+      async () => new Response('<rss><channel /></rss>'),
+    );
+    render(<RssWidget instanceId="empty-test" settings={{ feedUrl: 'https://empty.test/rss' }} />);
+    expect(await screen.findByText(t('rss.noPostsHint'))).toBeInTheDocument();
   });
 
   it('манифест должен быть строго типизирован и содержать surface=panel', () => {

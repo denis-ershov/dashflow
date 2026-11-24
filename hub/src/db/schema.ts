@@ -16,9 +16,15 @@ export function migrate(db: DatabaseSync): void {
   db.exec('PRAGMA busy_timeout = 5000; PRAGMA journal_mode = WAL;');
   transaction(db, () => {
     const version = db.prepare('PRAGMA user_version').get()?.user_version;
-    if (version === 1) return;
-    if (version !== 0) throw new Error('Unsupported Hub database version');
-    db.exec(`
+    if (version === 2) return;
+    if (version !== 0 && version !== 1) throw new Error('Unsupported Hub database version');
+    if (version === 0) migrateV1(db);
+    migrateV2(db);
+  });
+}
+
+function migrateV1(db: DatabaseSync): void {
+  db.exec(`
       CREATE TABLE items (
         id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, version INTEGER NOT NULL,
         kind TEXT NOT NULL, status TEXT NOT NULL, board_id TEXT, updated_at TEXT NOT NULL,
@@ -66,6 +72,22 @@ export function migrate(db: DatabaseSync): void {
         salt TEXT NOT NULL, origin TEXT, expires_at TEXT NOT NULL, failed_attempts INTEGER NOT NULL
       ) STRICT;
       PRAGMA user_version = 1;
-    `);
-  });
+  `);
+}
+
+function migrateV2(db: DatabaseSync): void {
+  db.exec(`
+    ALTER TABLE items ADD COLUMN assignee TEXT;
+    ALTER TABLE items ADD COLUMN source_id TEXT;
+    UPDATE items SET source_id = json_extract(payload, '$.source.id'), assignee = json_extract(payload, '$.assignee');
+    CREATE INDEX items_assignee_page ON items(assignee, updated_at DESC, id DESC);
+    CREATE INDEX items_source_page ON items(source_id, updated_at DESC, id DESC);
+    CREATE INDEX items_owner ON items(owner_id);
+
+    ALTER TABLE changes ADD COLUMN actor_id TEXT;
+    ALTER TABLE changes ADD COLUMN before_payload TEXT CHECK (json_valid(before_payload));
+    ALTER TABLE changes ADD COLUMN before_deleted INTEGER CHECK (before_deleted IN (0,1));
+    CREATE INDEX changes_actor_date ON changes(actor_id, at, seq) WHERE actor_id IS NOT NULL;
+    PRAGMA user_version = 2;
+  `);
 }

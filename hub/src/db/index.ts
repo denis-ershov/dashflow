@@ -1,4 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
+import { randomBytes } from 'node:crypto';
 import {
   HUB_SYNC_BATCH,
   orderBetween,
@@ -12,17 +13,29 @@ import {
   type Board,
   type Item,
   type ItemSource,
+  type ItemPatch,
   type HubChangePage,
 } from '@dashflow/shared';
 import { Credentials, digest } from './credentials.js';
+import {
+  assertRollbackSignature,
+  planAgentRollback,
+  signRollback,
+  type RollbackStep,
+} from './agentRollback.js';
 import { migrate, transaction } from './schema.js';
 import {
   HubDbError,
   type Actor,
+  type AgentRecord,
+  type AgentRollbackPreview,
+  type AgentRollbackRange,
+  type AgentRollbackResult,
   type Entity,
   type ListItemsQuery,
   type PushChange,
   type PushResult,
+  type TokenRecord,
 } from './types.js';
 
 export * from './types.js';
@@ -34,6 +47,15 @@ const DEFAULT_COLUMNS = [
   { id: 'doing', title: 'In progress' },
   { id: 'done', title: 'Done' },
 ];
+const ASSIGNED_TASK_STATUSES = new Set(['todo', 'doing', 'done']);
+
+function canManageItems(actor: Actor): boolean {
+  return Boolean(actor.scopes?.some((scope) => scope === 'sync' || scope === 'items:manage'));
+}
+
+function isAgentToken(token: TokenRecord) {
+  return !token.scopes.includes('sync');
+}
 
 function readVersion(value: number, minimum: number): number {
   if (!Number.isSafeInteger(value) || value < minimum || value >= Number.MAX_SAFE_INTEGER) {
@@ -98,6 +120,8 @@ function readPushValue(change: PushChange): Value {
 }
 
 export class HubRepository extends Credentials {
+  private readonly rollbackSecret = randomBytes(32);
+
   close(): void {
     this.db.close();
   }
@@ -123,6 +147,8 @@ export class HubRepository extends Credentials {
       ['kind', query.kind],
       ['status', query.status],
       ['board_id', query.boardId],
+      ['assignee', query.assignee],
+      ['source_id', query.sourceId],
     ]) {
       if (value && column) {
         predicates.push(`${column} = ?`);
@@ -156,6 +182,7 @@ export class HubRepository extends Credentials {
     const draft = parseItemDraft(input);
     return transaction(this.db, () =>
       this.idempotent(actor.id, 'item.create', idempotencyKey, draft, () => {
+        if (draft.assignee !== undefined) this.assertAssignment(actor, draft.kind, draft.assignee);
         const now = this.now();
         const last = this.db
           .prepare('SELECT sort_key FROM items ORDER BY sort_key DESC LIMIT 1')
@@ -173,7 +200,7 @@ export class HubRepository extends Credentials {
           updatedAt: now.toISOString(),
         });
         this.writeItem(value, actor.id);
-        this.writeChange('item', value.id, value.version, value);
+        this.writeChange(actor, 'item', value.id, value.version, value);
         this.auditWrite(actor, 'item.create', value.id);
         return value;
       }),
@@ -185,12 +212,11 @@ export class HubRepository extends Credentials {
     return transaction(this.db, () => {
       const row = this.readRow('item', id);
       if (!row || row.deleted_at) throw new HubDbError('NOT_FOUND', 'Item not found');
-      if (row.owner_id !== actor.id && !actor.scopes?.includes('items:manage')) {
-        throw new HubDbError('FORBIDDEN', 'Item belongs to another principal');
-      }
+      const current = itemFromRow(row);
+      this.assertItemEdit(actor, current, row.owner_id, patch);
       this.assertVersion(row.version, expectedVersion);
       const value = parseStoredItem({
-        ...itemFromRow(row),
+        ...current,
         ...Object.fromEntries(
           Object.entries(patch).map(([key, field]) => [key, field ?? undefined]),
         ),
@@ -199,10 +225,167 @@ export class HubRepository extends Credentials {
         version: row.version + 1,
       });
       this.writeItem(value, row.owner_id);
-      this.writeChange('item', id, value.version, value);
+      this.writeChange(actor, 'item', id, value.version, value, row);
       this.auditWrite(actor, 'item.update', id);
       return value;
     });
+  }
+
+  private assertItemEdit(actor: Actor, current: Item, owner: string, patch: ItemPatch): void {
+    if (patch.assignee !== undefined) this.assertAssignment(actor, current.kind, patch.assignee);
+    if (owner === actor.id || canManageItems(actor)) return;
+    const fields = Object.keys(patch);
+    if (
+      actor.type !== 'agent' ||
+      current.kind !== 'task' ||
+      current.assignee !== `agent:${actor.id}` ||
+      !this.isAssignableAgent(actor.id) ||
+      !fields.length ||
+      fields.some((field) => field !== 'status' && field !== 'agentComment') ||
+      (patch.status !== undefined && !ASSIGNED_TASK_STATUSES.has(patch.status))
+    ) {
+      throw new HubDbError(
+        'FORBIDDEN',
+        'Only status and agent comment may be changed on an assigned task',
+      );
+    }
+  }
+
+  private isAssignableAgent(id: string): boolean {
+    const token = this.getTokenRecord(id);
+    return Boolean(
+      token &&
+      isAgentToken(token) &&
+      token.scopes.includes('items:read') &&
+      token.scopes.includes('items:write') &&
+      this.isTokenActive(id),
+    );
+  }
+
+  private assertAssignment(
+    actor: Actor,
+    kind: Item['kind'],
+    assignee: Item['assignee'] | null,
+  ): void {
+    if (!canManageItems(actor))
+      throw new HubDbError('FORBIDDEN', 'Assigning tasks requires management scope');
+    if (
+      assignee !== undefined &&
+      assignee !== null &&
+      (kind !== 'task' || !this.isAssignableAgent(assignee.slice('agent:'.length)))
+    ) {
+      throw new HubDbError(
+        'VALIDATION_FAILED',
+        'Assignee must be an active agent with item access',
+      );
+    }
+  }
+
+  listAgents(actor: Actor): AgentRecord[] {
+    this.assertAgentManager(actor);
+    return this.listTokens()
+      .filter(isAgentToken)
+      .map((record) => this.withCreatedItems(record));
+  }
+
+  revokeAgent(actor: Actor, agentId: string): AgentRecord {
+    this.assertAgentManager(actor);
+    return transaction(this.db, () => {
+      this.requireAgent(agentId);
+      if (this.markTokenRevoked(agentId)) this.auditWrite(actor, 'agent.revoke', agentId);
+      return this.withCreatedItems(this.requireAgent(agentId));
+    });
+  }
+
+  previewAgentRollback(
+    actor: Actor,
+    agentId: string,
+    range: AgentRollbackRange,
+  ): AgentRollbackPreview {
+    this.assertAgentManager(actor);
+    return transaction(this.db, () => {
+      this.requireAgent(agentId);
+      const plan = planAgentRollback(this.db, agentId, range, this.now());
+      const { since, until, matched, eligible } = plan;
+      return {
+        since,
+        until,
+        matched,
+        eligible,
+        skipped: matched - eligible,
+        previewToken: signRollback(this.rollbackSecret, actor.id, agentId, plan),
+      };
+    });
+  }
+
+  rollbackAgent(
+    actor: Actor,
+    agentId: string,
+    input: AgentRollbackRange & { previewToken: string },
+  ): AgentRollbackResult {
+    this.assertAgentManager(actor);
+    return transaction(this.db, () => {
+      this.requireAgent(agentId);
+      const plan = planAgentRollback(this.db, agentId, input, this.now());
+      assertRollbackSignature(
+        signRollback(this.rollbackSecret, actor.id, agentId, plan),
+        input.previewToken,
+      );
+      for (const { earliest } of plan.plan) {
+        if (earliest) this.applyAgentRollback(actor, earliest);
+      }
+      this.auditWrite(actor, 'agent.rollback', agentId);
+      return {
+        reverted: plan.eligible,
+        skipped: plan.matched - plan.eligible,
+        latestSeq: this.latestChangeSeq(),
+      };
+    });
+  }
+
+  private assertAgentManager(actor: Actor): void {
+    if (!canManageItems(actor))
+      throw new HubDbError('FORBIDDEN', 'Agent management scope required');
+  }
+
+  private requireAgent(id: string): TokenRecord {
+    const record = this.getTokenRecord(id);
+    if (!record || !isAgentToken(record)) throw new HubDbError('NOT_FOUND', 'Agent not found');
+    return record;
+  }
+
+  private withCreatedItems(record: TokenRecord): AgentRecord {
+    const row = this.db
+      .prepare('SELECT count(*) AS total FROM items WHERE owner_id = ?')
+      .get(record.id);
+    return { ...record, createdItems: Number(row?.total ?? 0) };
+  }
+
+  private applyAgentRollback(
+    actor: Actor,
+    { entity, id, before_payload, before_deleted }: RollbackStep,
+  ): void {
+    const row = this.readRow(entity, id);
+    if (!row) throw new HubDbError('CONFLICT', 'Rollback entity is missing');
+    const version = readVersion(row.version + 1, 1);
+    const now = this.now().toISOString();
+    const deleted = before_payload === null || before_deleted === 1;
+    const snapshot: unknown = JSON.parse(before_payload ?? row.payload);
+    if (entity === 'item') {
+      const before = parseStoredItem(snapshot);
+      const item = {
+        ...before,
+        version,
+        updatedAt: now,
+        deletedAt: deleted ? (before.deletedAt ?? now) : undefined,
+      };
+      this.writeItem(item, row.owner_id);
+      this.writeChange(actor, entity, id, version, deleted ? null : item, row);
+    } else {
+      const board = { ...parseStoredBoard(snapshot), updatedAt: now };
+      this.writeBoard(board, row.owner_id, version, deleted ? now : null);
+      this.writeChange(actor, entity, id, version, deleted ? null : board, row);
+    }
   }
 
   deleteItem(actor: Actor, id: string, expectedVersion?: number): Item {
@@ -231,7 +414,7 @@ export class HubRepository extends Credentials {
         version: row.version + 1,
       };
       this.writeItem(item, row.owner_id);
-      this.writeChange('item', id, item.version, null);
+      this.writeChange(actor, 'item', id, item.version, null, row);
       this.auditWrite(actor, 'item.delete', id);
       return item;
     });
@@ -250,11 +433,12 @@ export class HubRepository extends Credentials {
       .toLowerCase();
     this.db
       .prepare(
-        `INSERT INTO items(id,owner_id,version,kind,status,board_id,updated_at,archived_at,deleted_at,sort_key,search_text,payload)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET
+        `INSERT INTO items(id,owner_id,version,kind,status,board_id,updated_at,archived_at,deleted_at,sort_key,search_text,payload,assignee,source_id)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET
       version=excluded.version,kind=excluded.kind,status=excluded.status,board_id=excluded.board_id,
       updated_at=excluded.updated_at,archived_at=excluded.archived_at,deleted_at=excluded.deleted_at,
-      sort_key=excluded.sort_key,search_text=excluded.search_text,payload=excluded.payload`,
+      sort_key=excluded.sort_key,search_text=excluded.search_text,payload=excluded.payload,
+      assignee=excluded.assignee,source_id=excluded.source_id`,
       )
       .run(
         item.id,
@@ -269,6 +453,8 @@ export class HubRepository extends Credentials {
         item.order,
         haystack,
         JSON.stringify(item),
+        item.assignee ?? null,
+        item.source.id,
       );
   }
 
@@ -296,7 +482,7 @@ export class HubRepository extends Credentials {
         updatedAt: now.toISOString(),
       };
       this.writeBoard(board, actor.id, 1);
-      this.writeChange('board', board.id, 1, board);
+      this.writeChange(actor, 'board', board.id, 1, board);
       this.auditWrite(actor, 'board.create', board.id);
       return board;
     });
@@ -319,7 +505,7 @@ export class HubRepository extends Credentials {
         updatedAt: this.now().toISOString(),
       });
       this.writeBoard(board, row.owner_id, row.version + 1);
-      this.writeChange('board', id, row.version + 1, board);
+      this.writeChange(actor, 'board', id, row.version + 1, board, row);
       this.auditWrite(actor, 'board.update', id);
       return board;
     });
@@ -343,9 +529,18 @@ export class HubRepository extends Credentials {
     this.recordAudit({ actorId: actor.id, action, entityId, outcome: 'ok' });
   }
 
-  private writeChange(entity: Entity, id: string, version: number, value: Value): void {
+  private writeChange(
+    actor: Actor,
+    entity: Entity,
+    id: string,
+    version: number,
+    value: Value,
+    before?: Row,
+  ): void {
     this.db
-      .prepare('INSERT INTO changes(entity,id,version,op,at,payload) VALUES (?,?,?,?,?,?)')
+      .prepare(
+        'INSERT INTO changes(entity,id,version,op,at,payload,actor_id,before_payload,before_deleted) VALUES (?,?,?,?,?,?,?,?,?)',
+      )
       .run(
         entity,
         id,
@@ -353,6 +548,9 @@ export class HubRepository extends Credentials {
         value ? 'upsert' : 'delete',
         this.now().toISOString(),
         value ? JSON.stringify(value) : null,
+        actor.id,
+        before?.payload ?? null,
+        before?.deleted_at ? 1 : 0,
       );
   }
 
@@ -452,12 +650,17 @@ export class HubRepository extends Credentials {
       });
       return { idempotencyKey, applied: false, version: currentVersion, value: current };
     }
+    if (value && 'kind' in value) {
+      const previousAssignee = row ? itemFromRow(row).assignee : undefined;
+      if (value.assignee !== previousAssignee)
+        this.assertAssignment(actor, value.kind, value.assignee);
+    }
     if (currentVersion && JSON.stringify(current) !== JSON.stringify(value)) {
       this.saveHistory(actor, change, currentVersion, current);
     }
     const owner = row?.owner_id ?? actor.id;
     this.writeSyncedValue(entity, row, value, owner, version);
-    this.writeChange(entity, id, version, value);
+    this.writeChange(actor, entity, id, version, value, row);
     this.auditWrite(actor, 'sync.push', id);
     return { idempotencyKey, applied: true, version, value };
   }

@@ -37,6 +37,14 @@ const MarketplaceModal = lazy(() =>
 const AppearanceModal = lazy(() =>
   import('@/features/appearance/AppearanceModal').then(({ AppearanceModal }) => ({ default: AppearanceModal })),
 );
+const OnboardingDialog = lazy(() =>
+  import('@/features/onboarding/OnboardingDialog').then(({ OnboardingDialog }) => ({ default: OnboardingDialog })),
+);
+const AssignAgentDialog = lazy(() =>
+  import('@/features/agents/AssignAgentDialog').then(({ AssignAgentDialog }) => ({
+    default: AssignAgentDialog,
+  })),
+);
 
 /** Загружает панель при первом открытии и сохраняет её состояние при закрытии. */
 function DeferredPanel({ open, children }: { open: boolean; children: React.ReactNode }) {
@@ -99,6 +107,26 @@ function DashboardContent() {
 
   const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
   const [isAudioDrawerOpen, setIsAudioDrawerOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [onboardingCheckComplete, setOnboardingCheckComplete] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void import('@/features/onboarding/onboarding')
+      .then(({ shouldShowOnboarding }) => shouldShowOnboarding())
+      .then((show) => {
+        if (!active) return;
+        setIsOnboardingOpen(show);
+        setOnboardingCheckComplete(true);
+      })
+      .catch((error: unknown) => {
+        crashLogger.logError(error, 'storage', { stage: 'onboarding-check' });
+        if (active) setOnboardingCheckComplete(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Ctrl+Z / Cmd+Z вне полей ввода — отмена последнего действия с данными
   useUndoHotkey();
@@ -163,7 +191,7 @@ function DashboardContent() {
     );
   }
 
-  if (!isInitialized || dashboardStatus === 'loading') {
+  if (!isInitialized || dashboardStatus === 'loading' || !onboardingCheckComplete) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-canvas text-fg">
         <div className="flex flex-col items-center gap-4">
@@ -238,6 +266,9 @@ function DashboardContent() {
 
       {/* Модальные окна и оверлеи */}
       <CommandPalette />
+      <DeferredPanel open={activeModal === 'assignAgent'}>
+        {activeModal === 'assignAgent' && <AssignAgentDialog onClose={() => setActiveModal(null)} />}
+      </DeferredPanel>
       <DeferredPanel open={activeModal === 'spaces'}><SpacesModal /></DeferredPanel>
       <DeferredPanel open={activeModal === 'settings'}><SettingsModal /></DeferredPanel>
       <DeferredPanel open={activeModal === 'addWidget'}><AddWidgetModal /></DeferredPanel>
@@ -258,6 +289,9 @@ function DashboardContent() {
         onClose={() => setIsAudioDrawerOpen(false)}
       />
       <ToastContainer />
+      <Suspense fallback={null}>
+        {isOnboardingOpen && <OnboardingDialog onComplete={() => setIsOnboardingOpen(false)} />}
+      </Suspense>
     </div>
   );
 }

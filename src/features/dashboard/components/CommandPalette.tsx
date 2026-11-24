@@ -184,7 +184,7 @@ function PaletteDialog({ revealItem, revealWidget }: PaletteActions) {
                         className={cn(
                           'flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm',
                           selection === position
-                            ? 'bg-primary text-primary-fg'
+                            ? 'border-s-2 border-primary bg-surface-active text-fg font-medium ring-1 ring-inset ring-primary'
                             : 'hover:bg-surface-hover',
                         )}
                       >

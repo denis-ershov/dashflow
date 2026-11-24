@@ -1,5 +1,6 @@
 import { chromium, expect, test, type BrowserContext, type Page } from '@playwright/test';
 import path from 'node:path';
+import { skipOnboardingForTest } from './extensionFixture';
 
 const extensionPath = path.resolve(process.cwd(), '.output/chrome-mv3');
 
@@ -39,7 +40,7 @@ for (const mode of ['mouse', 'touch'] as const) {
     });
 
     try {
-      const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+      const worker = await skipOnboardingForTest(context);
       const page = await context.newPage();
       await page.goto(`chrome-extension://${new URL(worker.url()).host}/newtab.html`);
       const title = `Kanban ${mode} card`;

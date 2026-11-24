@@ -10,6 +10,8 @@ import { digest } from './digest';
 import { agenda } from './agenda';
 import { capture } from './capture';
 import { hub } from './hub';
+import { onboarding } from './onboarding';
+import { agents } from './agents';
 
 export const en: LocaleShape<typeof ru> = {
   ...base,
@@ -22,4 +24,6 @@ export const en: LocaleShape<typeof ru> = {
   agenda,
   capture,
   hub,
+  onboarding,
+  agents,
 };

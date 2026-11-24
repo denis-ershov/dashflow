@@ -13,6 +13,7 @@ import {
   type BoardColumn,
   type BoardDraft,
   type ItemDraft,
+  type ItemAssignee,
   type ItemKind,
   type ItemPatch,
   type ItemPriority,
@@ -27,6 +28,7 @@ import {
 export const ITEM_LIMITS = {
   titleLength: 500,
   bodyLength: 100_000,
+  agentCommentLength: 4_000,
   urlLength: 2_048,
   tags: 20,
   tagLength: 40,
@@ -51,6 +53,10 @@ export type ItemValidationCode =
   | 'id'
   | 'version'
   | 'source';
+
+export function isItemAssignee(value: unknown): value is ItemAssignee {
+  return typeof value === 'string' && /^agent:[A-Za-z0-9_-]{1,64}$/.test(value);
+}
 
 export class ItemValidationError extends Error {
   constructor(
@@ -136,6 +142,8 @@ function readOptionalFields(input: Record<string, unknown>) {
   }
   const pinned = input.pinned;
   if (pinned !== undefined && typeof pinned !== 'boolean') fail('flag', 'pinned');
+  const assignee = input.assignee;
+  if (assignee !== undefined && !isItemAssignee(assignee)) fail('id', 'assignee');
 
   return {
     body: readText(input.body, 'body', ITEM_LIMITS.bodyLength, false),
@@ -148,6 +156,13 @@ function readOptionalFields(input: Record<string, unknown>) {
     remindAt: readDate(input.remindAt, 'remindAt'),
     tags: readTags(input.tags),
     pinned: pinned as boolean | undefined,
+    assignee: assignee as ItemAssignee | undefined,
+    agentComment: readText(
+      input.agentComment,
+      'agentComment',
+      ITEM_LIMITS.agentCommentLength,
+      false,
+    ),
   };
 }
 

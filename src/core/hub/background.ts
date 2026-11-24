@@ -4,7 +4,25 @@ import { hubSyncStore } from '@/core/items/hubSyncStore';
 import { asRecord } from '@/core/network/jsonReaders';
 import { hasBrowserPermissions, originPatternFor } from '@/core/permissions/browserPermissions';
 import type { Item } from '@/core/items/types';
-import { getHubEarlierItem, HubClientError, redeemHubCode } from './client';
+import {
+  fetchHubAgents,
+  getHubEarlierItem,
+  HubClientError,
+  previewHubAgentRollback,
+  redeemHubCode,
+  revokeHubAgent,
+  rollbackHubAgent,
+} from './client';
+import {
+  HUB_AGENTS,
+  HUB_AGENT_PREVIEW,
+  HUB_AGENT_REVOKE,
+  HUB_AGENT_ROLLBACK,
+  isAgentId,
+  type HubAgentRecord,
+  type HubAgentRollbackPreview,
+  type HubAgentRollbackResult,
+} from './agents';
 import {
   HUB_CONNECTION_KEY,
   HUB_DISCONNECT,
@@ -29,7 +47,27 @@ const RETRY_ALARM = 'dashflow-hub-retry';
 const POLL_MINUTES = 5;
 const BACKOFF_MAX = 5 * 60_000;
 const BACKOFF_INITIAL = 30_000;
-type HubReply = { ok: true; item?: Item } | { ok: false; issue: HubFailure };
+type HubReply =
+  | {
+      ok: true;
+      item?: Item;
+      agents?: HubAgentRecord[];
+      agent?: HubAgentRecord;
+      preview?: HubAgentRollbackPreview;
+      result?: HubAgentRollbackResult;
+    }
+  | { ok: false; issue: HubFailure };
+
+const AGENT_REQUESTS = new Set<unknown>([
+  HUB_AGENTS,
+  HUB_AGENT_REVOKE,
+  HUB_AGENT_PREVIEW,
+  HUB_AGENT_ROLLBACK,
+]);
+
+function validDate(value: unknown): value is string {
+  return typeof value === 'string' && value.length <= 40 && !Number.isNaN(Date.parse(value));
+}
 
 const readConnection = async () =>
   readHubConnection((await browser.storage.local.get(HUB_CONNECTION_KEY))[HUB_CONNECTION_KEY]);
@@ -166,6 +204,38 @@ export function startHubBackground() {
     }
   }
 
+  async function manageAgent(message: Record<string, unknown>): Promise<HubReply> {
+    const { type, id, since, until, previewToken } = message;
+    const connection = await readConnection();
+    if (!connection) return { ok: false, issue: 'unauthorized' };
+    try {
+      await assertHostPermission(connection.origin);
+      if (type === HUB_AGENTS) return { ok: true, agents: await fetchHubAgents(connection) };
+      if (!isAgentId(id)) return { ok: false, issue: 'data' };
+      if (type === HUB_AGENT_REVOKE) {
+        return { ok: true, agent: await revokeHubAgent(connection, id) };
+      }
+      if (!validDate(since) || (until !== undefined && !validDate(until))) {
+        return { ok: false, issue: 'data' };
+      }
+      if (type === HUB_AGENT_PREVIEW) {
+        return { ok: true, preview: await previewHubAgentRollback(connection, id, since, until) };
+      }
+      if (
+        !until ||
+        typeof previewToken !== 'string' ||
+        !/^[A-Za-z0-9_-]{1,256}$/.test(previewToken)
+      ) {
+        return { ok: false, issue: 'data' };
+      }
+      const result = await rollbackHubAgent(connection, id, since, until, previewToken);
+      wake(true);
+      return { ok: true, result };
+    } catch (error) {
+      return { ok: false, issue: issueOf(error) };
+    }
+  }
+
   async function configure(type: string, origin: unknown, code: unknown): Promise<HubReply> {
     if (controlsBusy) return { ok: false, issue: 'data' };
     controlsBusy = true;
@@ -222,7 +292,13 @@ export function startHubBackground() {
   return {
     wake,
     request(value: unknown, sender: chrome.runtime.MessageSender): Promise<HubReply> | undefined {
-      const { type, origin, code, id } = asRecord(value);
+      const message = asRecord(value);
+      const { type, origin, code, id } = message;
+      if (AGENT_REQUESTS.has(type)) {
+        return isWorkspace(sender)
+          ? manageAgent(message)
+          : Promise.resolve({ ok: false, issue: 'permissions' });
+      }
       if (
         type !== HUB_PAIR &&
         type !== HUB_DISCONNECT &&

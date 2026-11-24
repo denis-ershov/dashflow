@@ -5,11 +5,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WeatherWidget } from '@/widgets/built-in/WeatherWidget/WeatherWidget';
 import { weatherManifest } from '@/widgets/built-in/WeatherWidget/manifest';
 import { StorageAdapter } from '@/core/storage/StorageAdapter';
+import * as weatherService from '@/widgets/built-in/WeatherWidget/weatherService';
+import { useAppStore } from '@/stores/useAppStore';
 
 describe('WeatherWidget Component & Manifest', () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
+    useAppStore.setState({ city: '' });
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false, gcTime: 0 },
@@ -77,6 +80,47 @@ describe('WeatherWidget Component & Manifest', () => {
     expect(screen.getByText('24ч')).toBeInTheDocument();
     expect(screen.getByText('7 дн.')).toBeInTheDocument();
     expect(screen.getByText('Детали')).toBeInTheDocument();
+  });
+
+  it('использует город профиля и сохраняет приоритет явно заданного города виджета над координатами', async () => {
+    useAppStore.setState({ city: 'Riga' });
+    const fetchWeather = vi
+      .spyOn(weatherService, 'fetchFullWeatherData')
+      .mockRejectedValue(new Error('Ожидаемый отказ запроса в тесте'));
+
+    const view = render(
+      <QueryClientProvider client={queryClient}>
+        <WeatherWidget
+          instanceId="weather-city-priority"
+          settings={{ city: 'Paris', autoLocation: true, coords: { lat: 1, lon: 2 } }}
+        />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(fetchWeather).toHaveBeenCalledWith({
+        city: 'Paris',
+        autoLocation: false,
+        coords: undefined,
+      });
+    });
+
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <WeatherWidget
+          instanceId="weather-profile-city"
+          settings={{ autoLocation: true, coords: { lat: 1, lon: 2 } }}
+        />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(fetchWeather).toHaveBeenCalledWith({
+        city: 'Riga',
+        autoLocation: false,
+        coords: undefined,
+      });
+    });
   });
 
   it('позволяет переключать вкладки прямо в виджете (например, 24ч и Детали)', async () => {
